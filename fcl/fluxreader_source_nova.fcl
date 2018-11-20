@@ -8,40 +8,35 @@ services: {
   RandomNumberGenerator: {}
   NuRandomService: @local::microboone_seedservice
   TimeTracker: {}
-  FileCatalogMetadata:@local::art_file_catalog_mc
+  FileCatalogMetadata: @local::art_file_catalog_mc
 }
 
 source: {
-  fileNames:   []
+  fileNames: []
   module_type: FluxReader
-  skipEvents:  0
-  maxEvents:   -1
-  inputType:   "dk2nu"
-  nBins:       200
-  Elow:        0
-  Ehigh:       10
+  skipEvents: 0
+  maxEvents: -1
+  inputType: "dk2nu"
+  nBins: 200
+  Elow: 0
+  Ehigh: 50
   dk2nuConfig: "dk2nu_numi_at_nova"
 
   dk2nu_numi_at_nova: {
-    // Origin of detector coordinate system in beam coordinates (in cm)
-    userorigin: [ 226.9447, 6100.1882, -99113.1313 ]
-   
-    // Rotation matrix between detector coordinate system and beam coordinate system
-    rotmatrix:  [  9.9990e-01,  -8.2300e-04,  -1.4088e-02, 
-                   3.0533e-06,   9.9831e-01,  -5.8103e-02,
-                   1.4112e-02,   5.8097e-02,   9.9821e-01 ]
-
-    // Flux window in detector coordinate system (in cm)
-    windowBase: [ 500.0,  -250.0, -500 ]
-    window1:    [ 500.0,   500.0, -500 ]
-    window2:    [-500.0,  -250.0, -500 ]	 
-  }  
-}	
+    userbeam:   [ 226.9447, 6100.1882, -99113.1313 ]  // [cm]
+    rotmatrix:  [  9.9990e-01, -8.2300e-04, -1.4088e-02,
+                   3.0533e-06,  9.9831e-01, -5.8103e-02,
+                   1.4112e-02,  5.8097e-02,  9.9821e-01 ]
+    windowBase: [  500, -250, -500 ]
+    window1:    [  500,  500, -500 ]
+    window2:    [ -500, -250, -500 ]
+  }
+}
 
 outputs: {
  out1: {
    module_type: RootOutput
-   fileName: "%ifb_FluxRead_%tc.root" 
+   fileName: "%ifb_FluxRead_%tc.root"
    compressionLevel: 1
    dataTier: "simulated"
   }
