@@ -4,52 +4,52 @@
 process_name: FluxReader
 
 services: {
-  TFileService: { fileName: "flux_hist.root" }
-  RandomNumberGenerator: {}
-  NuRandomService: @local::microboone_seedservice
-  TimeTracker: {}
-  FileCatalogMetadata: @local::art_file_catalog_mc
+	TFileService: { fileName: "flux_hist.root" }
+	RandomNumberGenerator: {}
+	NuRandomService: @local::microboone_seedservice
+	TimeTracker: {}
+	FileCatalogMetadata: @local::art_file_catalog_mc
 }
 
 source: {
-  fileNames: []
-  module_type: FluxReader
-  skipEvents: 0
-  maxEvents: -1
-  inputType: "dk2nu"
-  nBins: 200
-  Elow: 0
-  Ehigh: 50
-  dk2nuConfig: "dk2nu_numi_at_nova"
+	fileNames: []
+	module_type: FluxReader
+	skipEvents: 0
+	maxEvents: -1
+	inputType: "dk2nu"
+	nBins: 200
+	Elow: 0
+	Ehigh: 50
+	dk2nuConfig: "dk2nu_numi_at_nova"
 
-  dk2nu_numi_at_nova: {
-    userbeam:   [ 226.9447, 6100.1882, -99113.1313 ]  // [cm]
-    rotmatrix:  [  9.9990e-01, -8.2300e-04, -1.4088e-02,
-                   3.0533e-06,  9.9831e-01, -5.8103e-02,
-                   1.4112e-02,  5.8097e-02,  9.9821e-01 ]
-    windowBase: [  500, -250, -500 ]
-    window1:    [  500,  500, -500 ]
-    window2:    [ -500, -250, -500 ]
-  }
+  	dk2nu_numi_at_nova: {
+    	userbeam:   [ 226.9447, 6100.1882, -99113.1313 ]  // [cm]
+    	rotmatrix:  [  9.9990e-01, -8.2300e-04, -1.4088e-02,
+    	               3.0533e-06,  9.9831e-01, -5.8103e-02,
+    	               1.4112e-02,  5.8097e-02,  9.9821e-01 ]
+    	windowBase: [  500, -250, -500 ]
+    	window1:    [  500,  500, -500 ]
+    	window2:    [ -500, -250, -500 ]
+	}
 }
 
 outputs: {
- out1: {
-   module_type: RootOutput
-   fileName: "%ifb_FluxRead_%tc.root"
-   compressionLevel: 1
-   dataTier: "simulated"
-  }
+	out1: {
+		module_type: RootOutput
+		fileName: "%ifb_FluxRead_%tc.root"
+		compressionLevel: 1
+		dataTier: "simulated"
+	}
 }
 
 physics: {
- producers: {
-   rns: { module_type: "RandomNumberSaver" }
- }
- analyzers: {}
- ana: []
- simulate: [ rns ]
- stream1: [ out1 ]
- end_paths: [ stream1 ]
+	producers: {
+		rns: { module_type: "RandomNumberSaver" }
+	}
+	analyzers: {}
+	ana: []
+	simulate: [ rns ]
+	stream1: [ out1 ]
+	end_paths: [ stream1 ]
 }
 
