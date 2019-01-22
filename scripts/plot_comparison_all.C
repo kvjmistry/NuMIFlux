@@ -31,9 +31,170 @@ std::vector<std::string> loopdir(TString  inputfile, TString mode) {
 	return (inputmode);
 }
 
+// function that makes a legend for multiple histograms and draws them to the canvas
+void legDraw(TLegend *legend, TH1D *hist, TString prodmode, TString mipp, std::string inputmode, TString mode){
+	
+	if (inputmode == "PPFXMaster"){
+	hist->SetLineColor(kBlack);
+	hist->SetLineWidth(2);
+	legend->AddEntry(hist, "PPFXMaster", "l");
+	hist->Draw("hist,same");
+	} 
+	else if  (inputmode == "ms_PPFX"){
+		hist->SetLineColor(kMagenta+2);
+		hist->SetLineWidth(2);
+		legend->AddEntry(hist, prodmode, "l"); // prodmode is overridden in the terminal input
+		hist->Draw("hist,same");
+	}
+	else if  (inputmode == "PPFXMIPPKaon" && mipp =="mippon"){ // only turn on if there is MIPP
+		hist->SetLineColor(30);
+		hist->SetLineWidth(2);
+		legend->AddEntry(hist, "MIPPKaon", "l");
+		hist->SetLineStyle(2);
+		hist->Draw("hist,same");
+	}
+	else if  ( inputmode == "PPFXMIPPPion" && mipp =="mippon"){ // only turn on if there is MIPP
+		hist->SetLineColor(38);
+		hist->SetLineWidth(2);
+		legend->AddEntry(hist, "MIPPPion", "l");
+		hist->SetLineStyle(2);
+		hist->Draw("hist,same");
+	}
+	else if  (inputmode == "PPFXOther"){
+		hist->SetLineColor(28);
+		hist->SetLineWidth(2);
+		legend->AddEntry(hist, "Other", "l");
+		hist->SetLineStyle(2);
+		hist->Draw("hist,same");
+		
+	}
+	else if  (inputmode == "PPFXTargAtten" ){
+		hist->SetLineColor(36);
+		hist->SetLineWidth(2);
+		legend->AddEntry(hist, "TargAtten", "l");
+		hist->SetLineStyle(2);
+		hist->Draw("hist,same");
+	}
+	else if  (inputmode == "PPFXThinKaon"){
+		hist->SetLineColor(1001);
+		hist->SetLineWidth(2);
+		legend->AddEntry(hist, "pC #rightarrow KX", "l");
+		hist->SetLineStyle(2);
+		hist->Draw("hist,same");
+	}
+	else if  (inputmode == "PPFXThinMeson"){
+		hist->SetLineColor(kBlue+1);
+		hist->SetLineWidth(2);
+		legend->AddEntry(hist, "Meson Incident.", "l");
+		hist->SetLineStyle(2);
+		hist->Draw("hist,same");
+	}
+	else if  (inputmode == "PPFXThinNeutron"){
+		hist->SetLineColor(42);
+		hist->SetLineWidth(2);
+		legend->AddEntry(hist, "nC #rightarrow #piX", "l");
+		hist->SetLineStyle(2);
+		hist->Draw("hist,same");
+	}
+	else if  (inputmode == "PPFXThinNucA"){
+		hist->SetLineColor(50);
+		hist->SetLineWidth(2);
+		legend->AddEntry(hist, "Nucleon-A", "l");
+		hist->SetLineStyle(2);
+		hist->Draw("hist,same");
+	}
+	else if  (inputmode == "PPFXThinNuc"){
+		hist->SetLineColor(kOrange+10);
+		hist->SetLineWidth(2);
+		legend->AddEntry(hist, "pC #rightarrow NucleonX", "l");
+		hist->SetLineStyle(2);
+		hist->Draw("hist,same");
+	}
+	else if  (inputmode == "PPFXThinPion"){
+		hist->SetLineColor(8);
+		hist->SetLineWidth(2);
+		legend->AddEntry(hist, "pC #rightarrow #piX", "l");
+		hist->SetLineStyle(2);
+		hist->Draw("hist,same");
+	}
+	else if  (inputmode == "PPFXTotAbsorp"){
+		hist->SetLineColor(kMagenta-7);
+		hist->SetLineWidth(2);
+		legend->AddEntry(hist, "TotAbsorp", "l");
+		hist->SetLineStyle(2);
+		hist->Draw("hist,same");
+	}
+	// else if  (inputmode == "Total"){ // haven't got this to work properly/ dont know what it means
+	// 	hist->SetLineColor(kGray);
+	// 	hist->SetLineWidth(2);
+	// 	legend->AddEntry(hist, "Total", "l");
+	// 	hist->Draw("hist,same");
+	// }
+	
+	// if (inputmode == "ms_PPFX") hist->Draw("hist,same");
+	// if (inputmode == "Master" || inputmode == "Total"  || inputmode == "ms_PPFX")hist->Draw("hist,same");
+	else return;
+	
+	if (mode == "numu")  hist->SetTitle("#nu_{#mu}");
+	if (mode == "nue")   hist->SetTitle("#nu_{e}");
+	if (mode == "numubar")  hist->SetTitle("#bar{#nu_{#mu}}");
+	if (mode == "nuebar")   hist->SetTitle("#bar{#nu_{e}}");
+
+
+}
+
+// Function to make the weight distribution plots
+void weight_plots(TString mode, std::vector<std::string> &inputmode, TFile* f1, TString prodmode, TString mipp, TCanvas* c, TLegend * leg  ){
+	TH1D* whist; // weight hist
+
+	c->cd(); //canvas
+
+	std::string mode_str;
+
+	// Convert TString to a std::string
+	if (mode == "numu") mode_str = "numu";
+	else if (mode == "numubar") mode_str = "numubar";
+	else if (mode == "nue") mode_str = "nue";
+	else mode_str = "numubar";
+
+	int loop = inputmode.size();
+	
+	// loop over labels
+	for (int l=0; l<loop; l++){	
+		if (inputmode[l] == "PPFXOther") continue;	// Skip this due to low stats
+		char name[500];
+
+		snprintf(name, 500, "%s/%s/%s_%s_wght_%s" ,mode_str.c_str(), inputmode[l].c_str(), mode_str.c_str(), "MS",  inputmode[l].c_str()); // MS
+	
+		whist = (TH1D*) f1->Get(name);
+		whist->Scale( 1./ (whist->GetEntries()) ); // Norm by num entries
+
+		// Draw and customise the plot
+		legDraw(leg, whist, prodmode, mipp, inputmode[l], mode);
+		
+		whist->GetXaxis()->SetTitle("Weight");
+		
+	}
+
+	// CV -- needs to be separate from loop
+	char name[500];
+	snprintf(name, 500, "%s/%s_CV_wght",mode_str.c_str(), mode_str.c_str());  // CV
+	whist = (TH1D*) f1->Get(name);
+	whist->Scale( 1./ (whist->GetEntries()) );
+	whist->SetLineColor(kCyan);
+	whist->SetLineWidth(2);
+	leg->AddEntry(whist, "CV", "l");
+	whist->Draw("hist,same");
+	
+	gPad->SetLogy();
+	leg->Draw();
+
+}
+
+// Enumbers for the input mode 
 enum e_mode{ enumu, enue, enumubar, enuebar};
 
-
+// Function to retun enum from mode label
 e_mode return_mode(TString mode){
 		if (mode == "numu")    return enumu;
 		if (mode == "nue")     return enue;
@@ -45,7 +206,7 @@ e_mode return_mode(TString mode){
 
 
 // Main
-void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TString mode) { // (mippon/mippoff, input, Product/noThinKaon etc. numu/nue)
+void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TString wplot, TString mode) { // (mippon/mippoff, input, Product/noThinKaon etc. numu/nue)
 	gStyle->SetOptStat(0); // say no to stats box
 
 	std::vector<std::string> inputmode = loopdir(inputfile, mode); // Grab the names
@@ -56,6 +217,7 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 	TString Cov_names;
 	TString Err_names;
 
+	// Select neutrino type to run with 
 	switch (return_mode(mode)){
 		case enumu:
 			std::cout << "\nUsing NuMu Mode!\n" << std::endl;
@@ -129,24 +291,21 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 
 	// Now get the NOvA CV Flux
 	TFile* f2 = TFile::Open("/uboone/app/users/kmistry/PPFX/numi-validation/nova_flux/FHC_Flux_NOvA_ND_2017.root");
-	// f2->ls();
 	
 	hNOvA_CV_Flux = (TH1D*) f2->Get(Getflux);
 
 	hNOvA_CV_Flux->SetLineColor(kBlue);
 	hNOvA_CV_Flux->SetLineWidth(2);
-
 	hNOvA_CV_Flux->Draw("same");
 	hCV_Flux->GetYaxis()->SetTitle(hNOvA_CV_Flux->GetYaxis()->GetTitle());
 	
+	// Normalisation
 	// Need to divide by area front face is 12.39 m2, looks closer to 14.6
 	hCV_Flux->Scale(1.0e6/(12.39*5.0e5*497)); 
-	
 	std::cout << "norm factor:\t" << hCV_Flux->Integral(2,-1)/hNOvA_CV_Flux->Integral(2,-1) << std::endl;
-	
 	hCV_Flux->Scale(hNOvA_CV_Flux->Integral(3,-1)/hCV_Flux->Integral(3,-1));
 	
-
+	// Clone for ratio plot
 	TH1D* hratio = (TH1D*) hCV_Flux->Clone("hratio");
 	hratio->SetDirectory(0);
 
@@ -175,7 +334,7 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 	flat->Draw();
 
 	// ++++++++++++++++++++++++++++++++++
-	// Correlations & uncertainties
+	// Correlations, Covariance & uncertainties
 	// ++++++++++++++++++++++++++++++++++
 
 	f1->cd();
@@ -194,8 +353,8 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 	TCanvas* c4 = new TCanvas();
 	TH1D* hu; // Flux hist for each universe
 	TH1D* herr2;
-	std::vector<TH2D*> cov;
-	std::vector<TH2D*> cor;
+	std::vector<TH2D*> cov;	// Covariance
+	std::vector<TH2D*> cor; // Correlation
 	std::vector<TH1D*> herr ; // Fractional Uncertenties 
 	TLegend* lfrac = new TLegend(0.5, 0.65, 0.9, 0.9);
 	lfrac->SetNColumns(3);
@@ -290,122 +449,8 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 		// Plot fractional errors overlaid with official NOvA plot
 		c4->cd();
 
-		if (inputmode[l] == "PPFXMaster"){
-			herr[l]->SetLineColor(kBlack);
-			herr[l]->SetLineWidth(2);
-			inputmode[l].erase(0,4); // Trim PPFX off the name
-			lfrac->AddEntry(herr[l], inputmode[l].c_str(), "l");
-			herr[l]->Draw("hist,same");
-		} 
-		else if  (inputmode[l] == "ms_PPFX"){
-			herr[l]->SetLineColor(kMagenta+2);
-			herr[l]->SetLineWidth(2);
-			lfrac->AddEntry(herr[l], prodmode, "l"); // prodmode is overridden in the terminal input
-			herr[l]->Draw("hist,same");
-		}
-		else if  (inputmode[l] == "PPFXMIPPKaon" && mipp =="mippon"){ // only turn on if there is MIPP
-			herr[l]->SetLineColor(30);
-			herr[l]->SetLineWidth(2);
-			inputmode[l].erase(0,4);
-			lfrac->AddEntry(herr[l], inputmode[l].c_str(), "l");
-			herr[l]->SetLineStyle(2);
-			herr[l]->Draw("hist,same");
-		}
-		else if  ( inputmode[l] == "PPFXMIPPPion" && mipp =="mippon"){ // only turn on if there is MIPP
-			herr[l]->SetLineColor(38);
-			herr[l]->SetLineWidth(2);
-			inputmode[l].erase(0,4);
-			lfrac->AddEntry(herr[l], inputmode[l].c_str(), "l");
-			herr[l]->SetLineStyle(2);
-			herr[l]->Draw("hist,same");
-		}
-		else if  (inputmode[l] == "PPFXOther"){
-			herr[l]->SetLineColor(28);
-			herr[l]->SetLineWidth(2);
-			inputmode[l].erase(0,4);
-			lfrac->AddEntry(herr[l], inputmode[l].c_str(), "l");
-			herr[l]->SetLineStyle(2);
-			herr[l]->Draw("hist,same");
-			
-		}
-		else if  (inputmode[l] == "PPFXTargAtten" ){
-			herr[l]->SetLineColor(36);
-			herr[l]->SetLineWidth(2);
-			inputmode[l].erase(0,4);
-			lfrac->AddEntry(herr[l], inputmode[l].c_str(), "l");
-			herr[l]->SetLineStyle(2);
-			herr[l]->Draw("hist,same");
-		}
-		else if  (inputmode[l] == "PPFXThinKaon"){
-			herr[l]->SetLineColor(1001);
-			herr[l]->SetLineWidth(2);
-			inputmode[l].erase(0,4);
-			lfrac->AddEntry(herr[l], "pC #rightarrow KX", "l");
-			herr[l]->SetLineStyle(2);
-			herr[l]->Draw("hist,same");
-		}
-		else if  (inputmode[l] == "PPFXThinMeson"){
-			herr[l]->SetLineColor(46);
-			herr[l]->SetLineWidth(2);
-			inputmode[l].erase(0,4);
-			lfrac->AddEntry(herr[l], "Meson Incident.", "l");
-			herr[l]->SetLineStyle(2);
-			herr[l]->Draw("hist,same");
-		}
-		else if  (inputmode[l] == "PPFXThinNeutron"){
-			herr[l]->SetLineColor(42);
-			herr[l]->SetLineWidth(2);
-			inputmode[l].erase(0,4);
-			lfrac->AddEntry(herr[l], "nC #rightarrow #piX", "l");
-			herr[l]->SetLineStyle(2);
-			herr[l]->Draw("hist,same");
-		}
-		else if  (inputmode[l] == "PPFXThinNucA"){
-			herr[l]->SetLineColor(50);
-			herr[l]->SetLineWidth(2);
-			inputmode[l].erase(0,4);
-			lfrac->AddEntry(herr[l], "Nucleon-A", "l");
-			herr[l]->SetLineStyle(2);
-			herr[l]->Draw("hist,same");
-		}
-		else if  (inputmode[l] == "PPFXThinNuc"){
-			herr[l]->SetLineColor(41);
-			herr[l]->SetLineWidth(2);
-			inputmode[l].erase(0,4);
-			lfrac->AddEntry(herr[l], "pC #rightarrow NucleonX", "l");
-			herr[l]->SetLineStyle(2);
-			herr[l]->Draw("hist,same");
-		}
-		else if  (inputmode[l] == "PPFXThinPion"){
-			herr[l]->SetLineColor(8);
-			herr[l]->SetLineWidth(2);
-			inputmode[l].erase(0,4);
-			lfrac->AddEntry(herr[l], "pC #rightarrow #piX", "l");
-			herr[l]->SetLineStyle(2);
-			herr[l]->Draw("hist,same");
-		}
-		else if  (inputmode[l] == "PPFXTotAbsorp"){
-			herr[l]->SetLineColor(kMagenta-7);
-			herr[l]->SetLineWidth(2);
-			inputmode[l].erase(0,4);
-			lfrac->AddEntry(herr[l], inputmode[l].c_str(), "l");
-			herr[l]->SetLineStyle(2);
-			herr[l]->Draw("hist,same");
-		}
-		// else if  (inputmode[l] == "Total"){ // haven't got this to work properly/ dont know what it means
-		// 	herr[l]->SetLineColor(kGray);
-		// 	herr[l]->SetLineWidth(2);
-		// 	lfrac->AddEntry(herr[l], inputmode[l].c_str(), "l");
-		// 	herr[l]->Draw("hist,same");
-		// }
-		
-		// if (inputmode[l] == "ms_PPFX") herr[l]->Draw("hist,same");
-		// if (inputmode[l] == "Master" || inputmode[l] == "Total"  || inputmode[l] == "ms_PPFX")herr[l]->Draw("hist,same");
-
-		if (mode == "numu")  herr[l]->SetTitle("#nu_{#mu}");
-		if (mode == "nue")   herr[l]->SetTitle("#nu_{e}");
-		if (mode == "numubar")  herr[l]->SetTitle("#bar{#nu_{#mu}}");
-		if (mode == "nuebar")   herr[l]->SetTitle("#bar{#nu_{e}}");
+		// Make the plot
+		legDraw(lfrac, herr[l], prodmode, mipp, inputmode[l], mode);
 		
 		herr[l]->GetYaxis()->SetRangeUser(0,0.35);
 		// herr[l]->GetYaxis()->SetRangeUser(0,1.75);
@@ -426,8 +471,26 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 	// create plots folder if it does not exist
 	gSystem->Exec("if [ ! -d \"plots\" ]; then echo \"\nPlots folder does not exist... creating\"; mkdir plots; fi"); 
 
-	// Save the plots as pdfs in the plots folder
 	
+	// ++++++++++++++++++++++++++++++++++
+	// Make the weight histogram
+	// ++++++++++++++++++++++++++++++++++
+
+	TCanvas* c5 = new TCanvas();
+	if (wplot == "wplot"){
+	
+		TLegend* lwght = new TLegend(0.5, 0.65, 0.9, 0.9);
+		lwght->SetNColumns(3);
+		lwght->SetBorderSize(0);
+		lwght->SetFillStyle(0);
+		lwght->SetTextFont(62);
+
+		weight_plots(mode, inputmode, f1, prodmode, mipp, c5, lwght);
+	}
+	// ++++++++++++++++++++++++++++++++++
+	// Save the plots as pdfs in the plots folder
+	// ++++++++++++++++++++++++++++++++++
+
 	// using mipp
 	if (mipp == "mippon"){
 		if (mode == "numu"){ 	
@@ -435,6 +498,7 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 			c2->Print("plots/Ratio_FLux_Prediction_NuMu_MIPPOn.pdf");
 			c3->Print("plots/Correlation_Matrix_NuMu_MIPPOn.pdf");
 			c4->Print("plots/Fractional_Uncertainties_NuMu_MIPPOn.pdf");
+			if (wplot == "wplot") c5->Print("plots/Weightplot_NuMu_MIPPOn.pdf");
 			std::cout << "\n"<< std::endl;
 		}
 		else if (mode == "nue") {
@@ -442,6 +506,7 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 			c2->Print("plots/Ratio_FLux_Prediction_Nue_MIPPOn.pdf");
 			c3->Print("plots/Correlation_Matrix_Nue_MIPPOn.pdf");
 			c4->Print("plots/Fractional_Uncertainties_Nue_MIPPOn.pdf");
+			if (wplot == "wplot") c5->Print("plots/Weightplot_Nue_MIPPOn.pdf");
 			std::cout << "\n"<< std::endl;
 
 		}
@@ -450,6 +515,7 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 			c2->Print("plots/Ratio_FLux_Prediction_Numubar_MIPPOn.pdf");
 			c3->Print("plots/Correlation_Matrix_Numubar_MIPPOn.pdf");
 			c4->Print("plots/Fractional_Uncertainties_Numubar_MIPPOn.pdf");
+			if (wplot == "wplot") c5->Print("plots/Weightplot_NuMubar_MIPPOn.pdf");
 			std::cout << "\n"<< std::endl;
 
 		}
@@ -458,6 +524,7 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 			c2->Print("plots/Ratio_FLux_Prediction_Nuebar_MIPPOn.pdf");
 			c3->Print("plots/Correlation_Matrix_Nuebar_MIPPOn.pdf");
 			c4->Print("plots/Fractional_Uncertainties_Nuebar_MIPPOn.pdf");
+			if (wplot == "wplot") c5->Print("plots/Weightplot_Nuebar_MIPPOn.pdf");
 			std::cout << "\n"<< std::endl;
 
 		}
@@ -469,6 +536,7 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 			c2->Print("plots/Ratio_FLux_Prediction_NuMu_MIPPOff.pdf");
 			c3->Print("plots/Correlation_Matrix_NuMu_MIPPOff.pdf");
 			c4->Print("plots/Fractional_Uncertainties_NuMu_MIPPOff.pdf");
+			if (wplot == "wplot") c5->Print("plots/Weightplot_NuMu_MIPPOff.pdf");
 			std::cout << "\n"<< std::endl;
 		}
 		else if (mode == "nue"){
@@ -476,6 +544,7 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 			c2->Print("plots/Ratio_FLux_Prediction_Nue_MIPPOff.pdf");
 			c3->Print("plots/Correlation_Matrix_Nue_MIPPOff.pdf");
 			c4->Print("plots/Fractional_Uncertainties_Nue_MIPPOff.pdf");
+			if (wplot == "wplot") c5->Print("plots/Weightplot_Nue_MIPPOff.pdf");
 			std::cout << "\n"<< std::endl;
 
 		}
@@ -484,6 +553,7 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 			c2->Print("plots/Ratio_FLux_Prediction_Numubar_MIPPOff.pdf");
 			c3->Print("plots/Correlation_Matrix_Numubar_MIPPOff.pdf");
 			c4->Print("plots/Fractional_Uncertainties_Numubar_MIPPOff.pdf");
+			if (wplot == "wplot") c5->Print("plots/Weightplot_NuMubar_MIPPOff.pdf");
 			std::cout << "\n"<< std::endl;
 
 		}
@@ -492,6 +562,7 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 			c2->Print("plots/Ratio_FLux_Prediction_Nuebar_MIPPOff.pdf");
 			c3->Print("plots/Correlation_Matrix_Nuebar_MIPPOff.pdf");
 			c4->Print("plots/Fractional_Uncertainties_Nuebar_MIPPOff.pdf");
+			if (wplot == "wplot") c5->Print("plots/Weightplot_Nuebar_MIPPOff.pdf");
 			std::cout << "\n"<< std::endl;
 
 		}
