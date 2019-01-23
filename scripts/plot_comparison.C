@@ -2,187 +2,346 @@
  * NuMI Validation Plotting
  *
  * A. Mastbaum <mastbaum@uchicago.edu> 2018/11
+ * Updated to plot multiple nu modes in a single plot
+ * by Krishan Mistry
  */
 
-void plot_comparison(TString  inputfile) {
-  gStyle->SetOptStat(0);
+// Fucnction that grabs the reweighted histogram names for plotting
+std::vector<std::string> loopdir(TString  inputfile, TString mode) {
+	std::vector<std::string> inputmode;
 
-  // Choose one mode
-  // std::string inputmode = "ms_PPFX"; 
-  std::string inputmode = "PPFXMaster"; 
-  // std::string inputmode = "Total"; 
+	TFile *f1 = TFile::Open(inputfile);
+	f1->cd(mode);
+	
+	TKey *key;
+	TIter nextkey(gDirectory->GetListOfKeys());
 
-  std::cout << "\nUsing "<< inputmode << " Mode!" << std::endl;
-  std::cout << "If the code breaks after the second plot, might want to chnage this...\n" << std::endl;
+	std::cout << "\n=================================================" << std::endl;	
+	std::cout << "Using input modes:" << std::endl;	
+  	while ( ( key =  (TKey*)nextkey()) ) { // extra brackets to omit a warning 
+    	if (key->IsFolder()) {
+			std::cout << key->GetName() << std::endl; // print hte input modes
+			inputmode.push_back(key->GetName());
+		}
+	}
+	std::cout << "=================================================\n" << std::endl;
 
-  enum type {knumu, knue};
+	return (inputmode);
+}
 
-  type mode = knumu; // select whether plotting numu or nue
+// function that makes a legend for multiple histograms and draws them to the canvas
+void legDraw(TLegend *legend, TH1D *hist, TString prodmode, std::string inputmode, TString mode){
+	
+	if (inputmode == "PPFXMaster"){
+
+		if (mode == "numu"){
+			hist->SetLineColor(kOrange+8);
+			hist->SetLineWidth(2);
+			hist->SetLineStyle(2);
+			legend->AddEntry(hist, "#nu_{#mu}", "l");
+			hist->Draw("hist,same");
+		}
+		else if (mode == "nue") {
+			hist->SetLineColor(kOrange+1);
+			hist->SetLineWidth(2);
+			hist->SetLineStyle(2);
+			legend->AddEntry(hist, "#nu_{e}", "l");
+			hist->Draw("hist,same");
+		}
+		else if (mode == "numubar") {
+			hist->SetLineColor(kMagenta-3);
+			hist->SetLineWidth(2);
+			hist->SetLineStyle(2);
+			legend->AddEntry(hist, "#bar{#nu_{#mu}}", "l");
+			hist->Draw("hist,same");
+
+		}
+		else if(mode == "nuebar"){
+			hist->SetLineColor(kMagenta+3);
+			hist->SetLineWidth(2);
+			hist->SetLineStyle(2);
+			legend->AddEntry(hist, "#bar{#nu_{e}}", "l");
+			hist->Draw("hist,same");
+		}
+		else return;
+	} 
+	else return;
+
+}
+
+// Enumbers for the input mode 
+enum e_mode{ enumu, enue, enumubar, enuebar};
+
+// Function to retun enum from mode label
+e_mode return_mode(TString mode){
+		if (mode == "numu")    return enumu;
+		if (mode == "nue")     return enue;
+		if (mode == "numubar") return enumubar;
+		if (mode == "nuebar")  return enuebar;
+		else return enumu;
+
+}
+
+// Function to get the fractional errors for each nu mode
+void GetFracErrors(TString mipp, TString inputfile, TString prodmode, TString mode, TCanvas* c, TLegend* leg ){
+  	
+ 	std::vector<std::string> inputmode = loopdir(inputfile, mode); // Grab the names
+
+	TString Getmode;
+	TString Gethist_TPC;
+	TString Getflux;
+	TString Cov_names;
+	TString Err_names;
+
+	// Select neutrino type to run with 
+	switch (return_mode(mode)){
+		case enumu:
+			std::cout << "\nUsing NuMu Mode!\n" << std::endl;
+			Getmode = "numu"; 												// Folder name
+			Gethist_TPC = "numu_CV_AV_TPC";									// AV in TPC flux prediction
+			Getflux = "flux_numu";											// CV flux from NOvA
+			Cov_names = "numu/%s/Active_TPC_Volume/numu_%s_Uni_%i_AV_TPC";  // Covariance matrix names
+			Err_names = "fractional_uncertainty_numu";						// NOvA fractional uncertainties plot
+			break;
+
+		case enue:
+			std::cout << "\nUsing Nue Mode!\n" << std::endl;
+			Getmode = "nue";
+			Gethist_TPC = "nue_CV_AV_TPC";
+			Getflux = "flux_nue";
+			Cov_names = "nue/%s/Active_TPC_Volume/nue_%s_Uni_%i_AV_TPC";
+			Err_names = "fractional_uncertainty_nue";
+			break;
+
+		case enumubar:
+			std::cout << "\nUsing NuMubar Mode!\n" << std::endl;
+			Getmode = "numubar";
+			Gethist_TPC = "numubar_CV_AV_TPC";
+			Getflux = "flux_numubar";
+			Cov_names = "numubar/%s/Active_TPC_Volume/numubar_%s_Uni_%i_AV_TPC";
+			Err_names = "fractional_uncertainty_numubar";
+			break;
+
+		case enuebar:
+			std::cout << "\nUsing Nuebar Mode!\n" << std::endl;
+			Getmode = "nuebar";
+			Gethist_TPC = "nuebar_CV_AV_TPC";
+			Getflux = "flux_nuebar";
+			Cov_names = "nuebar/%s/Active_TPC_Volume/nuebar_%s_Uni_%i_AV_TPC";
+			Err_names = "fractional_uncertainty_nuebar";
+			break;
+
+	} 
+	
+
+	// Root is dumb and so need to pre-decalre  some stuff here
+	TDirectory* d;
+	TH1D* hCV_Flux;
+
+	// ++++++++++++++++++++++++++++++++++
+	// Get the CV flux
+	// ++++++++++++++++++++++++++++++++++
  
-  if (mode == knumu) std::cout << "\nUsing NuMu Mode!\n" << std::endl;
-  if (mode == knue) std::cout << "\nUsing Nue Mode!\n" << std::endl;
+	TFile* f1 = TFile::Open(inputfile);
 
-  // Root is dumb and so need to pre-decalre here
-  TDirectory* d;
-  TH1D* h; 
-  TH1D* h2;
+	d = (TDirectory*)f1->Get(Getmode);
 
-  // Overlay of output plot with official NOvA FHC numu flux
-  TFile* f1 = TFile::Open(inputfile);
-  TCanvas* c1 = new TCanvas();
+	d->cd();
+	hCV_Flux = (TH1D*) (gDirectory->Get(Gethist_TPC)->Clone("fx"));
 
-  if (mode == knumu) d = (TDirectory*)f1->Get("numu");
-  if (mode == knue) d = (TDirectory*)f1->Get("nue");
+	hCV_Flux->SetDirectory(0);
+	
+	// Normalise flux by bin width (gives a flux/E [GeV])
+	for (int i=0;i<hCV_Flux->GetNbinsX()+1;i++) {
+		hCV_Flux->SetBinContent(i, hCV_Flux->GetBinContent(i)/hCV_Flux->GetBinWidth(i));
+	}
+	
+	hCV_Flux->Sumw2();
+	TH1D* horig = (TH1D*) hCV_Flux->Clone("horig");
+	
+  	// ++++++++++++++++++++++++++++++++++
+	// Correlations, Covariance & uncertainties
+	// ++++++++++++++++++++++++++++++++++
 
-  d->cd();
-  if (mode == knumu) h = (TH1D*) (gDirectory->Get("numu_CV_AV_TPC")->Clone("fx"));
-  if (mode == knue) h = (TH1D*) (gDirectory->Get("nue_CV_AV_TPC")->Clone("fx"));
-  h->SetDirectory(0);
-  for (int i=0;i<h->GetNbinsX()+1;i++) {
-    h->SetBinContent(i, h->GetBinContent(i)/h->GetBinWidth(i));
-  }
-  h->Sumw2();
-  h->SetLineColor(kRed);
-  h->SetLineWidth(2);
-  h->SetTitle(";E_{#nu} (GeV);Fraction/GeV");
-  h->Draw("");
-  TH1D* horig = (TH1D*) h->Clone("horig");
+	f1->cd();
+	const int nuni = 100; // num universes
+	const int nbins = hCV_Flux->GetNbinsX();
+	double* edges = new double[nbins+1];
 
-  TFile* f2 = TFile::Open("/uboone/app/users/kmistry/PPFX/numi-validation/nova_flux/FHC_Flux_NOvA_ND_2017.root");
-  f2->ls();
-  if (mode == knumu) h2 = (TH1D*) f2->Get("flux_numu");
-  if (mode == knue) h2 = (TH1D*) f2->Get("flux_nue");
-  h2->SetLineColor(kBlue);
-  h2->SetLineWidth(2);
+	// Set bin widths to be the same as NOvA
+	for (int i=1; i<nbins+1; i++) {
+		edges[i-1] = hCV_Flux->GetBinLowEdge(i);
+	}
+	edges[nbins] = hCV_Flux->GetBinLowEdge(nbins-1) + 2 * (hCV_Flux->GetBinWidth(nbins-1));
+	
+	// More pre-declarations go here
+	TH1D* hu; // Flux hist for each universe
+	
+	TH2D* cov;	// Covariance
+	TH1D* herr ; // Fractional Uncertenties 
 
-  h2->Draw("same");
-  h->GetYaxis()->SetTitle(h2->GetYaxis()->GetTitle());
-  h->Scale(h2->Integral(2,-1)/h->Integral(2,-1));
-  // h->Scale(1.0/(0.356e4)); // Try calculating norm
-
-
-  TH1D* hratio = (TH1D*) h->Clone("hratio");
-  hratio->SetDirectory(0);
-
-  TLegend* l = new TLegend(0.5, 0.6, 0.7, 0.8);
-  l->AddEntry(h2, "NOvA","l");
-  l->AddEntry(h, "This work","l");
-  l->Draw();
-
-  gPad->SetLogy();
-  gPad->Update();
-
-  // Ratio of ours to NOvA
-  TCanvas* c2 = new TCanvas();
-  hratio->Divide(h2);
-  hratio->SetLineColor(kBlack);
-  hratio->SetMarkerStyle(7);
-  hratio->Draw("e1");
-  hratio->SetTitle(";E_{#nu} (GeV);Ratio to NOvA");
-  hratio->GetYaxis()->SetRangeUser(0.85, 1.15);
-  TLine* flat = new TLine(0, 1, 20, 1);
-  flat->SetLineStyle(7);
-  flat->Draw();
-
-  // Correlations & uncertainties
-  f1->cd();
-  const int nuni = 100;
-  const int nbins = h->GetNbinsX();
-  double* edges = new double[nbins+1];
-
-  for (int i=1; i<nbins+1; i++) {
-    edges[i-1] = h->GetBinLowEdge(i);
-  }
-  edges[nbins] = h->GetBinLowEdge(nbins-1) + h->GetBinWidth(nbins-1);
-
-  // Covariance matrix
-  TH2D* cov = new TH2D("cov", ";E_{#nu} (GeV);E_{#nu} (GeV)", nbins, edges, nbins, edges);
+	cov  = new TH2D("cov" , ";E_{#nu} (GeV);E_{#nu} (GeV)", nbins, edges, nbins, edges);
+	herr = new TH1D("herr", ";E_{#nu};Fractional Uncertainty", nbins, edges);
+	
+		
+  // Covariance matrix only for Masterweight mode
   for (int k=0; k<nuni; k++) {
     char name[500];
-    if (mode == knumu) snprintf(name, 500, "numu/%s/Active_TPC_Volume/numu_%s_Uni_%i_AV_TPC",inputmode.c_str(),inputmode.c_str(), k); 
-    if (mode == knue) snprintf(name, 500, "nue/%s/Active_TPC_Volume/nue_%s_Uni_%i_AV_TPC",inputmode.c_str(),inputmode.c_str(), k);    
+    snprintf(name, 500, Cov_names ,"PPFXMaster","PPFXMaster", k); 
+
+    hu = (TH1D*) f1->Get(name);
     
-    TH1D* hu = (TH1D*) f1->Get(name);
     for (int m=0; m<nbins; m++) {
       hu->SetBinContent(m, hu->GetBinContent(m) / hu->GetBinWidth(m));
     }
 
     for (int i=1; i<nbins+1; i++) {
-      double cvi = horig->GetBinContent(i);
 
-      double uvi = hu->GetBinContent(i);
+		double cvi = horig->GetBinContent(i); // CV bin i
+		double uvi = hu->GetBinContent(i); // Univ bin i 
 
-      for (int j=1; j<nbins+1; j++) {
-        double cvj = horig->GetBinContent(j);
-        double uvj = hu->GetBinContent(j);
+		for (int j=1; j<nbins+1; j++) {
+			
+			double cvj = horig->GetBinContent(j); // CV bin j
+			double uvj = hu->GetBinContent(j);    // Univ bin j 
 
-        double c = (uvi - cvi) * (uvj - cvj);
+			double c = (uvi - cvi) * (uvj - cvj);
 
-        // std::cout << c << "\t" << uvi << "\t" << cvi << "\t" << uvj << "\t" << cvj << "\t"<< std::endl;
-        
-        cov->SetBinContent(i, j, cov->GetBinContent(i, j) + c / nuni);
-      }
+			cov->SetBinContent(i, j, cov->GetBinContent(i, j) + c / nuni); // Fill with variance
+		}
     }
+    hu->Reset();
   }
 
-  double cii{0}, cjj{0}, n{1}, temp{0}, horig_cont{0};
+  double cii{0}, cjj{0}, n{1}, horig_cont{0};
 
-  // Correlation matrix & fractional errors
-  TH2D* cor = (TH2D*) cov->Clone("cor");
-  TH1D* herr = new TH1D("herr", ";E_{#nu};Fractional Uncertainty", nbins, edges);
-  
+  //  Fractional errors
   // loop over rows
   for (int i=1; i<nbins+1; i++) {
     cii = cov->GetBinContent(i, i);
-    
-    // Catch zeros
-    if (horig->GetBinContent(i) <= 0) horig_cont = 0.5;
+
+    // Catch zeros , set to arbitary 1.0
+    if (horig->GetBinContent(i) <= 0) horig_cont = 1.0;
     else horig_cont = horig->GetBinContent(i);
 
     herr->SetBinContent(i, sqrt(cii) / horig_cont);
-    
-    // Loop over columns
-    for (int j=1; j<nbins+1; j++) {
-      cjj = cov->GetBinContent(j, j);
-      n = sqrt(cii * cjj);
-      
-      // Catch Zeros
-      if (n == 0) temp=0.5;
-      else temp = cov->GetBinContent(i, j) / n;
-      
-      cor->SetBinContent(i, j, temp );
-    }
+
   }
 
-  // Plot correlations
-  TCanvas* c3 = new TCanvas();
-  cor->Draw("colz");
-  gStyle->SetPalette(55); // kRainbow
+	// Plot fractional errors overlaid with official NOvA plot
+	c->cd();
 
-  // Plot fractional errors overlaid with official NOvA plot
-  TCanvas* c4 = new TCanvas();
-  herr->SetLineColor(kRed);
-  herr->SetLineWidth(2);
-  herr->Draw("hist");
-
-  f2->cd();
-  TH1D* herr2 = (TH1D*) f2->Get("fractional_uncertainty_numu");
-  herr2->SetLineColor(kBlue);
-  herr2->SetLineWidth(2);
-  herr2->Draw("same");
-
-  TLegend* lfrac = new TLegend(0.2, 0.65, 0.4, 0.8);
-  lfrac->AddEntry(herr2, "NOvA","l");
-  lfrac->AddEntry(herr, "This work", "l");
-  lfrac->Draw();
-
-  // create plots folder if it does not exist
-  gSystem->Exec("if [ ! -d \"plots\" ]; then echo \"\nPlots folder does not exist... creating\"; mkdir plots; fi"); 
-  
-  // Save the plots as pdfs in the plots folder
-  c1->Print("plots/CV_Flux_Prediction.pdf");
-  c2->Print("plots/Ratio_FLux_Prediction.pdf");
-  c3->Print("plots/Correlation_Matrix.pdf");
-  c4->Print("plots/Fractional_Uncertainties.pdf");
-  std::cout << "\n"<< std::endl;
+	// Make the plot
+	legDraw(leg, herr, prodmode, "PPFXMaster", mode);
+	
+	herr->GetYaxis()->SetRangeUser(0,0.35);
+	// herr->GetYaxis()->SetRangeUser(0,1.75);
+		
 }
+
+TString func_return_mode(TString mode){
+	
+	TString Err_names;
+	// Select neutrino type to run with 
+	switch (return_mode(mode)){
+		case enumu:
+			Err_names = "fractional_uncertainty_numu";						// NOvA fractional uncertainties plot
+			break;
+
+		case enue:
+			Err_names = "fractional_uncertainty_nue";
+			break;
+
+		case enumubar:
+			Err_names = "fractional_uncertainty_numubar";
+			break;
+
+		case enuebar:
+			Err_names = "fractional_uncertainty_nuebar";
+			break;
+	} 
+
+	return Err_names;
+}
+
+// Main
+void plot_comparison( TString mipp, TString inputfile, TString prodmode, TString wplot, TString mode) { // (mippon/mippoff, input, Product/noThinKaon etc. numu/nue)
+	gStyle->SetOptStat(0); // say no to stats box
+
+	TCanvas* c1 = new TCanvas();
+	TCanvas* c2 = new TCanvas();
+	TH1D* herr2;
+
+	TString Err_names;
+
+	TLegend* lfrac1 = new TLegend(0.2, 0.65, 0.6, 0.9);
+	lfrac1->SetNColumns(1);
+	lfrac1->SetBorderSize(0);
+	lfrac1->SetFillStyle(0);
+	lfrac1->SetTextFont(62); 
+
+	TLegend* lfrac2 = new TLegend(0.2, 0.65, 0.6, 0.9);
+	lfrac2->SetNColumns(1);
+	lfrac2->SetBorderSize(0);
+	lfrac2->SetFillStyle(0);
+	lfrac2->SetTextFont(62); 
+
+	// Now get the NOvA uncertainties
+	TFile* f2 = TFile::Open("/uboone/app/users/kmistry/PPFX/numi-validation/nova_flux/FHC_Flux_NOvA_ND_2017.root");
+	f2->cd();
+
+	mode = "numu";
+	Err_names = func_return_mode(mode);
+	GetFracErrors(mipp, inputfile, prodmode, mode, c1, lfrac1 );
+	herr2 = (TH1D*) f2->Get(Err_names);
+	herr2->SetLineColor(kOrange+8);
+	herr2->SetLineWidth(2);
+	herr2->Draw("same");
+	lfrac1->AddEntry(herr2, "#nu_{#mu} NOvA","l");
+	
+	mode = "numubar";
+	Err_names = func_return_mode(mode);
+	GetFracErrors(mipp, inputfile, prodmode, mode, c1, lfrac1 );
+	herr2 = (TH1D*) f2->Get(Err_names);
+	herr2 = (TH1D*) f2->Get(Err_names);
+	herr2->SetLineColor(kMagenta-3);
+	herr2->SetLineWidth(2);
+	herr2->Draw("same");
+	lfrac1->AddEntry(herr2, "#bar{#nu_{#mu}} NOvA","l");
+
+
+	mode = "nue";
+	Err_names = func_return_mode(mode);
+	GetFracErrors(mipp, inputfile, prodmode, mode, c2, lfrac2 );
+	herr2 = (TH1D*) f2->Get(Err_names);
+	herr2->SetLineColor(kOrange+1);
+	herr2->SetLineWidth(2);
+	herr2->Draw("same");
+	lfrac2->AddEntry(herr2, "#nu_{e} NOvA","l");
+	
+	mode = "nuebar";
+	Err_names = func_return_mode(mode);
+	GetFracErrors(mipp, inputfile, prodmode, mode, c2, lfrac2 );
+	herr2 = (TH1D*) f2->Get(Err_names);
+	herr2 = (TH1D*) f2->Get(Err_names);
+	herr2->SetLineColor(kMagenta+3);
+	herr2->SetLineWidth(2);
+	herr2->Draw("same");
+	lfrac2->AddEntry(herr2, "#bar{#nu_{e}} NOvA","l");
+
+	// Draw the legend
+	c1->cd();
+	lfrac1->Draw();
+
+	c2->cd();
+	lfrac2->Draw();
+
+	// create plots folder if it does not exist
+	gSystem->Exec("if [ ! -d \"plots\" ]; then echo \"\nPlots folder does not exist... creating\"; mkdir plots; fi"); 
+
+
+	c1->Print("plots/Fractional_Uncertainties_Master_NuMu_NuMubar_MIPPOff.pdf");
+	c2->Print("plots/Fractional_Uncertainties_Master_Nue_Nuebar_MIPPOff.pdf");
+
+} // end of main
+
