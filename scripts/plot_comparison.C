@@ -181,7 +181,7 @@ void GetFracErrors(TString mipp, TString inputfile, TString prodmode, TString mo
 	TH1D* herr ; // Fractional Uncertenties 
 
 	cov  = new TH2D("cov" , ";E_{#nu} (GeV);E_{#nu} (GeV)", nbins, edges, nbins, edges);
-	herr = new TH1D("herr", ";E_{#nu};Fractional Uncertainty", nbins, edges);
+	herr = new TH1D("herr", ";E_{#nu} (GeV);Fractional Uncertainty", nbins, edges);
 	
 		
   // Covariance matrix only for Masterweight mode
@@ -191,7 +191,7 @@ void GetFracErrors(TString mipp, TString inputfile, TString prodmode, TString mo
 
     hu = (TH1D*) f1->Get(name);
     
-    for (int m=0; m<nbins; m++) {
+    for (int m=1; m<nbins+1; m++) {
       hu->SetBinContent(m, hu->GetBinContent(m) / hu->GetBinWidth(m));
     }
 
@@ -234,8 +234,8 @@ void GetFracErrors(TString mipp, TString inputfile, TString prodmode, TString mo
 	// Make the plot
 	legDraw(leg, herr, prodmode, "PPFXMaster", mode);
 	
-	herr->GetYaxis()->SetRangeUser(0,0.35);
-	// herr->GetYaxis()->SetRangeUser(0,1.75);
+	if (mode == "nue" || mode =="nuebar" ) herr->GetYaxis()->SetRangeUser(0,0.40);
+	else herr->GetYaxis()->SetRangeUser(0,0.35);
 		
 }
 

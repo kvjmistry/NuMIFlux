@@ -278,8 +278,10 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 	hCV_Flux->SetDirectory(0);
 	
 	// Normalise flux by bin width (gives a flux/E [GeV])
-	for (int i=0;i<hCV_Flux->GetNbinsX()+1;i++) {
+	for (int i=1;i<hCV_Flux->GetNbinsX()+1;i++) {
+		std::cout << i<<"bc:\t"<< hCV_Flux->GetBinContent(i) <<"\tbw:\t" <<hCV_Flux->GetBinWidth(i)<<"\tbw norm:\t" <<hCV_Flux->GetBinWidth(i)/hCV_Flux->GetBinWidth(i)<< std::endl;
 		hCV_Flux->SetBinContent(i, hCV_Flux->GetBinContent(i)/hCV_Flux->GetBinWidth(i));
+		
 	}
 	
 	hCV_Flux->Sumw2();
@@ -288,6 +290,11 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 	hCV_Flux->SetTitle(";E_{#nu} (GeV);Fraction/GeV");
 	hCV_Flux->Draw("");
 	TH1D* horig = (TH1D*) hCV_Flux->Clone("horig");
+
+	if (mode == "numu")  hCV_Flux->SetTitle("#nu_{#mu}");
+	if (mode == "nue")   hCV_Flux->SetTitle("#nu_{e}");
+	if (mode == "numubar")  hCV_Flux->SetTitle("#bar{#nu_{#mu}}");
+	if (mode == "nuebar")   hCV_Flux->SetTitle("#bar{#nu_{e}}");
 
 	// Now get the NOvA CV Flux
 	TFile* f2 = TFile::Open("/uboone/app/users/kmistry/PPFX/numi-validation/nova_flux/FHC_Flux_NOvA_ND_2017.root");
@@ -309,9 +316,9 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 	TH1D* hratio = (TH1D*) hCV_Flux->Clone("hratio");
 	hratio->SetDirectory(0);
 
-	TLegend* l = new TLegend(0.5, 0.6, 0.7, 0.8);
+	TLegend* l = new TLegend(0.5, 0.6, 0.85, 0.8);
 	l->AddEntry(hNOvA_CV_Flux, "NOvA","l");
-	l->AddEntry(hCV_Flux, "Our Prediction","l");
+	l->AddEntry(hCV_Flux, "Our Prediction (stat+sys)","l");
 	l->Draw();
 	l->SetBorderSize(0);
 	l->SetFillStyle(0);
@@ -369,7 +376,7 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 	for (unsigned int l = 0; l < inputmode.size(); l++){
 		cor[l]  = new TH2D(Form("%s_cor",inputmode[l].c_str()), ";E_{#nu} (GeV);E_{#nu} (GeV)", nbins, edges, nbins, edges);
 		cov[l]  = new TH2D(Form("%s_cov",inputmode[l].c_str()), ";E_{#nu} (GeV);E_{#nu} (GeV)", nbins, edges, nbins, edges);
-		herr[l] = new TH1D(Form("%s_herr",inputmode[l].c_str()),";E_{#nu};Fractional Uncertainty", nbins, edges);
+		herr[l] = new TH1D(Form("%s_herr",inputmode[l].c_str()),";E_{#nu} (GeV);Fractional Uncertainty", nbins, edges);
 	}
 
 	// Loop over all input modes, get cov matrix and then get fractional uncertainties
@@ -383,7 +390,7 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 
 			hu = (TH1D*) f1->Get(name);
 			
-			for (int m=0; m<nbins; m++) {
+			for (int m=1; m<nbins+1; m++) {
 				hu->SetBinContent(m, hu->GetBinContent(m) / hu->GetBinWidth(m));
 			}
 
@@ -487,6 +494,39 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 
 		weight_plots(mode, inputmode, f1, prodmode, mipp, c5, lwght);
 	}
+
+	// ++++++++++++++++++++++++++++++++++
+	// Update the CV flux prediction to include stat+sys errors
+	// ++++++++++++++++++++++++++++++++++
+	c1->cd();
+	double sigma{0}, stat{0}, sys{0};
+
+	std::cout << "bins:\t" << hCV_Flux->GetNbinsX() << std::endl;
+
+	// Loop over the bins
+	for (int bin=1; bin<hCV_Flux->GetNbinsX()+1; bin++){
+		
+		// Get the bin error (stat)
+		stat = hCV_Flux->GetBinError(bin);
+
+		// Get the bin error (sys)
+		sys = herr[11]->GetBinContent(bin);
+		sys = hCV_Flux->GetBinContent(bin) * sys; 
+
+		// add in quadrature
+		sigma =std::sqrt( stat*stat + sys*sys );
+
+		std::cout << "stat:\t" << stat << "\t" << "sys:\t" <<sys << "\tsigma:\t"<< sigma<< "\tbin content:\t"<< hCV_Flux->GetBinContent(bin) <<  std::endl;
+
+		// Update the error on the plot
+		hCV_Flux->SetBinError(bin, sigma);
+	}
+
+	// Redraw the plot with the new errors
+	c1->Update();
+	c2->Update();
+
+
 	// ++++++++++++++++++++++++++++++++++
 	// Save the plots as pdfs in the plots folder
 	// ++++++++++++++++++++++++++++++++++
