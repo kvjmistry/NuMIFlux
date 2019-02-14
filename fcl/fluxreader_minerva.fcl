@@ -1,0 +1,62 @@
+#include "services_microboone.fcl"
+#include "seedservice_microboone.fcl"
+
+process_name: FluxReader
+
+services: {
+	TFileService: { fileName: "flux_hist.root" }
+	RandomNumberGenerator: {}
+	NuRandomService: @local::microboone_seedservice
+	TimeTracker: {}
+	FileCatalogMetadata: @local::art_file_catalog_mc
+}
+
+source: {
+	fileNames: []
+	module_type: FluxReader
+	skipEvents: 0
+	maxEvents: -1
+	inputType: "dk2nu"
+	nBins: 200
+	Elow: 0
+	Ehigh: 50
+	dk2nuConfig: "dk2nu_numi_at_minerva"
+
+  	dk2nu_numi_at_minerva: {
+    
+		// Origin of detector coordinate system in beam coordinates (in cm)
+		userbeam:   [ 24.86, 6035.0, -102274.0 ]
+
+		// Rotation matrix between detector coordinate system and beam coordinate system
+		rotmatrix: { 
+				x: -0.0582977560 
+				y: 0
+				z: 0 }
+
+		// Flux window in detector coordinate system (in cm)
+		windowBase: [ 175, -200,  414 ]
+		window1:    [ 175,  256,  414 ]
+		window2:    [-175, -200,  414 ]
+	}
+}
+
+outputs: {
+	out1: {
+		module_type: RootOutput
+		fileName: "%ifb_FluxRead_%tc.root"
+		compressionLevel: 1
+		dataTier: "simulated"
+	}
+}
+
+physics: {
+	producers: {
+		rns: { module_type: "RandomNumberSaver" }
+	}
+	analyzers: {}
+	ana: []
+	simulate: [ rns ]
+	stream1: [ out1 ]
+	end_paths: [ stream1 ]
+}
+

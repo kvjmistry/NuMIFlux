@@ -1,5 +1,5 @@
 /**
- * NuMI Validation Plotting
+ * NuMI Flux at uboone Plotting
  *
  * Plots each individual weighting mode instead of a single one
  * does not plot the correlation matrix for each individual mode to speed up the time
@@ -219,7 +219,7 @@ e_mode return_mode(TString mode){
 
 
 // Main
-void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TString wplot, TString mode) { // (mippon/mippoff, input, Product/noThinKaon etc. numu/nue)
+void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TString wplot, TString mode) { // (mippon/mippoff, input, Product/noThinKaon etc. numu/nue)
 	gStyle->SetOptStat(0); // say no to stats box
 
 	std::vector<std::string> inputmode = loopdir(inputfile, mode); // Grab the names
@@ -283,6 +283,19 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 	TFile* f1 = TFile::Open(inputfile);
 	TCanvas* c1 = new TCanvas();
 
+
+	// ++++++++++++++++++++++++++++++++++
+	// Get the POT in the file
+	// ++++++++++++++++++++++++++++++++++
+	TTree* TPOT = (TTree*) f1->Get("POT");
+	if (TPOT == NULL) std::cout << "Error cant get POT info" << std::endl;
+
+	double fPOT{0};
+	TPOT->SetBranchAddress("POT", &fPOT); // Get the POT
+	TPOT->GetEntry(0);
+	std::cout << "TOTAL POT READ IN:\t" << fPOT << std::endl;
+	// ++++++++++++++++++++++++++++++++++
+
 	d = (TDirectory*)f1->Get(Getmode);
 
 	// Check if sucessfully got DIR
@@ -309,67 +322,21 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 		
 	}
 	
+	TH1D* horig = (TH1D*) hCV_Flux->Clone("horig"); // Clone for plotting so dont need to norm the ms histograms
+
 	hCV_Flux->Sumw2();
 	hCV_Flux->SetLineColor(kRed);
 	hCV_Flux->SetLineWidth(2);
-	hCV_Flux->SetTitle(";E_{#nu} (GeV);Fraction/GeV");
-	hCV_Flux->Draw("");
-	TH1D* horig = (TH1D*) hCV_Flux->Clone("horig");
-
-	if (mode == "numu")  hCV_Flux->SetTitle("#nu_{#mu}");
-	if (mode == "nue")   hCV_Flux->SetTitle("#nu_{e}");
-	if (mode == "numubar")  hCV_Flux->SetTitle("#bar{#nu_{#mu}}");
-	if (mode == "nuebar")   hCV_Flux->SetTitle("#bar{#nu_{e}}");
-
-	// Now get the NOvA CV Flux
-	TFile* f2 = TFile::Open("/uboone/app/users/kmistry/PPFX/numi-validation/nova_flux/FHC_Flux_NOvA_ND_2017.root");
-	
-	hNOvA_CV_Flux = (TH1D*) f2->Get(Getflux);
-
-	// Check if sucessfully got histo
-	if (hNOvA_CV_Flux == NULL) {
-		std::cout << "\nfailed to get:\t" << Getflux<< "\tThis histogram might not exist in the file\n" << std::endl;
-		return;
-	}
-
-	hNOvA_CV_Flux->SetLineColor(kBlue);
-	hNOvA_CV_Flux->SetLineWidth(2);
-	hNOvA_CV_Flux->Draw("same");
-	hCV_Flux->GetYaxis()->SetTitle(hNOvA_CV_Flux->GetYaxis()->GetTitle());
-	
-	// Normalisation
-	// Need to divide by area front face is 12.39 m2, looks closer to 14.6
-	hCV_Flux->Scale(1.0e6/(12.39*5.0e5*497)); 
-	std::cout << "norm factor:\t" << hCV_Flux->Integral(2,-1)/hNOvA_CV_Flux->Integral(2,-1) << std::endl;
-	hCV_Flux->Scale(hNOvA_CV_Flux->Integral(3,-1)/hCV_Flux->Integral(3,-1));
-	
-	// Clone for ratio plot
-	TH1D* hratio = (TH1D*) hCV_Flux->Clone("hratio");
-	hratio->SetDirectory(0);
-
-	TLegend* l = new TLegend(0.5, 0.6, 0.85, 0.8);
-	l->AddEntry(hNOvA_CV_Flux, "NOvA","l");
-	l->AddEntry(hCV_Flux, "Our Prediction (stat+sys)","l");
-	l->Draw();
-	l->SetBorderSize(0);
-	l->SetFillStyle(0);
-
+	hCV_Flux->Scale(1.0e6/fPOT);
+	hCV_Flux->SetTitle(";E_{#nu} (GeV);#nu / 10^{6} POT / GeV");
 	gPad->SetLogy();
 	gPad->Update();
+	hCV_Flux->Draw("hist");
 
-	// ++++++++++++++++++++++++++++++++++
-	// Ratio of ours to NOvA
-	// ++++++++++++++++++++++++++++++++++
-	TCanvas* c2 = new TCanvas();
-	hratio->Divide(hNOvA_CV_Flux);
-	hratio->SetLineColor(kBlack);
-	hratio->SetMarkerStyle(7);
-	hratio->Draw("e1");
-	hratio->SetTitle(";E_{#nu} (GeV);Ratio to NOvA");
-	hratio->GetYaxis()->SetRangeUser(0.85, 1.15);
-	TLine* flat = new TLine(0, 1, 20, 1);
-	flat->SetLineStyle(7);
-	flat->Draw();
+	if (mode == "numu")		hCV_Flux->SetTitle("#nu_{#mu}");
+	if (mode == "nue")		hCV_Flux->SetTitle("#nu_{e}");
+	if (mode == "numubar")	hCV_Flux->SetTitle("#bar{#nu_{#mu}}");
+	if (mode == "nuebar")	hCV_Flux->SetTitle("#bar{#nu_{e}}");
 
 	// ++++++++++++++++++++++++++++++++++
 	// Correlations, Covariance & uncertainties
@@ -507,19 +474,6 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 		
 	}
 
-	f2->cd();
-	herr2 = (TH1D*) f2->Get(Err_names);
-
-	// Check if sucessfully got histo
-	if (herr2  == NULL) {
-		std::cout << "\nfailed to get:\t" << Err_names << "\tThis histogram might not exist in the file\n" << std::endl;
-		return;
-	}
-
-	herr2->SetLineColor(kBlue);
-	herr2->SetLineWidth(2);
-	herr2->Draw("same");
-	lfrac->AddEntry(herr2, "NOvA","l");
 
 	// Draw the legend
 	lfrac->Draw();
@@ -545,78 +499,6 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 	}
 
 	double sigma{0}, stat{0}, sys{0};
-	// ++++++++++++++++++++++++++++++++++
-	// Update the error to add in the beamline uncertainties
-	// ++++++++++++++++++++++++++++++++++
-	// Only have numu uncertainties so far
-	
-	// Get the histogram
-	if (mode == "numu"){
-
-		TFile* f3 = TFile::Open("/uboone/data/users/kmistry/work/PPFX/no_ThinKaon_Indiv/numu_Energy_ratios.root");
-		
-		TH1D* h_beamline;
-		// h_beamline = (TH1D*) f3->Get("hdev");
-
-		if (h_beamline == NULL) std::cout << "Error, could not get hdev" << std::endl;
-		else std::cout << "Adding in Beamline uncertainties" << std::endl;
-
-		double sigma_beamline{0};
-
-		std::vector<double> vsqsum;
-		std::vector<double> vquadsum;
-		
-
-		vsqsum.resize(hCV_Flux->GetNbinsX(),0);
-		vquadsum.resize(hCV_Flux->GetNbinsX(),0);
-		// std::fill(vquadsum.begin(), vquadsum.end(), 1);
-		// Get the standard deviation
-		// Lopp over each unverse
-		
-		for (int j=0; j < 20; j++){
-			
-			if (j == 12|| j == 7 ) j += 1;
-			
-			char name[500];
-			if (j == 0 || j == 1) snprintf(name, 500, "hratio_run000%d" ,j+8);
-			else snprintf(name, 500, "hratio_run00%d" , j+8);
-			h_beamline = (TH1D*) f3->Get(name);
-
-			// Loop over each bin in the universe
-			for (int bin=1; bin < h_beamline->GetNbinsX()+1; bin++){
-				vsqsum.at(bin - 1) +=  (h_beamline->GetBinContent(bin) - 1.0) * (h_beamline->GetBinContent(bin) - 1.0);
-				vquadsum.at(bin - 1) += (h_beamline->GetBinContent(bin) - 1.0) * (h_beamline->GetBinContent(bin) - 1.0);
-				
-			}
-
-		}
-
-		for (int i = 0; i < vsqsum.size(); i++){
-				vsqsum.at(i) = std::sqrt(vsqsum.at(i)/20);
-				vquadsum.at(i) = std::sqrt(vquadsum.at(i));
-				std::cout << vsqsum.at(i)*100 << "\t"<< vquadsum.at(i)*100 << std::endl;
-		}
-
-
-		// Loop over histograms
-		for (int i=0; i < herr.size(); i++){
-			// Loop over bins
-			for (int bin=1; bin<herr[i]->GetNbinsX()+1; bin++){
-				sys = herr[i]->GetBinContent(bin);
-				// sigma_beamline = vsqsum.at(bin - 1);
-				sigma_beamline = vquadsum.at(bin - 1);
-
-				// std::cout << h_beamline->GetBinLowEdge(bin) << "\t"<< sigma_beamline << std::endl;
-
-				sigma = std::sqrt( sys*sys + sigma_beamline*sigma_beamline );
-				herr[i]->SetBinContent(bin, sigma);
-			}
-			sys = 0; sigma = 0; sigma_beamline = 0;
-
-		}
-
-	}
-
 	// ++++++++++++++++++++++++++++++++++
 	// Update the CV flux prediction to include stat+sys errors
 	// ++++++++++++++++++++++++++++++++++
@@ -648,7 +530,6 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 
 	// Redraw the plot with the new errors
 	c1->Update();
-	c2->Update();
 	c4->Update();
 
 
@@ -660,7 +541,6 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 	if (mipp == "mippon"){
 		if (mode == "numu"){ 	
 			c1->Print("plots/CV_Flux_Prediction_NuMu_MIPPOn.pdf");
-			c2->Print("plots/Ratio_FLux_Prediction_NuMu_MIPPOn.pdf");
 			c3->Print("plots/Correlation_Matrix_NuMu_MIPPOn.pdf");
 			c4->Print("plots/Fractional_Uncertainties_NuMu_MIPPOn.pdf");
 			if (wplot == "wplot") c5->Print("plots/Weightplot_NuMu_MIPPOn.pdf");
@@ -668,7 +548,6 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 		}
 		else if (mode == "nue") {
 			c1->Print("plots/CV_Flux_Prediction_Nue_MIPPOn.pdf");
-			c2->Print("plots/Ratio_FLux_Prediction_Nue_MIPPOn.pdf");
 			c3->Print("plots/Correlation_Matrix_Nue_MIPPOn.pdf");
 			c4->Print("plots/Fractional_Uncertainties_Nue_MIPPOn.pdf");
 			if (wplot == "wplot") c5->Print("plots/Weightplot_Nue_MIPPOn.pdf");
@@ -677,7 +556,6 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 		}
 		else if (mode == "numubar"){
 			c1->Print("plots/CV_Flux_Prediction_Numubar_MIPPOn.pdf");
-			c2->Print("plots/Ratio_FLux_Prediction_Numubar_MIPPOn.pdf");
 			c3->Print("plots/Correlation_Matrix_Numubar_MIPPOn.pdf");
 			c4->Print("plots/Fractional_Uncertainties_Numubar_MIPPOn.pdf");
 			if (wplot == "wplot") c5->Print("plots/Weightplot_NuMubar_MIPPOn.pdf");
@@ -686,7 +564,6 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 		}
 		else {
 			c1->Print("plots/CV_Flux_Prediction_Nuebar_MIPPOn.pdf");
-			c2->Print("plots/Ratio_FLux_Prediction_Nuebar_MIPPOn.pdf");
 			c3->Print("plots/Correlation_Matrix_Nuebar_MIPPOn.pdf");
 			c4->Print("plots/Fractional_Uncertainties_Nuebar_MIPPOn.pdf");
 			if (wplot == "wplot") c5->Print("plots/Weightplot_Nuebar_MIPPOn.pdf");
@@ -698,7 +575,6 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 	else {
 		if (mode == "numu"){ 	
 			c1->Print("plots/CV_Flux_Prediction_NuMu_MIPPOff.pdf");
-			c2->Print("plots/Ratio_FLux_Prediction_NuMu_MIPPOff.pdf");
 			c3->Print("plots/Correlation_Matrix_NuMu_MIPPOff.pdf");
 			c4->Print("plots/Fractional_Uncertainties_NuMu_MIPPOff.pdf");
 			if (wplot == "wplot") c5->Print("plots/Weightplot_NuMu_MIPPOff.pdf");
@@ -706,7 +582,6 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 		}
 		else if (mode == "nue"){
 			c1->Print("plots/CV_Flux_Prediction_Nue_MIPPOff.pdf");
-			c2->Print("plots/Ratio_FLux_Prediction_Nue_MIPPOff.pdf");
 			c3->Print("plots/Correlation_Matrix_Nue_MIPPOff.pdf");
 			c4->Print("plots/Fractional_Uncertainties_Nue_MIPPOff.pdf");
 			if (wplot == "wplot") c5->Print("plots/Weightplot_Nue_MIPPOff.pdf");
@@ -715,7 +590,6 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 		}
 		else if (mode == "numubar"){
 			c1->Print("plots/CV_Flux_Prediction_Numubar_MIPPOff.pdf");
-			c2->Print("plots/Ratio_FLux_Prediction_Numubar_MIPPOff.pdf");
 			c3->Print("plots/Correlation_Matrix_Numubar_MIPPOff.pdf");
 			c4->Print("plots/Fractional_Uncertainties_Numubar_MIPPOff.pdf");
 			if (wplot == "wplot") c5->Print("plots/Weightplot_NuMubar_MIPPOff.pdf");
@@ -724,7 +598,6 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 		}
 		else {
 			c1->Print("plots/CV_Flux_Prediction_Nuebar_MIPPOff.pdf");
-			c2->Print("plots/Ratio_FLux_Prediction_Nuebar_MIPPOff.pdf");
 			c3->Print("plots/Correlation_Matrix_Nuebar_MIPPOff.pdf");
 			c4->Print("plots/Fractional_Uncertainties_Nuebar_MIPPOff.pdf");
 			if (wplot == "wplot") c5->Print("plots/Weightplot_Nuebar_MIPPOff.pdf");

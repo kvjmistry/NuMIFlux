@@ -207,7 +207,8 @@ void GetFracErrors(TString mipp, TString inputfile, TString prodmode, TString mo
 
 			double c = (uvi - cvi) * (uvj - cvj);
 
-			cov->SetBinContent(i, j, cov->GetBinContent(i, j) + c / nuni); // Fill with variance
+			if (k != nuni - 1) cov->SetBinContent(i, j, cov->GetBinContent(i, j) + c ); // Fill with variance
+			else cov->SetBinContent(i, j, (cov->GetBinContent(i, j) + c) / nuni);      // Fill with variance / nuni
 		}
     }
     hu->Reset();
@@ -224,7 +225,7 @@ void GetFracErrors(TString mipp, TString inputfile, TString prodmode, TString mo
     if (horig->GetBinContent(i) <= 0) horig_cont = 1.0;
     else horig_cont = horig->GetBinContent(i);
 
-    herr->SetBinContent(i, sqrt(cii) / horig_cont);
+    herr->SetBinContent(i, sqrt(cii) / horig_cont); // error is sqrt, divide by cv for frac err
 
   }
 
