@@ -8,6 +8,7 @@
  * Modified by K. Mistry 12/18
  */
 
+// ----------------------------------------------------------------------------
 // Fucnction that grabs the reweighted histogram names for plotting
 std::vector<std::string> loopdir(TString  inputfile, TString mode) {
 	std::vector<std::string> inputmode;
@@ -30,7 +31,7 @@ std::vector<std::string> loopdir(TString  inputfile, TString mode) {
 
 	return (inputmode);
 }
-
+// ----------------------------------------------------------------------------
 // function that makes a legend for multiple histograms and draws them to the canvas
 void legDraw(TLegend *legend, TH1D *hist, TString prodmode, TString mipp, std::string inputmode, TString mode){
 	
@@ -124,15 +125,6 @@ void legDraw(TLegend *legend, TH1D *hist, TString prodmode, TString mipp, std::s
 		hist->SetLineStyle(2);
 		hist->Draw("hist,same");
 	}
-	// else if  (inputmode == "Total"){ // haven't got this to work properly/ dont know what it means
-	// 	hist->SetLineColor(kGray);
-	// 	hist->SetLineWidth(2);
-	// 	legend->AddEntry(hist, "Total", "l");
-	// 	hist->Draw("hist,same");
-	// }
-	
-	// if (inputmode == "ms_PPFX") hist->Draw("hist,same");
-	// if (inputmode == "Master" || inputmode == "Total"  || inputmode == "ms_PPFX")hist->Draw("hist,same");
 	else return;
 	
 	if (mode == "numu")  hist->SetTitle("#nu_{#mu}");
@@ -142,7 +134,7 @@ void legDraw(TLegend *legend, TH1D *hist, TString prodmode, TString mipp, std::s
 
 
 }
-
+// ----------------------------------------------------------------------------
 // Function to make the weight distribution plots
 void weight_plots(TString mode, std::vector<std::string> &inputmode, TFile* f1, TString prodmode, TString mipp, TCanvas* c, TLegend * leg  ){
 	TH1D* whist; // weight hist
@@ -203,10 +195,10 @@ void weight_plots(TString mode, std::vector<std::string> &inputmode, TFile* f1, 
 	leg->Draw();
 
 }
-
+// ----------------------------------------------------------------------------
 // Enumbers for the input mode 
 enum e_mode{ enumu, enue, enumubar, enuebar};
-
+// ----------------------------------------------------------------------------
 // Function to retun enum from mode label
 e_mode return_mode(TString mode){
 		if (mode == "numu")    return enumu;
@@ -216,19 +208,18 @@ e_mode return_mode(TString mode){
 		else return enumu;
 
 }
-
-
+// ----------------------------------------------------------------------------
 // Main
 void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TString wplot, TString mode) { // (mippon/mippoff, input, Product/noThinKaon etc. numu/nue)
 	gStyle->SetOptStat(0); // say no to stats box
 
-	std::vector<std::string> inputmode = loopdir(inputfile, mode); // Grab the names
+	std::vector<std::string> inputmode = loopdir(inputfile, mode); // Grab the names of the input reweighters
 
 	TString Getmode;
 	TString Gethist_TPC;
 	TString Getflux;
 	TString Cov_names;
-	TString Err_names;
+	TString g_simp_names;
 
 	// Select neutrino type to run with 
 	switch (return_mode(mode)){
@@ -238,7 +229,7 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 			Gethist_TPC = "numu_CV_AV_TPC";									// AV in TPC flux prediction
 			Getflux = "flux_numu";											// CV flux from NOvA
 			Cov_names = "numu/%s/Active_TPC_Volume/numu_%s_Uni_%i_AV_TPC";  // Covariance matrix names
-			Err_names = "fractional_uncertainty_numu";						// NOvA fractional uncertainties plot
+			g_simp_names = "numuFluxHisto";									// G simple files
 			break;
 
 		case enue:
@@ -247,7 +238,7 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 			Gethist_TPC = "nue_CV_AV_TPC";
 			Getflux = "flux_nue";
 			Cov_names = "nue/%s/Active_TPC_Volume/nue_%s_Uni_%i_AV_TPC";
-			Err_names = "fractional_uncertainty_nue";
+			g_simp_names = "nueFluxHisto";
 			break;
 
 		case enumubar:
@@ -256,7 +247,7 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 			Gethist_TPC = "numubar_CV_AV_TPC";
 			Getflux = "flux_numubar";
 			Cov_names = "numubar/%s/Active_TPC_Volume/numubar_%s_Uni_%i_AV_TPC";
-			Err_names = "fractional_uncertainty_numubar";
+			g_simp_names = "anumuFluxHisto";
 			break;
 
 		case enuebar:
@@ -265,28 +256,26 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 			Gethist_TPC = "nuebar_CV_AV_TPC";
 			Getflux = "flux_nuebar";
 			Cov_names = "nuebar/%s/Active_TPC_Volume/nuebar_%s_Uni_%i_AV_TPC";
-			Err_names = "fractional_uncertainty_nuebar";
+			g_simp_names = "anueFluxHisto";
 			break;
 
 	}
-	
 
 	// Root is dumb and so need to pre-decalre  some stuff here
 	TDirectory* d;
 	TH1D* hCV_Flux;
 	TH1D* hNOvA_CV_Flux;
 
-	// ++++++++++++++++++++++++++++++++++
+	// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	// Overlay of output plot with official NOvA FHC numu flux
-	// ++++++++++++++++++++++++++++++++++
+	// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  
 	TFile* f1 = TFile::Open(inputfile);
 	TCanvas* c1 = new TCanvas();
 
-
-	// ++++++++++++++++++++++++++++++++++
+	// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	// Get the POT in the file
-	// ++++++++++++++++++++++++++++++++++
+	// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	TTree* TPOT = (TTree*) f1->Get("POT");
 	if (TPOT == NULL) std::cout << "Error cant get POT info" << std::endl;
 
@@ -294,7 +283,7 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	TPOT->SetBranchAddress("POT", &fPOT); // Get the POT
 	TPOT->GetEntry(0);
 	std::cout << "TOTAL POT READ IN:\t" << fPOT << std::endl;
-	// ++++++++++++++++++++++++++++++++++
+	// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 	d = (TDirectory*)f1->Get(Getmode);
 
@@ -314,6 +303,8 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	}
 
 	hCV_Flux->SetDirectory(0);
+
+	TH1D* horig = (TH1D*) hCV_Flux->Clone("horig"); // Clone for plotting so dont need to norm the ms histograms
 	
 	// Normalise flux by bin width (gives a flux/E [GeV])
 	for (int i=1;i<hCV_Flux->GetNbinsX()+1;i++) {
@@ -322,25 +313,51 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 		
 	}
 	
-	TH1D* horig = (TH1D*) hCV_Flux->Clone("horig"); // Clone for plotting so dont need to norm the ms histograms
+	// Get the gsimple flux given by colton
+	TH1D* h_g_simp; // gsimple flux
+	TFile* f_gsimple = TFile::Open("/uboone/data/users/kmistry/work/PPFX/uboone/NuMIFlux_update_morebins.root");
+
+	h_g_simp = (TH1D*) (f_gsimple->Get(g_simp_names));
+	// Check if sucessfully got histo
+	if (h_g_simp == NULL) {
+		std::cout << "\nfailed to get:\t" << g_simp_names << "\tThis histogram might not exist in the file\n" << std::endl;
+		return;
+	}
+	
 
 	hCV_Flux->Sumw2();
 	hCV_Flux->SetLineColor(kRed);
 	hCV_Flux->SetLineWidth(2);
-	hCV_Flux->Scale(1.0e6/fPOT);
-	hCV_Flux->SetTitle(";E_{#nu} (GeV);#nu / 10^{6} POT / GeV");
+	// Norm
+	// 20 is to get the bins in 50 MeV from 1GeV pi is fudge factor gsimple comparison, POT counting done wrong becuase of >1 file per job
+	hCV_Flux->Scale( (6.0e20)/ (100000*950*1.0e4) * (50./1000.) );  
+	// hCV_Flux->Scale( 3.14159* (6.0e20)/ (100000*950*1.0e4*20) );  // 671.36 is the window area, 20 is to get the bins in 50 MeV from 1GeV pi is fudge factor
+	hCV_Flux->SetTitle(";E_{#nu} (GeV);#nu / 6 #times 10^{20} POT / 5 MeV / cm^{2}");
 	gPad->SetLogy();
 	gPad->Update();
-	hCV_Flux->Draw("hist");
+	h_g_simp->SetLineWidth(2);
+	
+	hCV_Flux->Draw("hist,same");
+	h_g_simp->Draw("hist, same");
+
+	TLegend* lFlux = new TLegend(0.5, 0.65, 0.9, 0.9);
+	lFlux->SetNColumns(3);
+	lFlux->SetBorderSize(0);
+	lFlux->SetFillStyle(0);
+	lFlux->SetTextFont(62); 
+	lFlux->AddEntry(hCV_Flux, "DK2NU Flux","l");
+	lFlux->AddEntry(h_g_simp, "G Simple Flux","l");
+	lFlux->Draw();
+	
 
 	if (mode == "numu")		hCV_Flux->SetTitle("#nu_{#mu}");
 	if (mode == "nue")		hCV_Flux->SetTitle("#nu_{e}");
 	if (mode == "numubar")	hCV_Flux->SetTitle("#bar{#nu_{#mu}}");
 	if (mode == "nuebar")	hCV_Flux->SetTitle("#bar{#nu_{e}}");
 
-	// ++++++++++++++++++++++++++++++++++
+	// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	// Correlations, Covariance & uncertainties
-	// ++++++++++++++++++++++++++++++++++
+	// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 	f1->cd();
 	const int nuni = 100; // num universes
@@ -486,8 +503,9 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	// Make the weight histogram
 	// ++++++++++++++++++++++++++++++++++
 
-	TCanvas* c5 = new TCanvas();
+	TCanvas* c5;
 	if (wplot == "wplot"){
+		c5 = new TCanvas();
 	
 		TLegend* lwght = new TLegend(0.5, 0.65, 0.9, 0.9);
 		lwght->SetNColumns(3);
@@ -506,6 +524,7 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	
 
 	std::cout << "bins:\t" << hCV_Flux->GetNbinsX() << std::endl;
+	std::cout << "bins:\t" << std::endl;
 
 	// Loop over the bins
 	for (int bin=1; bin<hCV_Flux->GetNbinsX()+1; bin++){
@@ -529,8 +548,8 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 
 
 	// Redraw the plot with the new errors
-	c1->Update();
-	c4->Update();
+	// c1->Update();
+	// c4->Update();
 
 
 	// ++++++++++++++++++++++++++++++++++

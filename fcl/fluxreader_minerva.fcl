@@ -26,6 +26,7 @@ source: {
     
 		// Origin of detector coordinate system in beam coordinates (in cm)
 		userbeam:   [ 24.86, 6035.0, -102274.0 ]
+		// userbeam:   [ 0, 0, 716.95,  -56.28, -53.29317, 103231.9 ] // try these ones from the locations.txt file
 
 		// Rotation matrix between detector coordinate system and beam coordinate system
 		rotmatrix: { 

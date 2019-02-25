@@ -12,7 +12,7 @@
 #include "TDirectory.h"
 #include "TROOT.h"
 #include "TH1F.h"
-#include "TH1D.h"
+#include "TH2D.h"
 #include "TGraph.h"
 #include "TH2D.h"
 #include "TFile.h"
@@ -77,35 +77,16 @@ int main(int argc, char** argv) {
 	std::cout << "\nUsing 1e5 POT per dk2nu file, the flux will be wrong if this is not the case!\n" << std::endl;
 
 	// Histograms for each flavor
-	std::vector<TH1D*> Enu_CV_Window; // Energy
-	std::vector<TH1D*> Enu_CV_AV_TPC;
-	std::vector<TH1D*> Enu_UW_Window;
-	std::vector<TH1D*> Enu_UW_AV_TPC;
-	
-	std::vector<TH1D*> Th_CV_Window; // Theta
-	std::vector<TH1D*> Th_CV_AV_TPC;
-	std::vector<TH1D*> Th_UW_Window;
-	std::vector<TH1D*> Th_UW_AV_TPC;
+	std::vector<TH2D*> Enu_Th_CV_AV_TPC;
+	std::vector<TH2D*> Enu_Th_UW_AV_TPC;
 
 	// flavors - systematic - universe 
-	std::vector<std::vector<std::vector<TH1D*> > > Enu_Syst_Window;
-	std::vector<std::vector<std::vector<TH1D*> > > Enu_Syst_AV_TPC;
-	std::vector<std::vector<std::vector<TH1D*> > > Th_Syst_Window;
-	std::vector<std::vector<std::vector<TH1D*> > > Th_Syst_AV_TPC;
+	std::vector<std::vector<std::vector<TH2D*> > > Enu_Th_Syst_AV_TPC;
 
 	// Tree for POT counting
 	TTree* POTTree = new TTree("POT","Total POT");
 	POTTree -> Branch("POT", &totalPOT);
 	POTTree -> Fill();
-
-	// Histogram for weight distributions
-	// std::vector<TH2D*> Enu_Weight_CV; // Energy vs weight 2D Hist for CV
-	// std::vector<std::vector<TH2D*>> Enu_Weight_MS; // Energy vs weight 2D Hist for Masterweight
-	// std::vector<TH1D*> Weight_CV; // weight 1D Hist for CV
-	// std::vector<std::vector<TH1D*>> Weight_MS; // weight 1D Hist for Masterweight
-
-	// std::vector<double> TotWeight; // Product of weights in universe "i" for each label
-	// TotWeight.resize(100);         // ** Might want to put this further down to make more universal **
 
 	// systematic - universe 
 	std::vector< std::vector< double > > Weights;   
@@ -113,19 +94,21 @@ int main(int argc, char** argv) {
 	std::vector<string> flav = { "numu", "nue", "numubar", "nuebar" };
 
 	std::vector< std::vector<double> > bins; bins.resize(5);
+	// NuMu
 	bins[0] = {
 		0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50,
 		0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 1.00, 1.05, 1.10, 1.15, 
 		1.20, 1.25, 1.30, 1.35, 1.40, 1.45, 1.50, 1.75, 1.90, 2.10, 2.50,
 		3.00, 3.50, 4.00, 4.50, 5.00, 5.50, 6.00, 6.50, 7.00, 7.50, 8.00,
 		9.00, 10.0, 11.0, 12.0, 13.0, 14.0};
-
+	// Nue
 	bins[1] = {  
 		0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50,
 		0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 1.00, 1.05, 1.10, 1.15, 
 		1.20, 1.25, 1.30, 1.35, 1.40, 1.45, 1.50, 1.75, 1.90, 2.10, 2.50,
 		3.00, 3.50, 4.00, 4.50, 5.00, 6.00, 7.00, 8.00, 9.00, 10.0};
-
+	
+	// NuMubar
 	bins[2] = {
 		0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50,
 		0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 1.00, 1.05, 1.10, 1.15, 
@@ -133,6 +116,7 @@ int main(int argc, char** argv) {
 		3.00, 3.50, 4.00, 4.50, 5.00, 5.50, 6.00, 6.50, 7.00, 7.50, 8.00,
 		9.00, 10.0, 11.0, 12.0, 13.0, 14.0};
 
+	// Nuebar
 	bins[3] = {  
 		0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50,
 		0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 1.00, 1.05, 1.10, 1.15, 
@@ -155,34 +139,19 @@ int main(int argc, char** argv) {
 		Weights[i].resize(100);
 	}
 
-	Enu_CV_Window.resize(4); // Energy
-	Enu_CV_AV_TPC.resize(4);
-	Enu_UW_Window.resize(4);
-	Enu_UW_AV_TPC.resize(4);
-	Enu_Syst_Window.resize(4);
-	Enu_Syst_AV_TPC.resize(4);
-	
-	Th_CV_Window.resize(4); // Theta 
-	Th_CV_AV_TPC.resize(4);
-	Th_UW_Window.resize(4);
-	Th_UW_AV_TPC.resize(4);
-	Th_Syst_Window.resize(4);
-	Th_Syst_AV_TPC.resize(4);
-	
-	
-	// Enu_Weight_CV.resize(4);
-	// Enu_Weight_MS.resize(4);
-	// Weight_CV.resize(4);
-	// Weight_MS.resize(4);
+	Enu_Th_CV_AV_TPC.resize(4);
+	Enu_Th_UW_AV_TPC.resize(4);
+	Enu_Th_Syst_AV_TPC.resize(4);
 	
 	std::vector<double> temp, temp2;
 
 	int const n_th = bins[4].size()-1; // theta bins
-	temp2 = bins[4];
-
+	temp2 = bins[4]; 
+	
 	// Flavors
 	for(unsigned i=0; i<flav.size(); i++) {
 		int const n = bins[i].size()-1;
+		
 		temp.clear();
 		temp = bins[i];
 
@@ -190,47 +159,19 @@ int main(int argc, char** argv) {
 		double* bin_th = &temp2[0];
 
 		// FLux histograms
-		Enu_CV_Window[i] = new TH1D(Form("%s_CV_Window",flav[i].c_str()),"",n, bin); // Energy
-		Enu_CV_AV_TPC[i] = new TH1D(Form("%s_CV_AV_TPC",flav[i].c_str()),"",n, bin);
+		Enu_Th_CV_AV_TPC[i] = new TH2D(Form("%s_CV_AV_TPC",flav[i].c_str()),"",n, bin, n_th, bin_th);
 
-		Enu_UW_Window[i] = new TH1D(Form("%s_unweighted_Window",flav[i].c_str()),"",n, bin);
-		Enu_UW_AV_TPC[i] = new TH1D(Form("%s_unweighted_AV_TPC",flav[i].c_str()),"",n, bin);
+		Enu_Th_UW_AV_TPC[i] = new TH2D(Form("%s_unweighted_AV_TPC",flav[i].c_str()),"",n, bin, n_th, bin_th);
 
-		Th_CV_Window[i] = new TH1D(Form("Th_%s_CV_Window",flav[i].c_str()),"",n_th, bin_th); // Theta
-		Th_CV_AV_TPC[i] = new TH1D(Form("Th_%s_CV_AV_TPC",flav[i].c_str()),"",n_th, bin_th);
-
-		Th_UW_Window[i] = new TH1D(Form("Th_%s_unweighted_Window",flav[i].c_str()),"",n_th, bin_th);
-		Th_UW_AV_TPC[i] = new TH1D(Form("Th_%s_unweighted_AV_TPC",flav[i].c_str()),"",n_th, bin_th);
-
-
-		// // Weight histograms
-		// Enu_Weight_CV[i] = new TH2D(Form("%s_Enu_vs_CV_wght",flav[i].c_str()),";Enu; CV Weight",100, 0, 25, 200, -0.25, 5);
-		// Weight_CV[i] = new TH1D(Form("%s_CV_wght",flav[i].c_str()),";CV Weight",200, -0.25, 5);
-
-
-		Enu_Syst_Window[i].resize(labels.size());
-		Enu_Syst_AV_TPC[i].resize(labels.size());
-		Th_Syst_Window[i].resize(labels.size());
-		Th_Syst_AV_TPC[i].resize(labels.size());
-		// Enu_Weight_MS[i].resize(labels.size());
-		// Weight_MS[i].resize(labels.size());
+		Enu_Th_Syst_AV_TPC[i].resize(labels.size());
 
 		// Labels
 		for(unsigned j=0; j<labels.size(); j++) {
-			Enu_Syst_Window[i][j].resize(100);
-			Enu_Syst_AV_TPC[i][j].resize(100);
-			Th_Syst_Window[i][j].resize(100);
-			Th_Syst_AV_TPC[i][j].resize(100);
-
-			// Enu_Weight_MS[i][j] = new TH2D(Form("%s_Enu_vs_MS_wght_%s",flav[i].c_str(), labels[j].c_str()), ";Enu; MS Weight",100, 0, 25, 200, -0.25, 5);
-			// Weight_MS[i][j] = new TH1D(Form("%s_MS_wght_%s",flav[i].c_str(), labels[j].c_str()), ";MS Weight",200, -0.25, 5);
+			Enu_Th_Syst_AV_TPC[i][j].resize(100);
 
 			// Universes
 			for(int k=0; k<100; k++){
-				Enu_Syst_Window[i][j][k] =  new TH1D(Form("%s_%s_Uni_%d_Window",flav[i].c_str(), labels[j].c_str(), k),"",n, bin);
-				Enu_Syst_AV_TPC[i][j][k] =  new TH1D(Form("%s_%s_Uni_%d_AV_TPC",flav[i].c_str(), labels[j].c_str(), k),"",n, bin);
-				Th_Syst_Window[i][j][k] =  new TH1D(Form("Th_%s_%s_Uni_%d_Window",flav[i].c_str(), labels[j].c_str(), k),"",n_th, bin_th);
-				Th_Syst_AV_TPC[i][j][k] =  new TH1D(Form("Th_%s_%s_Uni_%d_AV_TPC",flav[i].c_str(), labels[j].c_str(), k),"",n_th, bin_th);
+				Enu_Th_Syst_AV_TPC[i][j][k] =  new TH2D(Form("%s_%s_Uni_%d_AV_TPC",flav[i].c_str(), labels[j].c_str(), k),"",n, bin, n_th, bin_th);
 			}
 		}
 	}
@@ -245,6 +186,9 @@ int main(int argc, char** argv) {
 	// Loop over events
 	for (gallery::Event ev(filename); !ev.atEnd(); ev.next()) {
 		n++;
+
+		// Alert the user
+    	if (n % 1000000 == 0) std::cout << "On entry " << n/1000000.0 <<"M" << std::endl;
 
 		auto const& mctruths = *ev.getValidHandle<vector<simb::MCTruth>>(mctruths_tag);   
 		auto const& mcfluxs = *ev.getValidHandle<vector<simb::MCFlux>>(mctruths_tag);   
@@ -293,7 +237,7 @@ int main(int argc, char** argv) {
 			}
 
 			double cv_weight = 1; 
-			
+
 			// Now get the momentums to calculate theta
 			double costheta = mctruth.GetNeutrino().Nu().Pz() / mctruth.GetNeutrino().Nu().P();
 			double theta = std::acos(costheta) * 180 / 3.14159265;
@@ -309,10 +253,6 @@ int main(int argc, char** argv) {
 				for (auto last : evtwght.fWeight) {
 
 					if (last.first.find("PPFXCV") != std::string::npos) {
-
-						// // Weights
-						// Enu_Weight_CV[pdg]->Fill(mctruth.GetNeutrino().Nu().E(), last.second.at(0) );
-						// Weight_CV[pdg]->Fill(last.second.at(0) );
 
 						if(last.second.at(0) > 30 || last.second.at(0) < 0){ // still fill even if bad weight, changed from >90 to >30
 							std::cout << "Bad CV weight, setting to 1: " << last.second.at(0) << std::endl;
@@ -331,10 +271,14 @@ int main(int argc, char** argv) {
 				 
 				// Weight of neutrino parent (importance weight) * Neutrino weight for a decay forced at center of near detector 
 				cv_weight *= mcflux.fnimpwt * mcflux.fnwtfar; // mcflux.fnwtfar == mcflux.fnwtnear
-				
 
-				// if (cv_weight < 0) std::cout << "Still got a negative weight:\t" << cv_weight << " pdg" << pdg << " Enu:\t" << mctruth.GetNeutrino().Nu().E()*1000<< std::endl;
+				// if (cv_weight < 0) std::cout << "Still got a negative weight:\t" << cv_weight << " pdg" << pdg << " Enu:\t" << mctruth.GetNeutrino().Nu().E()<< std::endl;
 				if (cv_weight < 0) cv_weight = 0; // get rid of them pesky negative weights
+				if ( std::isnan(cv_weight) == 1) { // catch NaN values
+					std::cout << "got a nan:\t"<<cv_weight <<std::endl;
+					cv_weight = 0;
+				
+				}
 
 				// Loop over all event weight objs
 				for (auto last : evtwght.fWeight) { 
@@ -347,11 +291,6 @@ int main(int argc, char** argv) {
 
 							// Loop over ms universes
 							for (unsigned i=0; i<last.second.size(); i++) { 
-
-								// // Weight Hists
-								// Enu_Weight_MS[pdg][l]->Fill(mctruth.GetNeutrino().Nu().E(),last.second.at(i));
-								// Weight_MS[pdg][l]->Fill(last.second.at(i));
-								
 
 								// Fill weights 0 < w < 30 otherwise fill 1's
 								if (last.second.at(i) > 0 && last.second.at(i) < 30){ 
@@ -377,54 +316,29 @@ int main(int argc, char** argv) {
 			// Now got weights, fill histograms
 			// ++++++++++++++++++++++++++++++++
 
-			// Window
-			Enu_CV_Window[pdg]->Fill(mctruth.GetNeutrino().Nu().E(), cv_weight);
-			Enu_UW_Window[pdg]->Fill(mctruth.GetNeutrino().Nu().E(), mcflux.fnimpwt * mcflux.fnwtfar);
-			Th_CV_Window[pdg]->Fill(theta, cv_weight);
-			Th_UW_Window[pdg]->Fill(theta, mcflux.fnimpwt * mcflux.fnwtfar);
-
 			// TPC AV
 			if (intercept) {
-				Enu_CV_AV_TPC[pdg]->Fill(mctruth.GetNeutrino().Nu().E(), cv_weight);
-				Enu_UW_AV_TPC[pdg]->Fill(mctruth.GetNeutrino().Nu().E(), mcflux.fnimpwt * mcflux.fnwtfar);
-				Th_CV_AV_TPC[pdg]->Fill(theta, cv_weight);
-				Th_UW_AV_TPC[pdg]->Fill(theta, mcflux.fnimpwt * mcflux.fnwtfar);
+				Enu_Th_CV_AV_TPC[pdg]->Fill(mctruth.GetNeutrino().Nu().E(),theta, cv_weight);
+				Enu_Th_UW_AV_TPC[pdg]->Fill(mctruth.GetNeutrino().Nu().E(),theta, mcflux.fnimpwt * mcflux.fnwtfar);
 
 				
 			}
 
 			// Now fill multisims
 			if (EW) {
-				// std::fill(TotWeight.begin(), TotWeight.end(), 1); 
 
 				// Options        
 				for (unsigned l=0; l<labels.size(); l++) {
 
 					// Universes
 					for (unsigned i=0; i<Weights[l].size(); i++) {
-						// if (labels[l] != "PPFXMaster" || labels[l] != "ms_PPFX")  TotWeight[i] *= Weights[l][i]; // don't add masterweight to total 
-						Enu_Syst_Window[pdg][l][i]->Fill(mctruth.GetNeutrino().Nu().E(), Weights[l][i]*cv_weight);
-						Th_Syst_Window[pdg][l][i]->Fill(theta, Weights[l][i]*cv_weight);
 
 						if (intercept) {
-							Enu_Syst_AV_TPC[pdg][l][i]->Fill(mctruth.GetNeutrino().Nu().E(), Weights[l][i]*cv_weight);
-							Th_Syst_AV_TPC[pdg][l][i]->Fill(theta, Weights[l][i]*cv_weight);
+							Enu_Th_Syst_AV_TPC[pdg][l][i]->Fill(mctruth.GetNeutrino().Nu().E(),theta, Weights[l][i]*cv_weight);
 
 						}
 					}
 				}
-
-				// int full_label = labels.size() - 1;
-
-				// // Now fill the total weights 
-				// for (unsigned int i=0; i<Weights[0].size(); i++){
-				// 	Enu_Syst_Window[pdg][full_label][i]->Fill(mctruth.GetNeutrino().Nu().E(), TotWeight[i]*cv_weight);
-
-				// 	if (intercept) {
-				// 		Enu_Syst_AV_TPC[pdg][full_label][i]->Fill(mctruth.GetNeutrino().Nu().E(), TotWeight[i]*cv_weight);
-
-				// 	}        
-				// }
 			}
 
 		} // End loop over mctruth
@@ -450,12 +364,12 @@ int main(int argc, char** argv) {
 		
 		// Create Win/AVTPC dirs
 		for(unsigned j=0; j<labels.size()+1; j++) {
-			subdir[i][j].resize(3);
+			subdir[i][j].resize(2);
 		}
 	
 	}
 
-	std::vector<string> cont = { "Window", "Active_TPC_Volume", ""};
+	std::vector<string> cont = { "Active_TPC_Volume", ""};
 
 	// Flavours
 	for (unsigned int f=0; f<flav.size(); f++) {
@@ -465,47 +379,26 @@ int main(int argc, char** argv) {
 		subdir[f][0][0] = savdir->mkdir(Form("%s",flav[f].c_str()));
 		subdir[f][0][0]->cd();
 
-		// Write CV fluxes
-		Enu_CV_Window[f]->Write();      
-		Enu_CV_AV_TPC[f]->Write();
-		Enu_UW_Window[f]->Write();      
-		Enu_UW_AV_TPC[f]->Write();
-		Th_CV_Window[f]->Write();      
-		Th_CV_AV_TPC[f]->Write();
-		Th_UW_Window[f]->Write();      
-		Th_UW_AV_TPC[f]->Write();
-
-		// Enu_Weight_CV[f]->Write();   
-		// Weight_CV[f]->Write();  
+		// Write CV fluxes   
+		Enu_Th_CV_AV_TPC[f]->Write();
+		Enu_Th_UW_AV_TPC[f]->Write();
 		
-
 		// Labels
 		for (unsigned int s=1; s<labels.size()+1; s++) {
 			std::cout << labels[s-1] << std::endl;
 			subdir[f][s][0] = subdir[f][0][0]->mkdir(Form("%s",labels[s-1].c_str()));
 			subdir[f][s][0]->cd();
 
-			// Enu_Weight_MS[f][s-1]->Write();  
-			// Weight_MS[f][s-1]->Write();  
-
 			// AV/TPC
-			for (int c=1; c<3; c++) {
+			for (int c=1; c<2; c++) {
 				std::cout << cont[c-1] << std::endl;
 				subdir[f][s][c] = subdir[f][s][0]->mkdir(Form("%s",cont[c-1].c_str()));
 				subdir[f][s][c]->cd();
 
 				if (c == 1) {
 					for(int i = 0; i < 100; i++){
-						Enu_Syst_Window[f][s-1][i]->Write();
-						Th_Syst_Window[f][s-1][i]->Write();
+						Enu_Th_Syst_AV_TPC[f][s-1][i]->Write();
 					}        
-				}
-
-				if (c == 2) {
-					for(int i = 0; i < 100; i++){
-						Enu_Syst_AV_TPC[f][s-1][i]->Write();
-						Th_Syst_AV_TPC[f][s-1][i]->Write();
-					}
 				}
 			}
 		}
