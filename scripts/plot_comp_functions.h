@@ -352,7 +352,7 @@ void BeamlineUncertainties(std::vector<TH1D*> &herr, TH1D* hCV_Flux, std::string
 // Returns a histogram with the mean in each universe, the error is the stddev
 TH1D* getBand(std::vector<TH1D*> vhIn){
 
-	int Nuniv = vhIn.size();
+	int Nuniv = vhIn.size(); // Get num universes
 	if(Nuniv==0) gSystem->Exit(1);  
   
 	TH1D* hband = (TH1D*) vhIn[0]->Clone();
@@ -405,12 +405,19 @@ TH1D* getFractionalError(TH1D* hIn){
 }
 // ------------------------------------------------------------------------------------------------------------
 // Leos method of calculating the HP uncertainties 
-void HPUncertainties_Leo(TFile* fIn, TH1D* &herror, std::string inputmode){
+void HPUncertainties_Leo(TFile* fIn, TH1D* &herror, std::string inputmode, TString mode){
+
+	// Convert TString to a std::string
+	std::string mode_str;
+	if (mode == "numu") mode_str = "numu";
+	else if (mode == "numubar") mode_str = "numubar";
+	else if (mode == "nue") mode_str = "nue";
+	else mode_str = "numubar";
 
 	std::vector<TH1D*> vhuniv;
 
 	// Get the universe histograms
-	TDirectory *udir = fIn->GetDirectory(Form("numu/%s/Active_TPC_Volume", inputmode.c_str()));
+	TDirectory *udir = fIn->GetDirectory(Form("%s/%s/Active_TPC_Volume", mode_str.c_str(), inputmode.c_str()));
 	TIter next(udir->GetListOfKeys());
 	TKey* key;
 
@@ -428,3 +435,60 @@ void HPUncertainties_Leo(TFile* fIn, TH1D* &herror, std::string inputmode){
 
 }
 // ------------------------------------------------------------------------------------------------------------
+// Function to draw assymetric errorband with CV and mean
+void DrawErrorBand(TFile* f, TString mode, TLegend* leg, std::string inputmode){
+
+	// Convert TString to a std::string
+	std::string mode_str;
+	if (mode == "numu") mode_str = "numu";
+	else if (mode == "numubar") mode_str = "numubar";
+	else if (mode == "nue") mode_str = "nue";
+	else mode_str = "numubar";
+	TH1D* hcv;
+
+	std::vector<TH1D*> vhuniv;
+
+	// Get the universe histograms
+	TDirectory *udir = f->GetDirectory(Form("%s/%s/Active_TPC_Volume", mode_str.c_str(), inputmode.c_str()));
+	TIter next(udir->GetListOfKeys());
+	TKey* key;
+
+	// Loop over the directory and grab each histo from each uni
+	while((key= (TKey*)next())){
+		TClass* cl = gROOT->GetClass(key->GetClassName());
+		if(!cl->InheritsFrom("TH1D"))continue;
+		vhuniv.push_back((TH1D*)key->ReadObj());
+	}
+
+	// Calculate the HP error
+	TH1D* htemp = getBand(vhuniv); 
+	TH1D* htemp_clone = (TH1D*) htemp->Clone("htemp_clone");
+
+	bool bool_hist = GetHist(f, hcv, Form("%s/%s_CV_AV_TPC", mode_str.c_str(), mode_str.c_str()) ); if (bool_hist == false) gSystem->Exit(0);
+
+	htemp->SetFillColor(18);
+	htemp->SetFillStyle(1001);
+	htemp->SetLineColor(kRed);
+	htemp->SetLineWidth(2);
+	htemp_clone->SetLineColor(kRed);
+	htemp_clone->SetLineWidth(2);
+
+	hcv->SetLineWidth(2);
+	hcv->SetMarkerSize(0);
+	hcv->SetLineColor(kBlack);
+
+	htemp->GetXaxis()->SetRangeUser(0,20);
+	htemp->SetStats(0);
+	htemp->SetMarkerSize(0);
+	htemp->SetTitle(Form("Error band for %s",mode_str.c_str()));
+	htemp->GetXaxis()->SetTitle("#nu energy (GeV)");
+
+	htemp->GetYaxis()->SetTitle(Form("%s/m^{2}/1e7POT",mode_str.c_str()));
+
+	htemp->Draw("e2");
+	htemp_clone->Draw("same,hist");
+	hcv->Draw("hist,same");
+
+	leg->AddEntry(htemp,"Mean Flux","LF");
+	leg->AddEntry(hcv,"CV Flux","l");
+}

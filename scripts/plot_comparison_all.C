@@ -274,16 +274,45 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 	// Override the errors to use Leos method
 	// ------------------------------------------------------------------------------------------------------------
 	// Decide if the errors need overwriting
-	if (overwrite_errors == true && mode == "numu"){
+	if (overwrite_errors == true ){
 		c4->cd();
 		std::cout << "Overwriting the errors" << std::endl;
 		for (unsigned int l = 0; l < inputmode.size(); l++){
 			// herr[l]->Reset();
-			HPUncertainties_Leo(f1, herr[l], inputmode[l]);
+			HPUncertainties_Leo(f1, herr[l], inputmode[l], mode);
 			legDraw(lfrac, herr[l], prodmode, mipp, inputmode[l], mode);
 		}
 		c4->Update();
 	}
+
+	// ------------------------------------------------------------------------------------------------------------
+	// Create a tfile with the nova HP uncertainties
+	// ------------------------------------------------------------------------------------------------------------
+	std::string mode_str;
+	if (mode == "numu") mode_str = "numu";
+	else if (mode == "numubar") mode_str = "numubar";
+	else if (mode == "nue") mode_str = "nue";
+	else mode_str = "numubar";
+
+	TFile* output = new TFile("nova_numu_hp_uncertainties.root", "RECREATE");
+	
+	for (int i=0; i<inputmode.size();i++){
+		herr[i]->SetOption("hist"); // Overwrite the histo option
+		herr[i]->SetName(Form("%s_%s", mode_str.c_str(), inputmode[i].c_str())); // Rename as names got grblled.. who knows why!
+		herr[i]->Write();
+	}
+	herr2->Write();
+	output->Close();
+
+	// ------------------------------------------------------------------------------------------------------------
+	// Make a plot with the uncertainties with errorbands
+	// ------------------------------------------------------------------------------------------------------------
+	TCanvas* cband = new TCanvas();
+	cband->cd();
+	TLegend* leg = new TLegend(0.60,0.70,0.90,0.90);
+	DrawErrorBand(f1, mode, leg, "PPFXMaster"); // Plot for masterweight
+	leg->Draw();
+
 	// ------------------------------------------------------------------------------------------------------------
 	// Make the weight histogram
 	// ------------------------------------------------------------------------------------------------------------
@@ -341,9 +370,9 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 		hCV_Flux->SetBinError(bin, sigma);
 	}
 
-	// ++++++++++++++++++++++++++++++++++
+	// ------------------------------------------------------------------------------------------------------------
 	// Take the ratio of novas uncertainties to ours
-	// ++++++++++++++++++++++++++++++++++
+	// ------------------------------------------------------------------------------------------------------------
 	TCanvas* c6;
 	TH1D* hratio_sig;
 	if (mode == "numu"){
@@ -367,13 +396,6 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 	c1->Update();
 	c2->Update();
 	c4->Update();
-
-	// Create a tfile with the nova uncertainties
-	TFile* output = new TFile("nova_numu_hp_uncertainties.root", "RECREATE");
-	for (int i=0; i<inputmode.size();i++){
-		herr[i]->Write();
-	}
-	herr2->Write();
 
 	// ------------------------------------------------------------------------------------------------------------
 	// Save the plots as pdfs in the plots folder

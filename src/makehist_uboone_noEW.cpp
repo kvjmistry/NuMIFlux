@@ -82,23 +82,25 @@ int main(int argc, char** argv) {
 	std::vector<TH1D*> Enu_UW_Window;
 	std::vector<TH1D*> Enu_UW_AV_TPC;
 
-	// flavors - systematic - universe 
-	// std::vector<std::vector<std::vector<TH1D*> > > Enu_Syst_Window;
-	// std::vector<std::vector<std::vector<TH1D*> > > Enu_Syst_AV_TPC;
+	// Flux by Parent
+	std::vector<string> parent = {"PI_Plus", "PI_Minus", "Mu_Plus", "Mu_Minus", "KaonPM", "K0L"};
+	std::vector<std::vector<TH1D*> > Enu_Parent_AV_TPC;		// Flux by Parent
+	std::vector<std::vector<TH1D*> > Th_Parent_AV_TPC; 		// Flux by parent in theta
+	std::vector<std::vector<TH1D*> > zpos_Parent_AV_TPC; 	// Flux by parent in z Pos at decay (production is unimplemented for now)
+	std::vector<std::vector<TH1D*> > dk_Parent_mom; 		// Decay momentum by parent
+	std::vector<std::vector<TH1D*> > impwght_Parent; 		// Importance weight by parent
+	std::vector<std::vector<TH1D*> > Prod_energy_Parent; 	// Production energy by parent
+	std::vector<std::vector<TH1D*> > Targ_mom_Parent; 	    // Momentum by parent as it leaves the target
+	
+	// Other hists
+	TH1D* NuMu_PiDAR_zpos = new TH1D("NuMu_PiDAR_zpos","", 400 , 0, 80000); // numu Pidar peak zpos
+	TH1D* NuMu_KDAR_zpos =  new  TH1D("NuMu_KDAR_zpos","", 400 , 0, 80000);  // numu kdar peak zpos
+	TH1D* NuMu_peak_mom_muon =   new  TH1D("NuMu_peak_mom_muon","", 100 , 0, 25);  // muon parent momentum at 550m peak
 
 	// Tree for POT counting
 	TTree* POTTree = new TTree("POT","Total POT");
 	POTTree -> Branch("POT", &totalPOT);
 	POTTree -> Fill();
-
-	// Histogram for weight distributions
-	// std::vector<TH2D*> Enu_Weight_CV; // Energy vs weight 2D Hist for CV
-	// std::vector<std::vector<TH2D*>> Enu_Weight_MS; // Energy vs weight 2D Hist for Masterweight
-	// std::vector<TH1D*> Weight_CV; // weight 1D Hist for CV
-	// std::vector<std::vector<TH1D*>> Weight_MS; // weight 1D Hist for Masterweight
-
-	// std::vector<double> TotWeight; // Product of weights in universe "i" for each label
-	// TotWeight.resize(100);         // ** Might want to put this further down to make more universal **
 
 	// systematic - universe 
 	std::vector< std::vector< double > > Weights;   
@@ -150,12 +152,13 @@ int main(int argc, char** argv) {
 	Enu_CV_AV_TPC.resize(4);
 	Enu_UW_Window.resize(4);
 	Enu_UW_AV_TPC.resize(4);
-	// Enu_Syst_Window.resize(4);
-	// Enu_Syst_AV_TPC.resize(4);
-	// Enu_Weight_CV.resize(4);
-	// Enu_Weight_MS.resize(4);
-	// Weight_CV.resize(4);
-	// Weight_MS.resize(4);
+	Enu_Parent_AV_TPC.resize(4);
+	Th_Parent_AV_TPC.resize(4);
+	zpos_Parent_AV_TPC.resize(4);
+	impwght_Parent.resize(4);
+	Targ_mom_Parent.resize(4);
+
+	
 	
 	std::vector<double> temp;
 
@@ -179,30 +182,23 @@ int main(int argc, char** argv) {
 		Enu_UW_Window[i] = new TH1D(Form("%s_unweighted_Window",flav[i].c_str()),"",n, bin);
 		Enu_UW_AV_TPC[i] = new TH1D(Form("%s_unweighted_AV_TPC",flav[i].c_str()),"",n, bin);
 
-		// // Weight histograms
-		// Enu_Weight_CV[i] = new TH2D(Form("%s_Enu_vs_CV_wght",flav[i].c_str()),";Enu; CV Weight",100, 0, 25, 200, -0.25, 5);
-		// Weight_CV[i] = new TH1D(Form("%s_CV_wght",flav[i].c_str()),";CV Weight",200, -0.25, 5);
+
+		Enu_Parent_AV_TPC[i].resize(parent.size());
+		Th_Parent_AV_TPC[i].resize(parent.size());
+		zpos_Parent_AV_TPC[i].resize(parent.size());
+		impwght_Parent[i].resize(parent.size());
+		Targ_mom_Parent[i].resize(parent.size());
 		
 
-		// Enu_Syst_Window[i].resize(labels.size());
-		// Enu_Syst_AV_TPC[i].resize(labels.size());
-		// Enu_Weight_MS[i].resize(labels.size());
-		// Weight_MS[i].resize(labels.size());
-
-		// Labels
-		for(unsigned j=0; j<labels.size(); j++) {
-			// Enu_Syst_Window[i][j].resize(100);
-			// Enu_Syst_AV_TPC[i][j].resize(100);
-
-			// Enu_Weight_MS[i][j] = new TH2D(Form("%s_Enu_vs_MS_wght_%s",flav[i].c_str(), labels[j].c_str()), ";Enu; MS Weight",100, 0, 25, 200, -0.25, 5);
-			// Weight_MS[i][j] = new TH1D(Form("%s_MS_wght_%s",flav[i].c_str(), labels[j].c_str()), ";MS Weight",200, -0.25, 5);
-
-			// Universes
-			for(int k=0; k<100; k++){
-				// Enu_Syst_Window[i][j][k] =  new TH1D(Form("%s_%s_Uni_%d_Window",flav[i].c_str(), labels[j].c_str(), k),"",n, bin);
-				// Enu_Syst_AV_TPC[i][j][k] =  new TH1D(Form("%s_%s_Uni_%d_AV_TPC",flav[i].c_str(), labels[j].c_str(), k),"",n, bin);
-			}
+		// Parent
+		for(unsigned k = 0; k < parent.size(); k++){
+			Enu_Parent_AV_TPC[i][k]  = new TH1D(Form("Enu_%s_%s_AV_TPC",flav[i].c_str(), parent[k].c_str()),"", 4000, 0, 20);
+			Th_Parent_AV_TPC[i][k]   = new TH1D(Form("Th_%s_%s_AV_TPC",flav[i].c_str(), parent[k].c_str()),"", 40 , 0, 180);
+			zpos_Parent_AV_TPC[i][k] = new TH1D(Form("zpos_%s_%s_AV_TPC",flav[i].c_str(), parent[k].c_str()),"", 400 , 0, 80000);
+			impwght_Parent[i][k]     = new TH1D(Form("impwght_Parent_%s_%s",flav[i].c_str(), parent[k].c_str()),"", 1 , 0, -1);
+			Targ_mom_Parent[i][k]    = new TH1D(Form("Targ_mom_Parent_%s_%s",flav[i].c_str(), parent[k].c_str()),";Parent P at Target [GeV/c]", 4000, 0, 20);
 		}
+		
 	}
 
 	// ++++++++++++++++++++++++++++++++
@@ -263,6 +259,9 @@ int main(int argc, char** argv) {
 			// Now get the momentums to calculate theta
 			double costheta = mctruth.GetNeutrino().Nu().Pz() / mctruth.GetNeutrino().Nu().P();
 			double theta = std::acos(costheta) * 180 / 3.14159265;
+			double Enu = mctruth.GetNeutrino().Nu().E();
+			double Pmom_dk = std::sqrt( mcflux.fpdpz*mcflux.fpdpz + mcflux.fpdpy*mcflux.fpdpy + mcflux.fpdpx*mcflux.fpdpx ); // Parent momentum at decay
+			double Pmom_tg = std::sqrt(mcflux.ftpx*mcflux.ftpx + mcflux.ftpy*mcflux.ftpy + mcflux.ftpz*mcflux.ftpz); // Parent moment
 
 			// Weight of neutrino parent (importance weight) * Neutrino weight for a decay forced at center of near detector 
 			cv_weight *= mcflux.fnimpwt * mcflux.fnwtfar; // mcflux.fnwtfar == mcflux.fnwtnear
@@ -274,8 +273,8 @@ int main(int argc, char** argv) {
 				
 			}
 			
-			if (mctruth.GetNeutrino().Nu().E() > 0.074 && mctruth.GetNeutrino().Nu().E() < 0.082 ){
-				std::cout << "E:\t" << mctruth.GetNeutrino().Nu().E() << "Parent:\t" << mcflux.fptype <<"  theta:\t" <<theta<<"   ntype:\t"<< mcflux.fndecay<<   std::endl;
+			if (Enu > 0.074 && Enu < 0.082 ){
+				// std::cout << "E:\t" << Enu << "Parent:\t" << mcflux.fptype <<"  theta:\t" <<theta<<"   ntype:\t"<< mcflux.fndecay<<   std::endl;
 			}
 
 			// ++++++++++++++++++++++++++++++++
@@ -283,14 +282,78 @@ int main(int argc, char** argv) {
 			// ++++++++++++++++++++++++++++++++
 
 			// Window
-			Enu_CV_Window[pdg]->Fill(mctruth.GetNeutrino().Nu().E(), cv_weight);
-			Enu_UW_Window[pdg]->Fill(mctruth.GetNeutrino().Nu().E(), mcflux.fnimpwt * mcflux.fnwtfar);
+			Enu_CV_Window[pdg]->Fill(Enu, cv_weight);
+			Enu_UW_Window[pdg]->Fill(Enu, mcflux.fnimpwt * mcflux.fnwtfar);
 
 			// TPC AV
 			if (intercept) {
-				Enu_CV_AV_TPC[pdg]->Fill(mctruth.GetNeutrino().Nu().E(), cv_weight);
-				Enu_UW_AV_TPC[pdg]->Fill(mctruth.GetNeutrino().Nu().E(), mcflux.fnimpwt * mcflux.fnwtfar);
+				Enu_CV_AV_TPC[pdg]->Fill(Enu, cv_weight);
+				Enu_UW_AV_TPC[pdg]->Fill(Enu, mcflux.fnimpwt * mcflux.fnwtfar);
 
+				// INDEXING: 0: PI_Plus 1: PI_Minus 2: Mu Plus 3: Mu_Minus 4: Kaon+/- 5: K0L 
+				if (mcflux.fptype == 211){ // pi plus
+					Enu_Parent_AV_TPC[pdg][0]->Fill(Enu, cv_weight);
+					Th_Parent_AV_TPC[pdg][0]->Fill(theta, cv_weight);
+					zpos_Parent_AV_TPC[pdg][0]->Fill(mcflux.fvz, cv_weight);
+					impwght_Parent[pdg][0]->Fill(mcflux.fnimpwt);
+					Targ_mom_Parent[pdg][0]->Fill(Pmom_tg, cv_weight);
+
+				}
+				else if (mcflux.fptype == -211){ // pi minus
+					Enu_Parent_AV_TPC[pdg][1]->Fill(Enu, cv_weight);
+					Th_Parent_AV_TPC[pdg][1]->Fill(theta, cv_weight);
+					zpos_Parent_AV_TPC[pdg][1]->Fill(mcflux.fvz, cv_weight);
+					impwght_Parent[pdg][1]->Fill(mcflux.fnimpwt);
+					Targ_mom_Parent[pdg][1]->Fill(Pmom_tg, cv_weight);
+
+
+				}
+				else if (mcflux.fptype == -13){ // mu plus
+					Enu_Parent_AV_TPC[pdg][2]->Fill(Enu, cv_weight);
+					Th_Parent_AV_TPC[pdg][2]->Fill(theta, cv_weight);
+					zpos_Parent_AV_TPC[pdg][2]->Fill(mcflux.fvz, cv_weight);
+					impwght_Parent[pdg][2]->Fill(mcflux.fnimpwt);
+					Targ_mom_Parent[pdg][2]->Fill(Pmom_tg, cv_weight);
+
+
+				} 
+				else if (mcflux.fptype == 13){ // mu minus
+					Enu_Parent_AV_TPC[pdg][3]->Fill(Enu, cv_weight);
+					Th_Parent_AV_TPC[pdg][3]->Fill(theta, cv_weight);
+					zpos_Parent_AV_TPC[pdg][3]->Fill(mcflux.fvz, cv_weight);
+					impwght_Parent[pdg][3]->Fill(mcflux.fnimpwt);
+					Targ_mom_Parent[pdg][3]->Fill(Pmom_tg, cv_weight);
+
+
+				} 
+				else if (mcflux.fptype == 321 || mcflux.fptype == -321){ // K+/-
+					Enu_Parent_AV_TPC[pdg][4]->Fill(Enu, cv_weight);
+					Th_Parent_AV_TPC[pdg][4]->Fill(theta, cv_weight);
+					zpos_Parent_AV_TPC[pdg][4]->Fill(mcflux.fvz, cv_weight);
+					impwght_Parent[pdg][4]->Fill(mcflux.fnimpwt);
+					Targ_mom_Parent[pdg][4]->Fill(Pmom_tg, cv_weight);
+
+				}
+				else if (mcflux.fptype == 130 ){ // K0L
+					Enu_Parent_AV_TPC[pdg][5]->Fill(Enu, cv_weight);
+					Th_Parent_AV_TPC[pdg][5]->Fill(theta, cv_weight);
+					zpos_Parent_AV_TPC[pdg][5]->Fill(mcflux.fvz, cv_weight);
+					impwght_Parent[pdg][5]->Fill(mcflux.fnimpwt);
+					Targ_mom_Parent[pdg][5]->Fill(Pmom_tg, cv_weight);
+
+				}
+				
+				if (Enu > 0.025 && Enu < 0.03 && mcflux.fptype == 211 ){ // Pidar peak
+					NuMu_PiDAR_zpos->Fill(mcflux.fvz, cv_weight);
+				}
+				if (Enu > 0.235 && Enu < 0.24 && (mcflux.fptype == 321 || mcflux.fptype == -321)){ // kdar peak
+					NuMu_KDAR_zpos->Fill(mcflux.fvz, cv_weight);
+				}
+
+				// Beam Pipe Peak at 550 m
+				if (mcflux.fvz> 54000 && mcflux.fvz < 56000 && mcflux.fptype == 13 ){ 
+					NuMu_peak_mom_muon->Fill(Pmom_dk,cv_weight );
+				}
 				
 			}
 
@@ -309,28 +372,28 @@ int main(int argc, char** argv) {
 	std::cout << "flavour.size:\t" <<flav.size()<<std::endl;
 
 	// Top Flav dir 
-	std::vector<std::vector<std::vector<TDirectory*> > > subdir(flav.size()); 
+	std::vector<std::vector<TDirectory*>> subdir(flav.size()); 
 	
 	//Create label dirs
 	for (unsigned i=0; i<flav.size(); i++){
-		subdir[i].resize(labels.size()+1);
+		subdir[i].resize(parent.size()+1);
 		
 		// Create Win/AVTPC dirs
-		for(unsigned j=0; j<labels.size()+1; j++) {
-			subdir[i][j].resize(3);
-		}
+		// for(unsigned j=0; j<labels.size()+1; j++) {
+		// 	subdir[i][j].resize(3);
+		// }
 	
 	}
 
-	std::vector<string> cont = { "Window", "Active_TPC_Volume", ""};
+	// std::vector<string> cont = { "Window", "Active_TPC_Volume", ""};
 
 	// Flavours
 	for (unsigned int f=0; f<flav.size(); f++) {
 	
 		std::cout << "\n" <<flav[f] << std::endl;
 
-		subdir[f][0][0] = savdir->mkdir(Form("%s",flav[f].c_str()));
-		subdir[f][0][0]->cd();
+		subdir[f][0] = savdir->mkdir(Form("%s",flav[f].c_str()));
+		subdir[f][0]->cd();
 
 		// Write CV fluxes
 		Enu_CV_Window[f]->Write();      
@@ -338,38 +401,26 @@ int main(int argc, char** argv) {
 		Enu_UW_Window[f]->Write();      
 		Enu_UW_AV_TPC[f]->Write();
 
-		// Enu_Weight_CV[f]->Write();   
-		// Weight_CV[f]->Write();  
-		
+		// Parent
+		for(unsigned int k = 1; k < parent.size()+1; k++){
+			std::cout << parent[k-1] << std::endl;
+			subdir[f][k] = subdir[f][0]->mkdir(Form("%s",parent[k-1].c_str()));
+			subdir[f][k]->cd();
 
-		// Labels
-		for (unsigned int s=1; s<labels.size()+1; s++) {
-			std::cout << labels[s-1] << std::endl;
-			subdir[f][s][0] = subdir[f][0][0]->mkdir(Form("%s",labels[s-1].c_str()));
-			subdir[f][s][0]->cd();
-
-			// Enu_Weight_MS[f][s-1]->Write();  
-			// Weight_MS[f][s-1]->Write();  
-
-			// AV/TPC
-			for (int c=1; c<3; c++) {
-				std::cout << cont[c-1] << std::endl;
-				subdir[f][s][c] = subdir[f][s][0]->mkdir(Form("%s",cont[c-1].c_str()));
-				subdir[f][s][c]->cd();
-
-				if (c == 1) {
-					for(int i = 0; i < 100; i++){
-						// Enu_Syst_Window[f][s-1][i]->Write();
-					}        
-				}
-
-				if (c == 2) {
-					for(int i = 0; i < 100; i++){
-						// Enu_Syst_AV_TPC[f][s-1][i]->Write();
-					}
-				}
-			}
+			Enu_Parent_AV_TPC[f][k-1]->Write();
+			Th_Parent_AV_TPC[f][k-1]->Write();
+			zpos_Parent_AV_TPC[f][k-1]->Write();
+			impwght_Parent[f][k-1]->Write();
+			Targ_mom_Parent[f][k-1]->Write();
 		}
+
+		// Make other plots folder for miscalanious variables
+		std::cout << "OtherPlots" << std::endl;
+		subdir[f][parent.size()+2] = subdir[f][0]->mkdir("OtherPlots");
+		subdir[f][parent.size()+2]->cd();
+		NuMu_PiDAR_zpos->Write();
+		NuMu_KDAR_zpos->Write();
+		NuMu_peak_mom_muon->Write();
 
 		savdir->cd();
 	}
@@ -385,4 +436,3 @@ int main(int argc, char** argv) {
 
 	return 0;
 }
-
