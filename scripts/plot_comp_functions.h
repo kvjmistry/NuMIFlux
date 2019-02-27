@@ -241,6 +241,18 @@ bool GetTree(TFile* f, TTree* &T, TString string){
 	}
 }
 // ------------------------------------------------------------------------------------------------------------
+bool GetFile(TFile* &f , TString string){
+	f = TFile::Open(string);
+	
+	if (f == NULL) {
+		// std::cout << "failed to get:\t" << string << "\tThis file might not exist in the file" << std::endl;
+		return false;
+	}
+	else {
+		return true;
+	}
+}
+// ------------------------------------------------------------------------------------------------------------
 void CalcCovariance(std::string inputmode,TString Cov_names, TFile* f, TH2D* &cov, TH1D* horig, const int nbins  ){
 	TH1D* hu; 					// Flux hist for each universe
 	const int nuni = 100; // num universes

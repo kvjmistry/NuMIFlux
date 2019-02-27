@@ -53,6 +53,7 @@ int main(int argc, char** argv) {
 	InputTag  evtwght_tag { "eventweight" };
 
 	double totalPOT{0};
+	double Kaontotal{0};
 
 
 	vector<string> badfiles;
@@ -91,11 +92,14 @@ int main(int argc, char** argv) {
 	std::vector<std::vector<TH1D*> > impwght_Parent; 		// Importance weight by parent
 	std::vector<std::vector<TH1D*> > Prod_energy_Parent; 	// Production energy by parent
 	std::vector<std::vector<TH1D*> > Targ_mom_Parent; 	    // Momentum by parent as it leaves the target
+	std::vector<std::vector<TH1D*> > MuDAR_Enu_Parent; 	    // Energy spectrum of decay at rest muons
 	
 	// Other hists
 	TH1D* NuMu_PiDAR_zpos = new TH1D("NuMu_PiDAR_zpos","", 400 , 0, 80000); // numu Pidar peak zpos
 	TH1D* NuMu_KDAR_zpos =  new  TH1D("NuMu_KDAR_zpos","", 400 , 0, 80000);  // numu kdar peak zpos
-	TH1D* NuMu_peak_mom_muon =   new  TH1D("NuMu_peak_mom_muon","", 100 , 0, 25);  // muon parent momentum at 550m peak
+	TH1D* NuMu_peak_mom_muon =   new  TH1D("NuMu_peak_mom_muon","", 100 , 0, 25);  // muon parent momentum at large enu peak
+	TH1D* NuMu_peak_theta_muon =   new  TH1D("NuMu_peak_theta_muon","", 40 , 0, 180);  // muon parent thetaat large peak
+	TH1D* NuMu_peak_zpos_muon =   new  TH1D("NuMu_peak_zpos_muon","", 400 , 0, 80000);  // muon parent thetaat large peak
 
 	// Tree for POT counting
 	TTree* POTTree = new TTree("POT","Total POT");
@@ -157,6 +161,7 @@ int main(int argc, char** argv) {
 	zpos_Parent_AV_TPC.resize(4);
 	impwght_Parent.resize(4);
 	Targ_mom_Parent.resize(4);
+	MuDAR_Enu_Parent.resize(4);
 
 	
 	
@@ -188,6 +193,7 @@ int main(int argc, char** argv) {
 		zpos_Parent_AV_TPC[i].resize(parent.size());
 		impwght_Parent[i].resize(parent.size());
 		Targ_mom_Parent[i].resize(parent.size());
+		MuDAR_Enu_Parent[i].resize(parent.size());
 		
 
 		// Parent
@@ -197,6 +203,7 @@ int main(int argc, char** argv) {
 			zpos_Parent_AV_TPC[i][k] = new TH1D(Form("zpos_%s_%s_AV_TPC",flav[i].c_str(), parent[k].c_str()),"", 400 , 0, 80000);
 			impwght_Parent[i][k]     = new TH1D(Form("impwght_Parent_%s_%s",flav[i].c_str(), parent[k].c_str()),"", 1 , 0, -1);
 			Targ_mom_Parent[i][k]    = new TH1D(Form("Targ_mom_Parent_%s_%s",flav[i].c_str(), parent[k].c_str()),";Parent P at Target [GeV/c]", 4000, 0, 20);
+			MuDAR_Enu_Parent[i][k]   = new TH1D(Form("MuDAR_Enu_%s_%s_AV_TPC",flav[i].c_str(), parent[k].c_str()),"", 4000, 0, 20);
 		}
 		
 	}
@@ -263,6 +270,10 @@ int main(int argc, char** argv) {
 			double Pmom_dk = std::sqrt( mcflux.fpdpz*mcflux.fpdpz + mcflux.fpdpy*mcflux.fpdpy + mcflux.fpdpx*mcflux.fpdpx ); // Parent momentum at decay
 			double Pmom_tg = std::sqrt(mcflux.ftpx*mcflux.ftpx + mcflux.ftpy*mcflux.ftpy + mcflux.ftpz*mcflux.ftpz); // Parent moment
 
+			// Count the total Kaons
+			if (mcflux.fptype == 321 || mcflux.fptype == -321) Kaontotal+=mcflux.fnimpwt;
+
+
 			// Weight of neutrino parent (importance weight) * Neutrino weight for a decay forced at center of near detector 
 			cv_weight *= mcflux.fnimpwt * mcflux.fnwtfar; // mcflux.fnwtfar == mcflux.fnwtnear
 			
@@ -297,7 +308,7 @@ int main(int argc, char** argv) {
 					zpos_Parent_AV_TPC[pdg][0]->Fill(mcflux.fvz, cv_weight);
 					impwght_Parent[pdg][0]->Fill(mcflux.fnimpwt);
 					Targ_mom_Parent[pdg][0]->Fill(Pmom_tg, cv_weight);
-
+					
 				}
 				else if (mcflux.fptype == -211){ // pi minus
 					Enu_Parent_AV_TPC[pdg][1]->Fill(Enu, cv_weight);
@@ -305,7 +316,7 @@ int main(int argc, char** argv) {
 					zpos_Parent_AV_TPC[pdg][1]->Fill(mcflux.fvz, cv_weight);
 					impwght_Parent[pdg][1]->Fill(mcflux.fnimpwt);
 					Targ_mom_Parent[pdg][1]->Fill(Pmom_tg, cv_weight);
-
+					
 
 				}
 				else if (mcflux.fptype == -13){ // mu plus
@@ -314,7 +325,11 @@ int main(int argc, char** argv) {
 					zpos_Parent_AV_TPC[pdg][2]->Fill(mcflux.fvz, cv_weight);
 					impwght_Parent[pdg][2]->Fill(mcflux.fnimpwt);
 					Targ_mom_Parent[pdg][2]->Fill(Pmom_tg, cv_weight);
-
+					
+					// Fill MuDAR Energy spectrum
+					if (Pmom_dk == 0 ){
+						MuDAR_Enu_Parent[pdg][2]->Fill(Enu, cv_weight);
+					}
 
 				} 
 				else if (mcflux.fptype == 13){ // mu minus
@@ -324,6 +339,10 @@ int main(int argc, char** argv) {
 					impwght_Parent[pdg][3]->Fill(mcflux.fnimpwt);
 					Targ_mom_Parent[pdg][3]->Fill(Pmom_tg, cv_weight);
 
+					// Fill MuDAR Energy spectrum
+					if (Pmom_dk == 0 ){
+						MuDAR_Enu_Parent[pdg][3]->Fill(Enu, cv_weight);
+					}
 
 				} 
 				else if (mcflux.fptype == 321 || mcflux.fptype == -321){ // K+/-
@@ -350,9 +369,14 @@ int main(int argc, char** argv) {
 					NuMu_KDAR_zpos->Fill(mcflux.fvz, cv_weight);
 				}
 
-				// Beam Pipe Peak at 550 m
-				if (mcflux.fvz> 54000 && mcflux.fvz < 56000 && mcflux.fptype == 13 ){ 
+				
+
+				// Look in the energy peak for muons
+				if (Enu > 0.074 && Enu < 0.082 && mcflux.fptype == 13 ){
 					NuMu_peak_mom_muon->Fill(Pmom_dk,cv_weight );
+					NuMu_peak_theta_muon->Fill(theta, cv_weight );
+					NuMu_peak_zpos_muon->Fill(mcflux.fvz,cv_weight );
+					// std::cout << "E:\t" << Enu << "Parent:\t" << mcflux.fptype <<"  theta:\t" <<theta<<"   ntype:\t"<< mcflux.fndecay<<   std::endl;
 				}
 				
 			}
@@ -365,6 +389,9 @@ int main(int argc, char** argv) {
 	// ++++++++++++++++++++++++++++++++
 	// Plotting 
 	// ++++++++++++++++++++++++++++++++
+
+	// Spit out the total Kaon
+	std::cout << "Total Kaons:\t" << Kaontotal << std::endl;
 
 	TFile* output = new TFile("output.root", "RECREATE");
 	TDirectory* savdir = gDirectory;
@@ -402,6 +429,7 @@ int main(int argc, char** argv) {
 		Enu_UW_AV_TPC[f]->Write();
 
 		// Parent
+		// INDEXING: 1: PI_Plus 2: PI_Minus 3: Mu Plus 4: Mu_Minus 5: Kaon+/- 6: K0L 
 		for(unsigned int k = 1; k < parent.size()+1; k++){
 			std::cout << parent[k-1] << std::endl;
 			subdir[f][k] = subdir[f][0]->mkdir(Form("%s",parent[k-1].c_str()));
@@ -412,6 +440,11 @@ int main(int argc, char** argv) {
 			zpos_Parent_AV_TPC[f][k-1]->Write();
 			impwght_Parent[f][k-1]->Write();
 			Targ_mom_Parent[f][k-1]->Write();
+
+			// Fill MuDAR Cases
+			if (k == 3 || k == 4){
+				MuDAR_Enu_Parent[f][k-1]->Write();
+			}
 		}
 
 		// Make other plots folder for miscalanious variables
@@ -421,6 +454,8 @@ int main(int argc, char** argv) {
 		NuMu_PiDAR_zpos->Write();
 		NuMu_KDAR_zpos->Write();
 		NuMu_peak_mom_muon->Write();
+		NuMu_peak_theta_muon->Write();
+		NuMu_peak_zpos_muon->Write();
 
 		savdir->cd();
 	}
