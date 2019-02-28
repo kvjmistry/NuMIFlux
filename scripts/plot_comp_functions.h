@@ -128,7 +128,10 @@ void legDraw(TLegend *legend, TH1D *hist, TString prodmode, TString mipp, std::s
 	
 	if (mode == "numu")  hist->SetTitle("#nu_{#mu}");
 	if (mode == "nue")   hist->SetTitle("#nu_{e}");
-	if (mode == "numubar")  hist->SetTitle("#bar{#nu_{#mu}}");
+	if (mode == "numubar"){
+		hist->GetYaxis()->SetRangeUser(0,0.45);
+		hist->SetTitle("#bar{#nu_{#mu}}");
+	}
 	if (mode == "nuebar")   hist->SetTitle("#bar{#nu_{e}}");
 
 
@@ -245,7 +248,7 @@ bool GetFile(TFile* &f , TString string){
 	f = TFile::Open(string);
 	
 	if (f == NULL) {
-		// std::cout << "failed to get:\t" << string << "\tThis file might not exist in the file" << std::endl;
+		std::cout << "failed to get:\t" << string << "\tThis file might not exist in the file" << std::endl;
 		return false;
 	}
 	else {
@@ -293,72 +296,86 @@ void CalcCovariance(std::string inputmode,TString Cov_names, TFile* f, TH2D* &co
 	}
 }
 // ------------------------------------------------------------------------------------------------------------
-void BeamlineUncertainties(std::vector<TH1D*> &herr, TH1D* hCV_Flux, std::string beam_type){
-	TFile* f3 = TFile::Open("/uboone/data/users/kmistry/work/PPFX/nova/no_ThinKaon_Indiv/numu_Energy_ratios_quad.root");
-		// Declearations
-		double sigma_beamline, sys, sigma;
-		std::vector<double> vsqsum;
-		std::vector<double> vquadsum;
-		TH1D* h_beamline;
+void BeamlineUncertainties(std::vector<TH1D*> &herr, TH1D* hCV_Flux, std::string beam_type, TString mode){
+	
+		// Convert TString to a std::string
+	std::string mode_str;
+	if (mode == "numu") mode_str = "numu";
+	else if (mode == "numubar") mode_str = "numubar";
+	else if (mode == "nue") mode_str = "nue";
+	else mode_str = "numubar";
 
-		if (beam_type == "file")  h_beamline = (TH1D*) f3->Get("h_error2");
+	TFile* f3;
+	bool boolfile;
+	if (mode_str == "numu")   boolfile = GetFile(f3,Form("/uboone/data/users/kmistry/work/PPFX/nova/no_ThinKaon_Indiv/%s_Energy_ratios_quad.root", mode_str.c_str() )); 
+	else  boolfile = GetFile(f3,Form("/uboone/data/users/kmistry/work/PPFX/nova/no_ThinKaon_Indiv/%s_Energy_ratios.root", mode_str.c_str() ));
+	if ( boolfile == false) gSystem->Exit(0);
+	
+	
+	// Declearations
+	double sigma_beamline, sys, sigma;
+	std::vector<double> vsqsum;
+	std::vector<double> vquadsum;
+	TH1D* h_beamline;
+
+	if (beam_type == "file")  h_beamline = (TH1D*) f3->Get("h_error2");
+	
+	// Manually add errors using individual histos
+	else {
+
+		if (beam_type == "file" && h_beamline == NULL) std::cout << "Error, could not get hdev" << std::endl;
+		else std::cout << "Adding in Beamline uncertainties" << std::endl;
+
+
 		
-		// Manually add errors using individual histos
-		else {
+		vsqsum.resize(hCV_Flux->GetNbinsX(),0);
+		vquadsum.resize(hCV_Flux->GetNbinsX(),0);
 
-			if (h_beamline == NULL) std::cout << "Error, could not get hdev" << std::endl;
-			else std::cout << "Adding in Beamline uncertainties" << std::endl;
-
-
+		// Loop over each unverse
+		for (int j=0; j < 23; j++){
 			
-			vsqsum.resize(hCV_Flux->GetNbinsX(),0);
-			vquadsum.resize(hCV_Flux->GetNbinsX(),0);
+			if (j == 7 ) j += 1; // skip run 15
+			
+			char name[500];
+			if (j == 0 || j == 1) snprintf(name, 500, "hratio_run000%d" ,j+8);
+			else snprintf(name, 500, "hratio_run00%d" , j+8);
+			
+			bool bool_hist = GetHist(f3, h_beamline,name); if (bool_hist == false) gSystem->Exit(0);
 
-			// Loop over each unverse
-			for (int j=0; j < 23; j++){
+			// Loop over each bin in the universe
+			for (int bin=1; bin < h_beamline->GetNbinsX()+1; bin++){
+				vsqsum.at(bin - 1) +=  (h_beamline->GetBinContent(bin) - 1.0) * (h_beamline->GetBinContent(bin) - 1.0);
+				vquadsum.at(bin - 1) += (h_beamline->GetBinContent(bin) - 1.0) * (h_beamline->GetBinContent(bin) - 1.0);
 				
-				if (j == 7 ) j += 1; // skip run 15
-				
-				char name[500];
-				if (j == 0 || j == 1) snprintf(name, 500, "hratio_run000%d" ,j+8);
-				else snprintf(name, 500, "hratio_run00%d" , j+8);
-				
-				bool bool_hist = GetHist(f3, h_beamline,name); if (bool_hist == false) gSystem->Exit(0);
-
-				// Loop over each bin in the universe
-				for (int bin=1; bin < h_beamline->GetNbinsX()+1; bin++){
-					vsqsum.at(bin - 1) +=  (h_beamline->GetBinContent(bin) - 1.0) * (h_beamline->GetBinContent(bin) - 1.0);
-					vquadsum.at(bin - 1) += (h_beamline->GetBinContent(bin) - 1.0) * (h_beamline->GetBinContent(bin) - 1.0);
-					
-				}
-
 			}
 
-			// Calc std and quadrature
-			for (int i = 0; i < vsqsum.size(); i++){
-					vsqsum.at(i) = std::sqrt(vsqsum.at(i)/20);
-					vquadsum.at(i) = std::sqrt(vquadsum.at(i)/2);
-					// std::cout << vsqsum.at(i)*100 << "\t"<< vquadsum.at(i)*100 << std::endl; // Display errors
-			}
 		}
 
-		// Loop over histograms
-		for (int i=0; i < herr.size(); i++){
-			
-			// Loop over bins
-			for (int bin=1; bin<herr[i]->GetNbinsX()+1; bin++){
-				sys = herr[i]->GetBinContent(bin);
-				
-				// Choose beamline uncertainty to add in
-				if (beam_type == "file") sigma_beamline = h_beamline->GetBinContent(bin); // errors from a file
-				else if (beam_type == "stdev") sigma_beamline = vsqsum.at(bin - 1);		  // standard deviation
-				else if (beam_type == "quad") sigma_beamline = vquadsum.at(bin - 1);	  // Quadrature
-				else std::cout << "Unknown Option given" << std::endl;
-
-				sigma = std::sqrt( sys*sys + sigma_beamline*sigma_beamline );
-				herr[i]->SetBinContent(bin, sigma);
-			}
+		// Calc std and quadrature
+		for (int i = 0; i < vsqsum.size(); i++){
+				vsqsum.at(i) = std::sqrt(vsqsum.at(i)/20);
+				vquadsum.at(i) = std::sqrt(vquadsum.at(i)/2);
+				// std::cout << vsqsum.at(i)*100 << "\t"<< vquadsum.at(i)*100 << std::endl; // Display errors
 		}
+	}
+
+	// Loop over histograms
+	for (int i=0; i < herr.size(); i++){
+		
+		// Loop over bins
+		for (int bin=1; bin<herr[i]->GetNbinsX()+1; bin++){
+			sys = herr[i]->GetBinContent(bin);
+			
+			// Choose beamline uncertainty to add in
+			if (beam_type == "file") sigma_beamline = h_beamline->GetBinContent(bin); // errors from a file
+			else if (beam_type == "stdev") sigma_beamline = vsqsum.at(bin - 1);		  // standard deviation
+			else if (beam_type == "quad") sigma_beamline = vquadsum.at(bin - 1);	  // Quadrature
+			else std::cout << "Unknown Option given" << std::endl;
+
+			sigma = std::sqrt( sys*sys + sigma_beamline*sigma_beamline );
+			herr[i]->SetBinContent(bin, sigma);
+		}
+	}
 }
 // ------------------------------------------------------------------------------------------------------------
 // Returns a histogram with the mean in each universe, the error is the stddev
@@ -472,7 +489,7 @@ void DrawErrorBand(TFile* f, TString mode, TLegend* leg, std::string inputmode){
 		vhuniv.push_back((TH1D*)key->ReadObj());
 	}
 
-	// Calculate the HP error
+	// Calculate the HP error using leos method
 	TH1D* htemp = getBand(vhuniv); 
 	TH1D* htemp_clone = (TH1D*) htemp->Clone("htemp_clone");
 

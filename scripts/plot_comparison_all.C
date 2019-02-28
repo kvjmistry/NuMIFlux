@@ -260,10 +260,23 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 	// Get the nova  histogram
 	boolhist = GetHist(f2, herr2, Err_names); if (boolhist == false) gSystem->Exit(0);
 
+	// Set the axes
+	if (mode == "numu"){
+		herr2->GetYaxis()->SetRangeUser(0,0.35);
+	}
+	if (mode == "nue"){
+		herr2->GetYaxis()->SetRangeUser(0,0.40);
+	}
+	if (mode == "numubar"){
+		herr2->GetYaxis()->SetRangeUser(0,0.65);
+	}
+	if (mode == "nuebar"){
+		herr2->GetYaxis()->SetRangeUser(0,0.65);
+	}
+
 	// Draw Nova errors
 	herr2->SetLineColor(kBlue);
 	herr2->SetLineWidth(2);
-	herr2->GetYaxis()->SetRangeUser(0,0.35);
 	herr2->Draw("same");
 	lfrac->AddEntry(herr2, "NOvA","l");
 
@@ -334,14 +347,11 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 	// ------------------------------------------------------------------------------------------------------------
 	// Update the error to add in the beamline uncertainties
 	// ------------------------------------------------------------------------------------------------------------
-	// Only have numu uncertainties so far
-	if (mode == "numu") {
-		// Choose one of these
-		// BeamlineUncertainties(herr, hCV_Flux, "file");
-		// BeamlineUncertainties(herr, hCV_Flux, "stdev");
-		BeamlineUncertainties(herr, hCV_Flux, "quad");
-	}
-	
+	// Choose one of these
+	// BeamlineUncertainties(herr, hCV_Flux, "file"); // likely to not be implemented anymore
+	// BeamlineUncertainties(herr, hCV_Flux, "stdev");
+	BeamlineUncertainties(herr, hCV_Flux, "quad",mode);
+
 	// ------------------------------------------------------------------------------------------------------------
 	// Update the CV flux prediction to include stat+sys errors
 	// ------------------------------------------------------------------------------------------------------------
@@ -375,22 +385,19 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 	// ------------------------------------------------------------------------------------------------------------
 	TCanvas* c6;
 	TH1D* hratio_sig;
-	if (mode == "numu"){
-		c6 = new TCanvas();
-		// Clone for ratio plot
-		hratio_sig = (TH1D*) herr[12]->Clone("hratio_sig");
-		
-		hratio_sig->Divide(herr2);
-		hratio_sig->SetLineColor(kBlack);
-		hratio_sig->SetMarkerStyle(7);
-		hratio_sig->Draw("e1");
-		hratio_sig->SetTitle("Ratio of uncertainties to NOvA;E_{#nu} (GeV);Ratio");
-		hratio_sig->GetYaxis()->SetRangeUser(0, 3);
-		hratio_sig->Draw("hist");
-		flat->Draw();
-
-	}
-
+	
+	c6 = new TCanvas();
+	// Clone for ratio plot
+	hratio_sig = (TH1D*) herr[12]->Clone("hratio_sig");
+	
+	hratio_sig->Divide(herr2);
+	hratio_sig->SetLineColor(kBlack);
+	hratio_sig->SetMarkerStyle(7);
+	hratio_sig->Draw("e1");
+	hratio_sig->SetTitle("Ratio of uncertainties to NOvA;E_{#nu} (GeV);Ratio");
+	hratio_sig->GetYaxis()->SetRangeUser(0, 3);
+	hratio_sig->Draw("hist");
+	flat->Draw();
 
 	// Redraw the plot with the new errors
 	c1->Update();
