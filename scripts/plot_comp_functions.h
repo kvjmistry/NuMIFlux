@@ -23,7 +23,7 @@ std::vector<std::string> loopdir(TString  inputfile, TString mode) {
 }
 // ------------------------------------------------------------------------------------------------------------
 // function that makes a legend for multiple histograms and draws them to the canvas
-void legDraw(TLegend *legend, TH1D *hist, TString prodmode, TString mipp, std::string inputmode, TString mode){
+void legDraw(TLegend * &legend, TH1D *&hist, TString prodmode, TString mipp, std::string inputmode, TString mode){
 	
 	if (inputmode == "PPFXMaster"){
 	hist->SetLineColor(kBlack);
@@ -233,6 +233,17 @@ bool GetHist(TFile* f, TH1D* &h, TString string){
 	}
 }
 // ------------------------------------------------------------------------------------------------------------
+bool GetHist(TFile* f, TH2D* &h, TString string){
+	h = (TH2D*) f->Get(string);
+	if (h == NULL) {
+		std::cout << "\nfailed to get:\t" << string << "\tThis histogram might not exist in the file\n" << std::endl;
+		return false;
+	}
+	else {
+		return true;
+	}
+}
+// ------------------------------------------------------------------------------------------------------------
 bool GetTree(TFile* f, TTree* &T, TString string){
 	T = (TTree*) f->Get(string);
 	if (T == NULL) {
@@ -296,9 +307,34 @@ void CalcCovariance(std::string inputmode,TString Cov_names, TFile* f, TH2D* &co
 	}
 }
 // ------------------------------------------------------------------------------------------------------------
+// Use this for covariance calculation in 4d
+void CalcCovariance_4D(TH2D* &cov, TH1D* hCV, TH1D* &hu, int &nbinsX, int &nbinsY, int k  ){
+
+	int nuni{100};
+	// Loop over rows
+	for (int i=1; i<nbinsX+1; i++) {
+
+		double cvi = hCV->GetBinContent(i); // CV bin i
+		double uvi = hu->GetBinContent(i);    // Univ bin i 
+
+		// Loop over columns
+		for (int j=1; j<nbinsY+1; j++) {
+			
+			double cvj = hCV->GetBinContent(j); // CV bin j
+			double uvj = hu->GetBinContent(j);    // Univ bin j 
+			double c = (uvi - cvi) * (uvj - cvj); 
+
+			if (k != nuni - 1) cov->SetBinContent(i, j, cov->GetBinContent(i, j) + c ); // Fill with variance 
+			else cov->SetBinContent(i, j, (cov->GetBinContent(i, j) + c) / nuni);       // Fill with variance and divide by nuni
+		}
+
+	} // End cov calc for universe i
+
+}
+// ------------------------------------------------------------------------------------------------------------
 void BeamlineUncertainties(std::vector<TH1D*> &herr, TH1D* hCV_Flux, std::string beam_type, TString mode){
 	
-		// Convert TString to a std::string
+	// Convert TString to a std::string
 	std::string mode_str;
 	if (mode == "numu") mode_str = "numu";
 	else if (mode == "numubar") mode_str = "numubar";
@@ -307,8 +343,10 @@ void BeamlineUncertainties(std::vector<TH1D*> &herr, TH1D* hCV_Flux, std::string
 
 	TFile* f3;
 	bool boolfile;
-	if (mode_str == "numu")   boolfile = GetFile(f3,Form("/uboone/data/users/kmistry/work/PPFX/nova/no_ThinKaon_Indiv/%s_Energy_ratios_quad.root", mode_str.c_str() )); 
-	else  boolfile = GetFile(f3,Form("/uboone/data/users/kmistry/work/PPFX/nova/no_ThinKaon_Indiv/%s_Energy_ratios.root", mode_str.c_str() ));
+	// if (mode_str == "numu")   boolfile = GetFile(f3,Form("/uboone/data/users/kmistry/work/PPFX/nova/no_ThinKaon_Indiv/%s_Energy_ratios_quad.root", mode_str.c_str() )); 
+	// else  boolfile = GetFile(f3,Form("/uboone/data/users/kmistry/work/PPFX/nova/no_ThinKaon_Indiv/%s_Energy_ratios.root", mode_str.c_str() ));
+	boolfile = GetFile(f3,Form("/uboone/data/users/kmistry/work/PPFX/nova/no_ThinKaon_Indiv/beamline_uncertainties/%s_beam_errors.root", mode_str.c_str() )); 
+	
 	if ( boolfile == false) gSystem->Exit(0);
 	
 	
@@ -318,10 +356,8 @@ void BeamlineUncertainties(std::vector<TH1D*> &herr, TH1D* hCV_Flux, std::string
 	std::vector<double> vquadsum;
 	TH1D* h_beamline;
 
-	if (beam_type == "file")  h_beamline = (TH1D*) f3->Get("h_error2");
-	
-	// Manually add errors using individual histos
-	else {
+	if (beam_type == "file")  h_beamline = (TH1D*) f3->Get("herr_totalbeam");
+	else {// Manually add errors using individual histos
 
 		if (beam_type == "file" && h_beamline == NULL) std::cout << "Error, could not get hdev" << std::endl;
 		else std::cout << "Adding in Beamline uncertainties" << std::endl;
@@ -444,17 +480,28 @@ void HPUncertainties_Leo(TFile* fIn, TH1D* &herror, std::string inputmode, TStri
 	else mode_str = "numubar";
 
 	std::vector<TH1D*> vhuniv;
+	TH1D* hu;
 
 	// Get the universe histograms
 	TDirectory *udir = fIn->GetDirectory(Form("%s/%s/Active_TPC_Volume", mode_str.c_str(), inputmode.c_str()));
 	TIter next(udir->GetListOfKeys());
 	TKey* key;
+	int i{0};
 
 	// Loop over the directory and grab each histo from each uni
 	while((key= (TKey*)next())){
 		TClass* cl = gROOT->GetClass(key->GetClassName());
-		if(!cl->InheritsFrom("TH1D"))continue;
-		vhuniv.push_back((TH1D*)key->ReadObj());
+		if(!cl->InheritsFrom("TH1D"))continue; // if not a TH1D skip
+
+		hu = (TH1D*)key->ReadObj(); // get the histogram
+		i=vhuniv.size()-1;
+		
+		// Veto theta histograms
+		std::string huname = hu->GetName();
+		std::string thetaname = Form("Th_%s_PPFXMaster_Uni_%i_AV_TPC", mode_str.c_str(), i);
+		if ( huname == thetaname ) continue;
+		
+		vhuniv.push_back(hu);
 	}
 
 	// Calculate the HP error
@@ -476,17 +523,27 @@ void DrawErrorBand(TFile* f, TString mode, TLegend* leg, std::string inputmode){
 	TH1D* hcv;
 
 	std::vector<TH1D*> vhuniv;
+	TH1D* hu; 
 
-	// Get the universe histograms
 	TDirectory *udir = f->GetDirectory(Form("%s/%s/Active_TPC_Volume", mode_str.c_str(), inputmode.c_str()));
 	TIter next(udir->GetListOfKeys());
 	TKey* key;
+	int i{0};
 
 	// Loop over the directory and grab each histo from each uni
 	while((key= (TKey*)next())){
 		TClass* cl = gROOT->GetClass(key->GetClassName());
-		if(!cl->InheritsFrom("TH1D"))continue;
-		vhuniv.push_back((TH1D*)key->ReadObj());
+		if(!cl->InheritsFrom("TH1D"))continue; // if not a TH1D skip
+
+		hu = (TH1D*)key->ReadObj(); // get the histogram
+		i=vhuniv.size()-1;
+
+		// Veto theta histograms
+		std::string huname = hu->GetName();
+		std::string thetaname = Form("Th_%s_PPFXMaster_Uni_%i_AV_TPC",mode_str.c_str(), i);
+		if ( huname == thetaname ) continue;
+		
+		vhuniv.push_back(hu);
 	}
 
 	// Calculate the HP error using leos method
@@ -520,4 +577,67 @@ void DrawErrorBand(TFile* f, TString mode, TLegend* leg, std::string inputmode){
 
 	leg->AddEntry(htemp,"Mean Flux","LF");
 	leg->AddEntry(hcv,"CV Flux","l");
+}
+// ------------------------------------------------------------------------------------------------------------
+// function to plot each neutrino flux on the same graph
+void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT, TString Gethist_TPC ){
+	TH1D *h_flux;
+	c->cd();
+	
+	// Check if sucessfully got histo
+	bool boolhist = GetHist(f1, h_flux, Gethist_TPC); if (boolhist == false) gSystem->Exit(0);
+	h_flux->SetDirectory(0);
+	
+	// Normalise flux by bin width (gives a flux/E [GeV])
+	for (int i=1;i<h_flux->GetNbinsX()+1;i++) {
+		h_flux->SetBinContent(i, h_flux->GetBinContent(i)/h_flux->GetBinWidth(i));		
+	}
+
+
+	// 6e20 POT, 50/1000 for 50 MeV from 1GeV, 1e-4 for m2->cm2
+	h_flux->Scale( (6.0e20)/ (fPOT*1.0e4) * (50./1000.) );  
+	
+
+	if (mode == "numu"){
+		h_flux->SetLineColor(kRed+1);
+		h_flux->SetLineWidth(2);
+		h_flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / 50 MeV / cm^{2}");
+		leg->AddEntry(h_flux, "#nu_{#mu}","l");
+		h_flux->Draw("hist,same");
+	}
+
+	else if (mode == "nue"){	
+		h_flux->SetLineColor(kRed+1);
+		h_flux->SetLineWidth(2);
+		h_flux->SetLineStyle(2);
+		h_flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / 50 MeV / cm^{2}");
+		leg->AddEntry(h_flux, "#nu_{e}","l");
+		h_flux->Draw("hist,same");
+
+	}
+	
+	else if (mode == "numubar"){
+		h_flux->SetLineColor(kBlue+1);
+		h_flux->SetLineWidth(2);
+		h_flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / 50 MeV / cm^{2}");
+		leg->AddEntry(h_flux, "#bar{#nu_{#mu}}","l");
+		h_flux->Draw("hist,same");
+	}
+	
+	else if (mode == "nuebar"){	
+		h_flux->SetLineColor(kBlue+1);
+		h_flux->SetLineWidth(2);
+		h_flux->SetLineStyle(2);
+		h_flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / 50 MeV / cm^{2}");
+		leg->AddEntry(h_flux, "#bar{#nu_{e}} ","l");
+		h_flux->Draw("hist,same");
+	
+	}
+	else std::cout << "unknown neutrino type ...."<<std::endl;
+	h_flux->GetXaxis()->SetRangeUser(0,6);
+	
+	gPad->SetLogy();
+	// gPad->Update();
+	
+
 }
