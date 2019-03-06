@@ -139,7 +139,7 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 	hratio->SetLineColor(kBlack);
 	hratio->SetMarkerStyle(7);
 	hratio->Draw("e1");
-	hratio->SetTitle(";E_{#nu} (GeV);Ratio to NOvA");
+	hratio->SetTitle(";E_{#nu} [GeV];Ratio to NOvA");
 	hratio->GetYaxis()->SetRangeUser(0.85, 1.15);
 	TLine* flat = new TLine(0, 1, 20, 1);
 	flat->SetLineStyle(7);
@@ -293,7 +293,7 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 		for (unsigned int l = 0; l < inputmode.size(); l++){
 			// herr[l]->Reset();
 			HPUncertainties_Leo(f1, herr[l], inputmode[l], mode);
-			legDraw(lfrac, herr[l], prodmode, mipp, inputmode[l], mode);
+			if (l == 11)legDraw(lfrac, herr[l], prodmode, mipp, inputmode[l], mode);
 		}
 		c4->Update();
 	}
@@ -348,9 +348,9 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 	// Update the error to add in the beamline uncertainties
 	// ------------------------------------------------------------------------------------------------------------
 	// Choose one of these
-	// BeamlineUncertainties(herr, hCV_Flux, "file"); // likely to not be implemented anymore
-	// BeamlineUncertainties(herr, hCV_Flux, "stdev");
-	BeamlineUncertainties(herr, hCV_Flux, "quad",mode);
+	BeamlineUncertainties(herr, hCV_Flux, "file",mode); // likely to not be implemented anymore
+	// BeamlineUncertainties(herr, hCV_Flux, "stdev",mode);
+	// BeamlineUncertainties(herr, hCV_Flux, "quad",mode);
 
 	// ------------------------------------------------------------------------------------------------------------
 	// Update the CV flux prediction to include stat+sys errors

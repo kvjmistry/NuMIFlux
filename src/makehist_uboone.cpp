@@ -53,6 +53,7 @@ int main(int argc, char** argv) {
 	InputTag  evtwght_tag { "eventweight" };
 
 	double totalPOT{0};
+	double Kaontotal{0};
 
 
 	vector<string> badfiles;
@@ -67,7 +68,7 @@ int main(int argc, char** argv) {
 		else {
 			std::cout << "FILE : " << argv[i] << std::endl; 
 			filename.push_back(string(argv[i]));
-			totalPOT+=100000; // 100 000 POT per dk2nu file
+			totalPOT+=100000; // 100 000 POT per dk2nu file 500 000 if running over nova files
 			filein->Close();
 		}
 	}
@@ -168,6 +169,11 @@ int main(int argc, char** argv) {
 		Enu_UW_Window[i] = new TH1D(Form("%s_unweighted_Window",flav[i].c_str()),"",n, bin);
 		Enu_UW_AV_TPC[i] = new TH1D(Form("%s_unweighted_AV_TPC",flav[i].c_str()),"",n, bin);
 
+		
+		// Use these for a finer binning
+		// Enu_CV_AV_TPC[i] = new TH1D(Form("%s_CV_AV_TPC",flav[i].c_str()),"",4000, 0, 20);
+		// Enu_UW_AV_TPC[i] = new TH1D(Form("%s_unweighted_AV_TPC",flav[i].c_str()),"",4000, 0, 20);
+
 		Th_CV_Window[i] = new TH1D(Form("Th_%s_CV_Window",flav[i].c_str()),"",n_th, bin_th); // Theta
 		Th_CV_AV_TPC[i] = new TH1D(Form("Th_%s_CV_AV_TPC",flav[i].c_str()),"",n_th, bin_th);
 
@@ -267,6 +273,8 @@ int main(int argc, char** argv) {
 			// Now get the momentums to calculate theta
 			double costheta = mctruth.GetNeutrino().Nu().Pz() / mctruth.GetNeutrino().Nu().P();
 			double theta = std::acos(costheta) * 180 / 3.14159265;
+			// Count the total Kaons
+			if (mcflux.fptype == 321 || mcflux.fptype == -321) Kaontotal+=mcflux.fnimpwt;
 			
 			if(EW) {
 
@@ -385,6 +393,9 @@ int main(int argc, char** argv) {
 	// ++++++++++++++++++++++++++++++++
 	// Plotting 
 	// ++++++++++++++++++++++++++++++++
+
+	// Spit out the total number of Kaons in the file
+	std::cout << "Kaon Total:\t" << Kaontotal << std::endl;
 
 	TFile* output = new TFile("output.root", "RECREATE");
 	TDirectory* savdir = gDirectory;

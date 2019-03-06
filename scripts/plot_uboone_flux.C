@@ -396,145 +396,165 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	// ------------------------------------------------------------------------------------------------------------
 	// Make a 4D Covariance matrix for re-weighing
 	// ------------------------------------------------------------------------------------------------------------
-	TCanvas *c4dcovA,*c4dcovB,*c4dcovC,*c4dcovD;
-	
-	c4dcovA= new TCanvas();
-	c4dcovB= new TCanvas();
-	c4dcovC= new TCanvas();
-	c4dcovD= new TCanvas();
-	
+	TCanvas* c_cov= new TCanvas();
+	c_cov->cd();
+
 	// Call caclulate covzriance matrix function. For now write function here.
-	TH1D *hu_Enu, *hu_Th, *hCV_Enu, *hCV_Th, *hu1, *hu2; 	// Flux hist for each universe
-	std::vector<TH2D*> cov4d;
-	cov4d.resize(4);
-
-	// Get the CV 2D matrix
-	boolhist = GetHist(f1, hCV_Enu, Gethist_TPC);   if (boolhist == false) gSystem->Exit(0);
-	boolhist = GetHist(f1, hCV_Th, Gethist_TPC_Th); if (boolhist == false) gSystem->Exit(0);
-
-	const int nbinsX = hCV_Enu->GetNbinsX();
-	const int nbinsY = hCV_Th->GetNbinsX();
-	double* edgesX = new double[nbinsX+1];
-	double* edgesY = new double[nbinsY+1];
-	int nuni{100};
-
+	TH1D *hCV2d, *hu, *hCV_unwrap, *hu_unwrap; 	// Flux hist for each universe
+	TH2D *cov4d;
+	TFile* f2d;
 	std::string mode_str;
 	if (mode == "numu") mode_str = "numu";
 	else if (mode == "numubar") mode_str = "numubar";
 	else if (mode == "nue") mode_str = "nue";
 	else mode_str = "numubar";
 
+	boolfile  = GetFile(f2d , "/uboone/data/users/kmistry/work/PPFX/uboone/with_tilt_2Dhists/output.root"); if (boolfile == false) gSystem->Exit(0);
 
-	// Get bin details
-	// Set bin widths to be the same as the CV FLux
-	for (int i=1; i<nbinsX+1; i++){
-		edgesX[i-1] = hCV_Enu->GetBinLowEdge(i);
-		std::cout << edgesX[i-1] << std::endl;}
+	// Get the CV 2D matrix
+	boolhist = GetHist(f2d, hCV2d, Gethist_TPC);   if (boolhist == false) gSystem->Exit(0);
+	const int nBinsEnu = hCV2d->GetXaxis()->GetNbins(); // Enu
+	const int nBinsTh = hCV2d->GetYaxis()->GetNbins(); // Theta
+	int nuni{100};
 	
-	for (int i=1; i<nbinsY+1.; i++){ 
-		edgesY[i-1] = hCV_Th->GetBinLowEdge(i);
-		std::cout << edgesY[i-1] << std::endl;}
-	
-	// Get last bin
-	edgesX[nbinsX] = hCV_Enu->GetBinLowEdge(nbinsX-1) + 2 * (hCV_Enu->GetBinWidth(nbinsX-1));
-	edgesY[nbinsY] = hCV_Th->GetBinLowEdge(nbinsY-1)  + 2 * (hCV_Th->GetBinWidth(nbinsY-1));
+	//------------------------------
+	// Normalise 2d hist by bin area / deg / GeV
+	// Loop over rows
+	for (int i=1; i<nBinsEnu+1; i++) {
 
-	// 4D Covariance matrix
-	for (int i = 0; i < 4; i++){ 
-		if (i == 0) cov4d[i]  = new TH2D(Form("PPFXMaster_%i_cov_4d",i), ";E_{#nu} [GeV];E_{#nu} [GeV]", nbinsX, edgesX, nbinsX, edgesX); // E E
-		if (i == 1) cov4d[i]  = new TH2D(Form("PPFXMaster_%i_cov_4d",i), ";Theta [deg];E_{#nu} [GeV]", nbinsY, edgesY, nbinsX, edgesX); // Theta E
-		if (i == 2) cov4d[i]  = new TH2D(Form("PPFXMaster_%i_cov_4d",i), ";E_{#nu} [GeV];Theta [deg]", nbinsX, edgesX, nbinsY, edgesY); // E Theta
-		if (i == 3) cov4d[i]  = new TH2D(Form("PPFXMaster_%i_cov_4d",i), ";Theta [deg];Theta [deg]", nbinsY, edgesY, nbinsY, edgesY); // Theta Theta
+		// Loop over columns
+		for (int j=1; j<nBinsTh+1; j++) {
+			hCV2d->SetBinContent(i,j, hCV2d->GetBinContent(i, j)/ ( hCV2d->GetXaxis()->GetBinWidth(i) * hCV2d->GetYaxis()->GetBinWidth(j) ));
+		}
+
+	} 
+	hCV2d->Scale((6.0e20)/ (2.5e8*1.0e4)); // scale to right POT and m2
+	//------------------------------
+	// Unwrap the histogram to binindex
+	hCV_unwrap = new TH1D("", "",nBinsEnu*nBinsTh, 0, nBinsEnu*nBinsTh );
+	int counter{0};
+	for (int i=1; i<nBinsEnu+1; i++) { // Loop over rows
+		for (int j=1; j<nBinsTh+1; j++){// Loop over columns
+			counter++;
+			hCV_unwrap->SetBinContent(counter, hCV2d->GetBinContent(i , j)  );
+		}
 	}
-
-	// Normalise flux by bin width 
-	for (int i=1;i<hCV_Enu->GetNbinsX()+1;i++) 
-		hCV_Enu->SetBinContent(i, hCV_Enu->GetBinContent(i)/hCV_Enu->GetBinWidth(i));	
-
-	for (int i=1;i<hCV_Th->GetNbinsX()+1;i++) 
-		hCV_Th->SetBinContent(i, hCV_Th->GetBinContent(i)/hCV_Th->GetBinWidth(i));	
+	//------------------------------
+	// 4D Covariance matrix	
+	cov4d  = new TH2D(Form("PPFXMaster_cov_4d"), ";Bin i; Bin j", nBinsEnu*nBinsTh, 0, nBinsEnu*nBinsTh , nBinsEnu*nBinsTh, 0, nBinsEnu*nBinsTh); // Bin i  Bin j
 
 	// Loop over universes
 	for (int k=0; k < nuni; k++) {
-		char name_Enu[500];
-		snprintf(name_Enu, 500,"%s/PPFXMaster/Active_TPC_Volume/%s_PPFXMaster_Uni_%i_AV_TPC" ,mode_str.c_str(), mode_str.c_str(), k); // Get Enu uni i
-
-		char name_Th[500];
-		snprintf(name_Th, 500,"%s/PPFXMaster/Active_TPC_Volume/Th_%s_PPFXMaster_Uni_%i_AV_TPC" ,mode_str.c_str(), mode_str.c_str(), k); // Get Th Uni i
+		char name[500];
+		snprintf(name, 500,"%s/PPFXMaster/Active_TPC_Volume/%s_PPFXMaster_Uni_%i_AV_TPC" ,mode_str.c_str(), mode_str.c_str(), k); // Get uni i
+		
 		
 		// Check if sucessfully got histo
-		boolhist = GetHist(f1, hu_Enu, name_Enu); if (boolhist == false) gSystem->Exit(0);
-		boolhist = GetHist(f1, hu_Th, name_Th);   if (boolhist == false) gSystem->Exit(0);
-
-		// Normalise new universe by bin width
-		for (int i=1;i<hu_Enu->GetNbinsX()+1;i++) 
-			hu_Enu->SetBinContent(i, hu_Enu->GetBinContent(i)/hu_Enu->GetBinWidth(i));	
-
-		for (int i=1;i<hu_Th->GetNbinsX()+1;i++) 
-			hu_Th->SetBinContent(i, hu_Th->GetBinContent(i)/hu_Th->GetBinWidth(i));	
-
-		// Loop over dimentions
-		for (int l=0; l<4; l++) {
-			
-			int nbins_one, nbins_two;
-			if (l == 0) {
-				nbins_one = nbinsX;
-				nbins_two = nbinsX;
-				hu1 = hCV_Enu; // CV E
-				hu2 = hu_Enu;  // Uni E
+		boolhist = GetHist(f2d, hu, name); if (boolhist == false) gSystem->Exit(0);
+		//------------------------------
+		// Normalise 2d hist by bin area / deg / GeV
+		// Loop over rows
+		for (int p=1; p<nBinsEnu+1; p++) {
+			// Loop over columns
+			for (int q=1; q<nBinsTh+1; q++) {
+				hu->SetBinContent(p,q, hu->GetBinContent(p, q)/ ( hu->GetXaxis()->GetBinWidth(p) * hu->GetYaxis()->GetBinWidth(q) ));
 			}
-			if (l == 1) {
-				nbins_one = nbinsY;
-				nbins_two = nbinsX;
-				hu1 = hCV_Th; // CV Th
-				hu2 = hu_Enu;  // Uni E
+		} 
+		hu->Scale((6.0e20)/ (2.5e8*1.0e4)); // scale to right POT and m2
+		//------------------------------
+		// Unwrap the histogram to binindex
+		hu_unwrap = new TH1D("", "",nBinsEnu*nBinsTh, 0, nBinsEnu*nBinsTh );
+
+		counter = 0;
+		// Loop over rows
+		for (int i=1; i<nBinsEnu+1; i++) { 
+			// Loop over columns
+			for (int j=1; j<nBinsTh+1; j++){ 
+				counter ++;
+				hu_unwrap->SetBinContent( counter, hu->GetBinContent(i , j)  );
 			}
-			if (l == 2) {
-				nbins_one = nbinsX;
-				nbins_two = nbinsY;
-				hu1 = hCV_Enu; // CV E
-				hu2 = hu_Th;  // Uni Th
-			}
-			if (l == 3) {
-				nbins_one = nbinsY;
-				nbins_two = nbinsY;
-				hu1 = hCV_Th; // CV Th
-				hu2 = hu_Th;  // Uni E
-			}
+		}
+		//------------------------------
+		// Now calculate the covariance matrix
+		CalcCovariance_4D(cov4d, hCV_unwrap, hu_unwrap, nBinsEnu*nBinsTh, nBinsEnu*nBinsTh, k  );
 
-			CalcCovariance_4D(cov4d[l], hu1, hu2, nbins_one, nbins_two, k  );
+	} // End cov calc for universe i
+	
+	cov4d->SetTitle("4D Covariance Matrix ; Bin i; Bin j");
+	cov4d->Draw("colz");
+	gPad->SetLogz();
+	gPad->Update();
+
+	//------------------------------
+	// Calculate the correlation matrix
+	TCanvas *c_corr4d = new TCanvas();
+	c_corr4d->cd();
+	TH2D *hcorr4d = (TH2D*) cov4d->Clone("hCorr4d");
+	CalcCorrelation(hcorr4d, cov4d, nBinsEnu*nBinsTh );
+	hcorr4d->SetTitle("4D Correlation Matrix ; Bin i; Bin j");
+	hcorr4d->Draw("colz");
+	gPad->SetLogz();
+	gPad->Update();
+	//------------------------------
+	// Calculate the fractional covariance matrix
+	TCanvas *c_fraccov4d = new TCanvas();
+	c_fraccov4d->cd();
+	TH2D *hfraccov4d = (TH2D*) cov4d->Clone("hfraccov4d");
+	CalcFracCovariance(hCV_unwrap, hfraccov4d, nBinsEnu*nBinsTh );
+	hfraccov4d->SetTitle("4D Fractional Covariance Matrix ; Bin i; Bin j");
+	hfraccov4d->Draw("colz");
+	gPad->SetLogz();
+	gPad->Update();
+
+	//------------------------------
+	// Create a histogram with the bin indexes
+	TCanvas *c_binidx = new TCanvas();
+	c_binidx->cd();
+	TH2D *hbinidx = (TH2D*) hCV2d->Clone("hCVClone");
+	counter = 0;
+	// Loop over rows
+	for (int i=1; i<nBinsEnu+1; i++) {  // Enu
+		// Loop over columns
+		for (int j=1; j<nBinsTh+1; j++){ // Theta
+			counter ++;
+			hbinidx->SetBinContent( i, j, counter );
+		}
+	}
+	hbinidx->SetTitle("Bin Indexes; Energy [GeV]; Theta [deg]");
+	hbinidx->Draw("text00");
+	gPad->SetLogx();
+	gPad->Update();
 
 
-		} // End cov calc for universe i
-		hu_Enu->Reset();
-		hu_Th->Reset();
+	// ------------------------------------------------------------------------------------------------------------
+	// Compare the percentage difference between the mean and the CV in each unwrapped histogram bin
+	// ------------------------------------------------------------------------------------------------------------
+	TCanvas *cMeanCV = new TCanvas();
+	TH1D* hRatioCVMean;
+	TH1D *hMean_unwrap = (TH1D*) hCV_unwrap->Clone("hMean_unwrap");
+	CalcMeanHist(f2d, hMean_unwrap, nBinsEnu, nBinsTh,mode);
 
+	// Now call a function that calcuates the ratio between them
+	CalcRatioMeanCV(hCV_unwrap, hMean_unwrap, hRatioCVMean);
+
+	// Fill a histogram with the Ratio values to better visualise
+	TH1D* hRatioMeanCVHist = new TH1D("hRatioMeanCVHist", "Ratio CV to Mean; Ratio; Entries", 30, 0.6, 1.4);
+
+	for (unsigned int i =1; i <  hRatioCVMean->GetNbinsX()+1; i++ ){
+		if (hRatioCVMean->GetBinContent(i) == 0) continue;
+		hRatioMeanCVHist->Fill(hRatioCVMean->GetBinContent(i));
 	}
 
 
-	// cov4d[1]->GetXaxis()->SetRangeUser(20,125);
-	// cov4d[2]->GetYaxis()->SetRangeUser(20,125);
-	// cov4d[3]->GetXaxis()->SetRangeUser(20,125);
-	// cov4d[3]->GetYaxis()->SetRangeUser(20,125);
-	
-	c4dcovA->cd();
-	cov4d[0]->Draw("colz");
-	gPad->SetLogz();
-	gPad->Update();
-	c4dcovB->cd();
-	cov4d[1]->Draw("colz");
-	gPad->SetLogz();
-	gPad->Update();
-
-	c4dcovC->cd();
-	cov4d[2]->Draw("colz");
-	gPad->SetLogz();
-	gPad->Update();
-
-	c4dcovD->cd();
-	cov4d[3]->Draw("colz");
-	gPad->SetLogz();
-	gPad->Update();
+	// hCV_unwrap->Draw("hist");
+	// hMean_unwrap->Draw("histsame");
+	hRatioCVMean->Draw("E2");
+	hRatioMeanCVHist->SetLineWidth(2);
+	hRatioMeanCVHist->SetLineColor(kBlack);
+	// hRatioMeanCVHist->Draw("hist");
+	// TLine* flat = new TLine(0, 1, 400, 1);
+	// flat->SetLineStyle(7);
+	// flat->Draw();
 
 
 	// ------------------------------------------------------------------------------------------------------------
@@ -621,6 +641,9 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 			c4->Print("plots/Fractional_Uncertainties_NuMu_MIPPOff.pdf");
 			c_uw_v_w->Print("plots/Unweighted_vs_ppfx_NuMu_MIPPOff.pdf");
 			if (wplot == "wplot") c5->Print("plots/Weightplot_NuMu_MIPPOff.pdf");
+			cov4d->Print("plots/CovarianceMarix4D_NuMu_MIPPOff.pdf");			
+			c_corr4d->Print("plots/CorrelationMarix4D_NuMu_MIPPOff.pdf");
+			hfraccov4d->Print("plots/FracCovarianceMarix4D_NuMu_MIPPOff.pdf");
 			std::cout << "\n"<< std::endl;
 		}
 		else if (mode == "nue"){
@@ -629,6 +652,9 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 			c4->Print("plots/Fractional_Uncertainties_Nue_MIPPOff.pdf");
 			c_uw_v_w->Print("plots/Unweighted_vs_ppfx_Nue_MIPPOff.pdf");
 			if (wplot == "wplot") c5->Print("plots/Weightplot_Nue_MIPPOff.pdf");
+			cov4d->Print("plots/CovarianceMarix4D_Nue_MIPPOff.pdf");
+			c_corr4d->Print("plots/CorrelationMarix4D_Nue_MIPPOff.pdf");
+			hfraccov4d->Print("plots/FracCovarianceMarix4D_Nue_MIPPOff.pdf");
 			std::cout << "\n"<< std::endl;
 
 		}
@@ -638,6 +664,9 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 			c4->Print("plots/Fractional_Uncertainties_Numubar_MIPPOff.pdf");
 			c_uw_v_w->Print("plots/Unweighted_vs_ppfx_Numubar_MIPPOff.pdf");
 			if (wplot == "wplot") c5->Print("plots/Weightplot_NuMubar_MIPPOff.pdf");
+			cov4d->Print("plots/CovarianceMarix4D_Numubar_MIPPOff.pdf");
+			c_corr4d->Print("plots/CorrelationMarix4D_Numubar_MIPPOff.pdf");
+			hfraccov4d->Print("plots/FracCovarianceMarix4D_Numubar_MIPPOff.pdf");
 			std::cout << "\n"<< std::endl;
 
 		}
@@ -647,6 +676,9 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 			c4->Print("plots/Fractional_Uncertainties_Nuebar_MIPPOff.pdf");
 			c_uw_v_w->Print("plots/Unweighted_vs_ppfx_Nuebar_MIPPOff.pdf");
 			if (wplot == "wplot") c5->Print("plots/Weightplot_Nuebar_MIPPOff.pdf");
+			cov4d->Print("plots/CovarianceMarix4D_Nuebar_MIPPOff.pdf");
+			c_corr4d->Print("plots/CorrelationMarix4D_Nuebar_MIPPOff.pdf");
+			hfraccov4d->Print("plots/FracCovarianceMarix4D_Nue_MIPPOff.pdf");
 			std::cout << "\n"<< std::endl;
 
 		}

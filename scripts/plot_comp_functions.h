@@ -307,21 +307,66 @@ void CalcCovariance(std::string inputmode,TString Cov_names, TFile* f, TH2D* &co
 	}
 }
 // ------------------------------------------------------------------------------------------------------------
+// Function to calculate the correlation matrix
+void CalcCorrelation(TH2D* &cor, TH2D* &cov, int nbins ){
+	std::cout << "Calculating Correlation Matrix" << std::endl;
+	double cor_bini;
+	// loop over rows
+	for (int i=1; i<nbins+1; i++) {
+		double cii = cov->GetBinContent(i, i);
+
+		// Loop over columns
+		for (int j=1; j<nbins+1; j++) {
+			double cjj = cov->GetBinContent(j, j);
+			double n = sqrt(cii * cjj);
+
+			// Catch Zeros, set to arbitary 1.0
+			if (n == 0) cor_bini = 0;
+			else cor_bini = cov->GetBinContent(i, j) / n;
+
+			cor->SetBinContent(i, j, cor_bini );
+		}
+	}
+}
+// ------------------------------------------------------------------------------------------------------------
+// Function to calculate the fractional covariance matrix
+void CalcFracCovariance(TH1D* &hCV, TH2D* &frac_cov, int nbins ){
+	std::cout << "Calculating Fractional Covariance Matrix" << std::endl;
+	double setbin;
+
+	// loop over rows
+	for (int i=1; i<nbins+1; i++) {
+		double cii = hCV->GetBinContent(i);
+
+		// Loop over columns
+		for (int j=1; j<nbins+1; j++) {
+			double cjj = hCV->GetBinContent(j);
+			double n = cii * cjj;
+
+			// Catch Zeros, set to arbitary 1.0
+			if (n == 0) setbin = 0;
+			else setbin = frac_cov->GetBinContent(i, j) / n;
+
+			frac_cov->SetBinContent(i, j, setbin );
+		}
+	}
+}
+// ------------------------------------------------------------------------------------------------------------
 // Use this for covariance calculation in 4d
-void CalcCovariance_4D(TH2D* &cov, TH1D* hCV, TH1D* &hu, int &nbinsX, int &nbinsY, int k  ){
+void CalcCovariance_4D(TH2D* &cov, TH1D* &hCV, TH1D* &hu, const int &nbinsX, const int &nbinsY, int k  ){
 
 	int nuni{100};
 	// Loop over rows
 	for (int i=1; i<nbinsX+1; i++) {
 
-		double cvi = hCV->GetBinContent(i); // CV bin i
+		double cvi = hCV->GetBinContent(i);   // CV bin i
 		double uvi = hu->GetBinContent(i);    // Univ bin i 
 
 		// Loop over columns
 		for (int j=1; j<nbinsY+1; j++) {
 			
 			double cvj = hCV->GetBinContent(j); // CV bin j
-			double uvj = hu->GetBinContent(j);    // Univ bin j 
+			double uvj = hu->GetBinContent(j);  // Univ bin j 
 			double c = (uvi - cvi) * (uvj - cvj); 
 
 			if (k != nuni - 1) cov->SetBinContent(i, j, cov->GetBinContent(i, j) + c ); // Fill with variance 
@@ -641,3 +686,105 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
 	
 
 }
+// ------------------------------------------------------------------------------------------------------------
+// Function to calculate the mean 2d histogram from the multisim variations and retun the unwarapped version
+void CalcMeanHist(TFile* fIn, TH1D* &hMean_unwrap, int nBinsEnu, int nBinsTh, TString mode){
+	std::cout << "Calculating the Mean universe"<<std::endl;
+	// Convert TString to a std::string
+	std::string mode_str;
+	if (mode == "numu") mode_str = "numu";
+	else if (mode == "numubar") mode_str = "numubar";
+	else if (mode == "nue") mode_str = "nue";
+	else mode_str = "numubar";
+
+	std::vector<TH1D*> vhuniv;
+	TH2D* hu;
+	TH1D* hu_unwrap;
+
+	// Get the universe histograms
+	TDirectory *udir = fIn->GetDirectory(Form("%s/%s/Active_TPC_Volume", mode_str.c_str(), "PPFXMaster"));
+	TIter next(udir->GetListOfKeys());
+	TKey* key;
+	int i{0};
+	double counter;
+
+	// Loop over the directory and grab each histo from each uni
+	while((key= (TKey*)next())){
+		TClass* cl = gROOT->GetClass(key->GetClassName());
+		if(!cl->InheritsFrom("TH2D"))continue; // if not a TH2D skip
+
+		hu = (TH2D*)key->ReadObj(); // Get the histogram
+		i=vhuniv.size()-1;
+		
+		// Veto theta histograms
+		std::string huname = hu->GetName();
+		std::string thetaname = Form("Th_%s_PPFXMaster_Uni_%i_AV_TPC", mode_str.c_str(), i);
+		if ( huname == thetaname ) continue;
+
+		// Normalise 2d hist by bin area / deg / GeV
+		// Loop over rows
+		for (int p=1; p<nBinsEnu+1; p++) {
+			// Loop over columns
+			for (int q=1; q<nBinsTh+1; q++) {
+				hu->SetBinContent(p,q, hu->GetBinContent(p, q)/ ( hu->GetXaxis()->GetBinWidth(p) * hu->GetYaxis()->GetBinWidth(q) ));
+			}
+		} 
+		hu->Scale((6.0e20)/ (2.5e8*1.0e4)); // scale to right POT and m2
+
+		// Unwrap the histogram to binindex
+		hu_unwrap = new TH1D("", "",nBinsEnu*nBinsTh, 0, nBinsEnu*nBinsTh );
+
+		counter = 0;
+		// Loop over rows
+		for (int i=1; i<nBinsEnu+1; i++) { 
+			// Loop over columns
+			for (int j=1; j<nBinsTh+1; j++){
+				counter ++;
+				hu_unwrap->SetBinContent( counter, hu->GetBinContent(i , j)  );
+			}
+		}
+		
+		// Push back to vector
+		vhuniv.push_back(hu_unwrap);
+	}
+
+	// Now get the mean universe
+	hMean_unwrap = getBand(vhuniv); 
+
+}
+// ------------------------------------------------------------------------------------------------------------
+// Function to caluclate the bias matrix from the mean and CV to correct for in the covariance matrix
+void CalcBias(TH2D* &hBias, TH1D* hMean_unwrap, TH1D* hCV_unwrap, int nbins){
+	std::cout << "Calculating the Bias Covariance Matrix"<<std::endl;
+	// Loop over rows
+	for (int i=1; i<nbins+1; i++) {
+		double cvi = hCV_unwrap->GetBinContent(i);  // CV bin i 
+		double mi  = hMean_unwrap->GetBinContent(i); // mean bin i
+		
+		// Loop over columns
+		for (int j=1; j<nbins+1; j++) {
+			double cvj = hCV_unwrap->GetBinContent(j);  // CV bin i 
+			double mj  = hMean_unwrap->GetBinContent(j); // mean bin i
+			double c   = (mi - cvi) * (mj - cvj); 
+			
+			hBias->SetBinContent(i, j, c);
+		}
+
+	}
+
+}
+// ------------------------------------------------------------------------------------------------------------
+// Function that calculates the percentage differnece between the CV and mean
+void CalcRatioMeanCV(TH1D* hCV, TH1D *hMean, TH1D* &hRatioCVMean){
+
+	std::cout << "Calculating the Ratio of CV to Mean"<<std::endl;
+	hRatioCVMean = (TH1D*) hCV->Clone("hratioCVMean");
+	hRatioCVMean->Divide(hMean);
+	hRatioCVMean->SetLineColor(kBlack);
+	hRatioCVMean->SetMarkerStyle(7);
+	// hRatioCVMean->SetMarkerSize(3);
+	hRatioCVMean->SetTitle(";Bin i;Ratio of CV to Mean");
+	// hRatioCVMean->GetYaxis()->SetRangeUser(0.85, 1.15);
+
+}
+// ------------------------------------------------------------------------------------------------------------
