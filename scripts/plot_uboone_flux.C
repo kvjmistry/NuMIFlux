@@ -279,12 +279,13 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 		for (int i=1; i<nbins+1; i++) {
 			cii = cov[l]->GetBinContent(i, i);
 
-			// Catch zeros , set to arbitary 1.0
-			if (horig->GetBinContent(i) <= 0) horig_cont = 1.0;
-			else horig_cont = horig->GetBinContent(i);
+			// // Catch zeros , set to arbitary 1.0
+			// if (horig->GetBinContent(i) <= 0) horig_cont = 1.0;
+			// else horig_cont = horig->GetBinContent(i);
 
-			herr[l]->SetBinContent(i, sqrt(cii) / horig_cont);
-
+			if (horig->GetBinContent(i) == 0) herr[l]->SetBinContent(i, 0);
+			else herr[l]->SetBinContent(i, sqrt(cii) / horig->GetBinContent(i));
+			
 			// Loop over columns
 			for (int j=1; j<nbins+1; j++) {
 				cjj = cov[l]->GetBinContent(j, j);
@@ -396,9 +397,6 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	// ------------------------------------------------------------------------------------------------------------
 	// Make a 4D Covariance matrix for re-weighing
 	// ------------------------------------------------------------------------------------------------------------
-	TCanvas* c_cov= new TCanvas();
-	c_cov->cd();
-
 	// Call caclulate covzriance matrix function. For now write function here.
 	TH1D *hCV2d, *hu, *hCV_unwrap, *hu_unwrap; 	// Flux hist for each universe
 	TH2D *cov4d;
@@ -439,6 +437,23 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 			hCV_unwrap->SetBinContent(counter, hCV2d->GetBinContent(i , j)  );
 		}
 	}
+
+	// Draw the CV Unwrapped
+	TCanvas* c_CV_unwrap= new TCanvas();
+	c_CV_unwrap->cd();
+	hCV_unwrap->SetTitle("CV Unwrapped; Bin index; Flux ");
+	hCV_unwrap->SetLineWidth(2);
+	hCV_unwrap->SetLineColor(kBlack);
+	hCV_unwrap->Draw("hist");
+
+	// Draw the CV in 2D
+	TCanvas* c_CV2d= new TCanvas();
+	c_CV2d->cd();
+	hCV2d->SetTitle("CV 2D; Energy [GeV]; Theta [deg] ");
+	gPad->SetLogz();
+	gPad->Update();
+	hCV2d->Draw("colz");
+
 	//------------------------------
 	// 4D Covariance matrix	
 	cov4d  = new TH2D(Form("PPFXMaster_cov_4d"), ";Bin i; Bin j", nBinsEnu*nBinsTh, 0, nBinsEnu*nBinsTh , nBinsEnu*nBinsTh, 0, nBinsEnu*nBinsTh); // Bin i  Bin j
@@ -480,7 +495,10 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 
 	} // End cov calc for universe i
 	
+	TCanvas* c_cov= new TCanvas();
+	c_cov->cd();
 	cov4d->SetTitle("4D Covariance Matrix ; Bin i; Bin j");
+	gStyle->SetPalette(kDeepSea);
 	cov4d->Draw("colz");
 	gPad->SetLogz();
 	gPad->Update();
@@ -493,8 +511,8 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	CalcCorrelation(hcorr4d, cov4d, nBinsEnu*nBinsTh );
 	hcorr4d->SetTitle("4D Correlation Matrix ; Bin i; Bin j");
 	hcorr4d->Draw("colz");
-	gPad->SetLogz();
-	gPad->Update();
+	// gPad->SetLogz();
+	// gPad->Update();
 	//------------------------------
 	// Calculate the fractional covariance matrix
 	TCanvas *c_fraccov4d = new TCanvas();
@@ -503,8 +521,6 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	CalcFracCovariance(hCV_unwrap, hfraccov4d, nBinsEnu*nBinsTh );
 	hfraccov4d->SetTitle("4D Fractional Covariance Matrix ; Bin i; Bin j");
 	hfraccov4d->Draw("colz");
-	gPad->SetLogz();
-	gPad->Update();
 
 	//------------------------------
 	// Create a histogram with the bin indexes
@@ -527,7 +543,7 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 
 
 	// ------------------------------------------------------------------------------------------------------------
-	// Compare the percentage difference between the mean and the CV in each unwrapped histogram bin
+	// Compare the percentage difference between the mean and the CV in each unwrapped histogram bin right now we output the pull
 	// ------------------------------------------------------------------------------------------------------------
 	TCanvas *cMeanCV = new TCanvas();
 	TH1D* hRatioCVMean;
@@ -539,22 +555,38 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 
 	// Fill a histogram with the Ratio values to better visualise
 	TH1D* hRatioMeanCVHist = new TH1D("hRatioMeanCVHist", "Ratio CV to Mean; Ratio; Entries", 30, 0.6, 1.4);
+	TH1D* hPull = new TH1D("hPull", "CV - Mean / (stdev/#sqrt{n}); Pull; Entries", 25,-10, 10); // histogram with the pull 
 
+	// Get rid of zeros
 	for (unsigned int i =1; i <  hRatioCVMean->GetNbinsX()+1; i++ ){
 		if (hRatioCVMean->GetBinContent(i) == 0) continue;
 		hRatioMeanCVHist->Fill(hRatioCVMean->GetBinContent(i));
 	}
 
+	CalcPull(hCV_unwrap, hMean_unwrap, hPull);
+	hPull->Draw("hist");
 
 	// hCV_unwrap->Draw("hist");
 	// hMean_unwrap->Draw("histsame");
-	hRatioCVMean->Draw("E2");
-	hRatioMeanCVHist->SetLineWidth(2);
-	hRatioMeanCVHist->SetLineColor(kBlack);
+	// hRatioCVMean->Draw("E2");
+	// hRatioMeanCVHist->SetLineWidth(2);
+	// hRatioMeanCVHist->SetLineColor(kBlack);
 	// hRatioMeanCVHist->Draw("hist");
 	// TLine* flat = new TLine(0, 1, 400, 1);
 	// flat->SetLineStyle(7);
 	// flat->Draw();
+
+	// ------------------------------------------------------------------------------------------------------------
+	// Make a plot of the fractional uncertainties from the 4d covariance matrix
+	// ------------------------------------------------------------------------------------------------------------
+	TCanvas *c_FracError4d = new TCanvas();
+	TH1D *hFracError4d = (TH1D*) hCV_unwrap->Clone("hFracError4d");
+
+	// Function to caluclate the fractional uncertainties
+	CalcFractionalError(cov4d, hCV_unwrap, hFracError4d );
+	
+	hFracError4d->Draw("hist");
+
 
 
 	// ------------------------------------------------------------------------------------------------------------
