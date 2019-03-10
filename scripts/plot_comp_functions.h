@@ -782,9 +782,41 @@ void CalcRatioMeanCV(TH1D* hCV, TH1D *hMean, TH1D* &hRatioCVMean){
 	hRatioCVMean->Divide(hMean);
 	hRatioCVMean->SetLineColor(kBlack);
 	hRatioCVMean->SetMarkerStyle(7);
-	// hRatioCVMean->SetMarkerSize(3);
+	// hRatioCVMean->SetMarkerSize(3);.q
 	hRatioCVMean->SetTitle(";Bin i;Ratio of CV to Mean");
 	// hRatioCVMean->GetYaxis()->SetRangeUser(0.85, 1.15);
 
+}
+// ------------------------------------------------------------------------------------------------------------
+// Function that calculates the Pull
+void CalcPull(TH1D* hCV, TH1D *hMean, TH1D* &hPull){
+
+	std::cout << "Calculating the Pull"<<std::endl;
+	
+	for (unsigned int i = 1; i< hCV->GetNbinsX() + 1; i++)
+		hPull->Fill( (hCV->GetBinContent(i) - hMean->GetBinContent(i) )/ (hMean->GetBinError(i)/sqrt(100))  );
+	
+	hPull->SetLineWidth(2);
+	hPull->SetLineColor(kBlack);
+}
+// ------------------------------------------------------------------------------------------------------------
+// Function to caluclate the fractional error 
+void CalcFractionalError(TH2D* cov4d, TH1D* hCV, TH1D* &hFracError4d ){
+
+	std::cout << "Calculating the 4D Fractional Covariance Matrix"<<std::endl;
+
+	int nbins = cov4d->GetXaxis()->GetNbins(); // Get the number of bins
+
+	// Loop over rows
+	for (int i=1; i<nbins+1; i++) {
+		double cii = cov4d->GetBinContent(i, i); // Get diag
+
+		if (hCV->GetBinContent(i) == 0) hFracError4d->SetBinContent(i, 0); // catch dividing by zero
+		else hFracError4d->SetBinContent(i, sqrt(cii) / hCV->GetBinContent(i));
+
+	}
+	hFracError4d->SetTitle("4d Covariance Matrix Fractional Error; Bin index; Fractional Error");
+	hFracError4d->SetLineColor(kBlack);
+	hFracError4d->SetLineWidth(2);
 }
 // ------------------------------------------------------------------------------------------------------------

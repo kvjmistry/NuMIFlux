@@ -5,15 +5,19 @@
 double GetWeight(int universe, TH2D* hCV2d , int index, double Enu, double Theta)){
     
     double weight;
-    TH2D* hBeamine2d, *hHP2d;
+    TH2D *hBeamine2d, *hBeamine2dnue, *hBeamine2dnuebar, *hHP2d, *hHP2dnue ,*hHP2dnuebar;
     TFile *fBeamline, *fCV;
 
     // if index is 0 then we are running over HP
     // get histogram from fCV for Masterweight PPFX universe i and divide out  by the cv
     if (index == 1){
         bool boolfile  = GetFile(fCV , "/uboone/data/users/kmistry/work/PPFX/uboone/with_tilt_2Dhists/output.root"); if (boolfile == false) gSystem->Exit(0);
-        bool boolhist = GetHist(fCV, hHP2d, Form("nue/PPFXMaster/Active_TPC_Volume/nue_PPFXMaster_Uni_%i_AV_TPC"), universe); if (boolhist == false) gSystem->Exit(0);
+        bool boolhist = GetHist(fCV, hHP2dnue, Form("nue/PPFXMaster/Active_TPC_Volume/nue_PPFXMaster_Uni_%i_AV_TPC"), universe); if (boolhist == false) gSystem->Exit(0);
+        boolhist = GetHist(fCV, hHP2dnuebar, Form("nuebar/PPFXMaster/Active_TPC_Volume/nuebar_PPFXMaster_Uni_%i_AV_TPC"), universe); if (boolhist == false) gSystem->Exit(0);
         
+        hHP2d = (TH2D*) hHP2dnue->Clone("hHP2d");
+	    hHP2d->Add(hHP2dnuebar); // Combine the fluxes
+
         TH2D* hRatio = (TH2D*) hHP2d->Clone("hRatio");
         hRatio->Divide(hCV2d); // Divide the histogram
         fCV->Close();
@@ -22,9 +26,13 @@ double GetWeight(int universe, TH2D* hCV2d , int index, double Enu, double Theta
     else if (index > 1) {
 
         bool boolfile  = GetFile(fBeamline , Form("/uboone/data/users/kmistry/work/PPFX/uboone/with_tilt_2Dhists/beamline/output%i.root", index+7)); if (boolfile == false) gSystem->Exit(0);
-        bool boolhist = GetHist(fBeamline, hBeamline2d, "nue/nue_CV_AV_TPC"); if (boolhist == false) gSystem->Exit(0);
+        bool boolhist = GetHist(fBeamline, hBeamline2dnue, "nue/nue_CV_AV_TPC"); if (boolhist == false) gSystem->Exit(0);
+        boolhist = GetHist(fCV, hBeamline2dnuebar, "nuebar/nuebar_CV_AV_TPC"); if (boolhist == false) gSystem->Exit(0);
         
-        TH2D* hRatio = (TH2D*) h hBeamline2d->Clone("hRatio");
+        hBeamline2d = (TH2D*) hBeamline2dnue->Clone("hBeamline2d");
+	    hBeamline2d->Add(hBeamline2dnuebar); // Combine the fluxes
+
+        TH2D* hRatio = (TH2D*) hBeamline2d->Clone("hRatio");
         hRatio->Divide(hCV2d); // Divide the histogram
         fBeamline->Close();
     }
@@ -42,13 +50,19 @@ double GetWeight(int universe, TH2D* hCV2d , int index, double Enu, double Theta
 double IntegrateFlux(int universe, TFile* fCV, int index){
 
     double flux{0};
+    TH2D *hBeamine2d, *hBeamine2dnue, *hBeamine2dnuebar, *hHP2d, *hHP2dnue ,*hHP2dnuebar, *hCV2dnue, *hCV2dnuebar, *hCV2d;
 
     // if index is 0 then we are running over HP
     // get histogram from fCV for Masterweight PPFX universe i and divide out  by the cv
     if (index == 1){
 
-        bool boolhist = GetHist(fCV, hHP2d, Form("nue/PPFXMaster/Active_TPC_Volume/nue_PPFXMaster_Uni_%i_AV_TPC"), universe); if (boolhist == false) gSystem->Exit(0);
+        bool boolhist = GetHist(fCV, hHP2dnue, Form("nue/PPFXMaster/Active_TPC_Volume/nue_PPFXMaster_Uni_%i_AV_TPC"), universe); if (boolhist == false) gSystem->Exit(0);
+        boolhist = GetHist(fCV, hHP2dnuebar, Form("nuebar/PPFXMaster/Active_TPC_Volume/nuebar_PPFXMaster_Uni_%i_AV_TPC"), universe); if (boolhist == false) gSystem->Exit(0);
+        boolhist = GetHist(fCV, hHP2dnuebar, Form("nuebar/PPFXMaster/Active_TPC_Volume/nuebar_PPFXMaster_Uni_%i_AV_TPC"), universe); if (boolhist == false) gSystem->Exit(0);
         
+        hHP2d = (TH2D*) hHP2dnue->Clone("hHP2d");
+	    hHP2d->Add(hHP2dnuebar); // Combine the fluxes
+
         flux  = hHP2d->Integral(0, 20, 0, 180); // Integrate over whole phase space
     }
     // else we have a beamline variations indexes from 1 to N
@@ -58,14 +72,22 @@ double IntegrateFlux(int universe, TFile* fCV, int index){
 
         // Get the CV histogram in 2D
         bool boolhist = GetHist(fBeamline, hBeamline2d, "nue/nue_CV_AV_TPC"); if (boolhist == false) gSystem->Exit(0);
+        boolhist = GetHist(fCV, hBeamline2dnuebar, "nuebar/nuebar_CV_AV_TPC"); if (boolhist == false) gSystem->Exit(0);
         
+        hBeamline2d = (TH2D*) hBeamline2dnue->Clone("hBeamline2d");
+	    hBeamline2d->Add(hBeamline2dnuebar); // Combine the fluxes
+
         flux  = hBeamline2d->Integral(0, 20, 0, 180); // Integrate over whole phase space
 
         fBeamline->Close();
     }
     else { // CV
-        bool boolhist = GetHist(fCV, hCV2d, "nue/nue_CV_AV_TPC"); if (boolhist == false) gSystem->Exit(0);
-        
+        bool boolhist = GetHist(fCV, hCV2dnue, "nue/nue_CV_AV_TPC"); if (boolhist == false) gSystem->Exit(0);
+        boolhist = GetHist(fCV, hCV2dnuebar, "nuebar/nuebar_CV_AV_TPC"); if (boolhist == false) gSystem->Exit(0);
+
+        hCV2d = (TH2D*) hCV2dnue->Clone("hCV2d");
+        hCV2d->Add(hCV2dnuebar); // Combine the fluxes
+
         flux  = hCV2d->Integral(0, 20, 0, 180); // Integrate over whole phase space
 
     }
@@ -124,4 +146,6 @@ ReadEvents(const char *filename, std::vector<int> &N_evtnum ){
 		fileIN.close();
 	}
 }
+// ------------------------------------------------------------------------------------------------------------
+// Function to convert detector co-ords to beam coords
 // ------------------------------------------------------------------------------------------------------------
