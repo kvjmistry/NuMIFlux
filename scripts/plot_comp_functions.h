@@ -832,3 +832,12 @@ double GetPOT(TFile* f){
 
     return fPOT;
 }
+// ------------------------------------------------------------------------------------------------------------
+double IntegrateHist1D(TH1D* h){
+
+double flux{0};
+	for (unsigned int i=1; i < h->GetNbinsX()+1; i++){
+		flux += h->GetBinContent(i);
+	}
+	return flux;
+}

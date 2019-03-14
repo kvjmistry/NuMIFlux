@@ -17,7 +17,7 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	bool overwrite_errors{false};
 	// bool overwrite_errors{true};
 	// bool novafiles{false};
-	bool novafiles{true};
+	bool novafiles{false};
 	bool unweighted{false};
 	// bool novafiles{true};
 
@@ -215,6 +215,7 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	l_uw_v_w->SetTextFont(62); 
 	l_uw_v_w->Draw();
 
+	// Lets integrate the Gsimple flux and the dk2nu flux and see how differnent they really are!
 	
 	
 	// ------------------------------------------------------------------------------------------------------------
