@@ -405,7 +405,7 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	if (mode == "numu") mode_str = "numu";
 	else if (mode == "numubar") mode_str = "numubar";
 	else if (mode == "nue") mode_str = "nue";
-	else mode_str = "numubar";
+	else mode_str = "nuebar";
 
 	boolfile  = GetFile(f2d , "/uboone/data/users/kmistry/work/PPFX/uboone/with_tilt_2Dhists/output.root"); if (boolfile == false) gSystem->Exit(0);
 	// boolfile  = GetFile(f2d , "/uboone/data/users/kmistry/work/PPFX/uboone/beamline/run0008/output.root"); if (boolfile == false) gSystem->Exit(0);
@@ -586,7 +586,7 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 
 	// Function to caluclate the fractional uncertainties
 	CalcFractionalError(cov4d, hCV_unwrap, hFracError4d );
-	
+	c_FracError4d->cd();
 	hFracError4d->Draw("hist");
 
 
@@ -675,9 +675,12 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 			c4->Print("plots/Fractional_Uncertainties_NuMu_MIPPOff.pdf");
 			c_uw_v_w->Print("plots/Unweighted_vs_ppfx_NuMu_MIPPOff.pdf");
 			if (wplot == "wplot") c5->Print("plots/Weightplot_NuMu_MIPPOff.pdf");
-			cov4d->Print("plots/CovarianceMarix4D_NuMu_MIPPOff.pdf");			
+			c_cov->Print("plots/CovarianceMarix4D_NuMu_MIPPOff.pdf");			
 			c_corr4d->Print("plots/CorrelationMarix4D_NuMu_MIPPOff.pdf");
-			hfraccov4d->Print("plots/FracCovarianceMarix4D_NuMu_MIPPOff.pdf");
+			c_FracError4d->Print("plots/FracCovarianceMarix4D_NuMu_MIPPOff.pdf");
+			c_binidx->Print("plots/BinIndex_NuMu.pdf");
+			c_fraccov4d->Print("plots/FracCovariance4d_NuMu_MIPPOff.pdf");
+			c_CV2d->Print("plots/CV2d_NuMu_MIPPOff.pdf");
 			std::cout << "\n"<< std::endl;
 		}
 		else if (mode == "nue"){
@@ -686,9 +689,12 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 			c4->Print("plots/Fractional_Uncertainties_Nue_MIPPOff.pdf");
 			c_uw_v_w->Print("plots/Unweighted_vs_ppfx_Nue_MIPPOff.pdf");
 			if (wplot == "wplot") c5->Print("plots/Weightplot_Nue_MIPPOff.pdf");
-			cov4d->Print("plots/CovarianceMarix4D_Nue_MIPPOff.pdf");
+			c_cov->Print("plots/CovarianceMarix4D_Nue_MIPPOff.pdf");
 			c_corr4d->Print("plots/CorrelationMarix4D_Nue_MIPPOff.pdf");
-			hfraccov4d->Print("plots/FracCovarianceMarix4D_Nue_MIPPOff.pdf");
+			c_FracError4d->Print("plots/FracCovarianceMarix4D_Nue_MIPPOff.pdf");
+			c_binidx->Print("plots/BinIndex_Nue.pdf");
+			c_fraccov4d->Print("plots/FracCovariance4d_Nue_MIPPOff.pdf");
+			c_CV2d->Print("plots/CV2d_Nue_MIPPOff.pdf");
 			std::cout << "\n"<< std::endl;
 
 		}
@@ -698,9 +704,12 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 			c4->Print("plots/Fractional_Uncertainties_Numubar_MIPPOff.pdf");
 			c_uw_v_w->Print("plots/Unweighted_vs_ppfx_Numubar_MIPPOff.pdf");
 			if (wplot == "wplot") c5->Print("plots/Weightplot_NuMubar_MIPPOff.pdf");
-			cov4d->Print("plots/CovarianceMarix4D_Numubar_MIPPOff.pdf");
+			c_cov->Print("plots/CovarianceMarix4D_Numubar_MIPPOff.pdf");
 			c_corr4d->Print("plots/CorrelationMarix4D_Numubar_MIPPOff.pdf");
-			hfraccov4d->Print("plots/FracCovarianceMarix4D_Numubar_MIPPOff.pdf");
+			c_FracError4d->Print("plots/FracCovarianceMarix4D_Numubar_MIPPOff.pdf");
+			c_binidx->Print("plots/BinIndex_Numubar.pdf");
+			c_fraccov4d->Print("plots/FracCovariance4d_Numubar_MIPPOff.pdf");
+			c_CV2d->Print("plots/CV2d_Numubar_MIPPOff.pdf");
 			std::cout << "\n"<< std::endl;
 
 		}
@@ -710,9 +719,12 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 			c4->Print("plots/Fractional_Uncertainties_Nuebar_MIPPOff.pdf");
 			c_uw_v_w->Print("plots/Unweighted_vs_ppfx_Nuebar_MIPPOff.pdf");
 			if (wplot == "wplot") c5->Print("plots/Weightplot_Nuebar_MIPPOff.pdf");
-			cov4d->Print("plots/CovarianceMarix4D_Nuebar_MIPPOff.pdf");
+			c_cov->Print("plots/CovarianceMarix4D_Nuebar_MIPPOff.pdf");
 			c_corr4d->Print("plots/CorrelationMarix4D_Nuebar_MIPPOff.pdf");
-			hfraccov4d->Print("plots/FracCovarianceMarix4D_Nue_MIPPOff.pdf");
+			c_FracError4d->Print("plots/FracCovarianceMarix4D_Nuebar_MIPPOff.pdf");
+			c_binidx->Print("plots/BinIndex_Nuebar.pdf");
+			c_fraccov4d->Print("plots/FracCovariance4d_Nuebar_MIPPOff.pdf");
+			c_CV2d->Print("plots/CV2d_Nuebar_MIPPOff.pdf");
 			std::cout << "\n"<< std::endl;
 
 		}

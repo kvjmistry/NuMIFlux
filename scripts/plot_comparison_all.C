@@ -305,9 +305,9 @@ void plot_comparison_all( TString mipp, TString inputfile, TString prodmode, TSt
 	if (mode == "numu") mode_str = "numu";
 	else if (mode == "numubar") mode_str = "numubar";
 	else if (mode == "nue") mode_str = "nue";
-	else mode_str = "numubar";
+	else mode_str = "nuebar";
 
-	TFile* output = new TFile("nova_numu_hp_uncertainties.root", "RECREATE");
+	TFile* output = new TFile(Form("plots/nova_%s_hp_uncertainties.root",mode_str.c_str()), "RECREATE");
 	
 	for (int i=0; i<inputmode.size();i++){
 		herr[i]->SetOption("hist"); // Overwrite the histo option

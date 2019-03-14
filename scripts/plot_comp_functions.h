@@ -149,7 +149,7 @@ void weight_plots(TString mode, std::vector<std::string> &inputmode, TFile* f1, 
 	if (mode == "numu") mode_str = "numu";
 	else if (mode == "numubar") mode_str = "numubar";
 	else if (mode == "nue") mode_str = "nue";
-	else mode_str = "numubar";
+	else mode_str = "nuebar";
 
 	int loop = inputmode.size();
 	
@@ -384,7 +384,7 @@ void BeamlineUncertainties(std::vector<TH1D*> &herr, TH1D* hCV_Flux, std::string
 	if (mode == "numu") mode_str = "numu";
 	else if (mode == "numubar") mode_str = "numubar";
 	else if (mode == "nue") mode_str = "nue";
-	else mode_str = "numubar";
+	else mode_str = "nuebar";
 
 	TFile* f3;
 	bool boolfile;
@@ -522,7 +522,7 @@ void HPUncertainties_Leo(TFile* fIn, TH1D* &herror, std::string inputmode, TStri
 	if (mode == "numu") mode_str = "numu";
 	else if (mode == "numubar") mode_str = "numubar";
 	else if (mode == "nue") mode_str = "nue";
-	else mode_str = "numubar";
+	else mode_str = "nuebar";
 
 	std::vector<TH1D*> vhuniv;
 	TH1D* hu;
@@ -564,7 +564,7 @@ void DrawErrorBand(TFile* f, TString mode, TLegend* leg, std::string inputmode){
 	if (mode == "numu") mode_str = "numu";
 	else if (mode == "numubar") mode_str = "numubar";
 	else if (mode == "nue") mode_str = "nue";
-	else mode_str = "numubar";
+	else mode_str = "nuebar";
 	TH1D* hcv;
 
 	std::vector<TH1D*> vhuniv;
@@ -695,7 +695,7 @@ void CalcMeanHist(TFile* fIn, TH1D* &hMean_unwrap, int nBinsEnu, int nBinsTh, TS
 	if (mode == "numu") mode_str = "numu";
 	else if (mode == "numubar") mode_str = "numubar";
 	else if (mode == "nue") mode_str = "nue";
-	else mode_str = "numubar";
+	else mode_str = "nuebar";
 
 	std::vector<TH1D*> vhuniv;
 	TH2D* hu;
@@ -820,3 +820,15 @@ void CalcFractionalError(TH2D* cov4d, TH1D* hCV, TH1D* &hFracError4d ){
 	hFracError4d->SetLineWidth(2);
 }
 // ------------------------------------------------------------------------------------------------------------
+// Function to get the POT
+double GetPOT(TFile* f){
+    TTree* TPOT = (TTree*) f->Get("POT");
+	if (TPOT == NULL) std::cout << "Error cant get POT info" << std::endl;
+
+	double fPOT{0};
+	TPOT->SetBranchAddress("POT", &fPOT); // Get the POT
+	TPOT->GetEntry(0);
+	std::cout << "TOTAL POT READ IN:\t" << fPOT << std::endl;
+
+    return fPOT;
+}
