@@ -266,13 +266,13 @@ void plot_uboone_beamline(){
     TCanvas *c_beamline = new TCanvas();
     TCanvas *c_beamline_ratio = new TCanvas();
     // c_beamline->SetWindowSize(1000, 1000);
-    TLegend *lFlux = new TLegend(0.8, 0.30, 1.0, 0.91);
+    TLegend *lFlux = new TLegend(0.8, 0.10, 1.0, 0.91);
     lFlux->SetNColumns(1);
 	lFlux->SetBorderSize(0);
 	lFlux->SetFillStyle(0);
 	lFlux->SetTextFont(62);
 
-    TLegend *lFlux_ratio = new TLegend(0.8, 0.30, 1.0, 0.91);
+    TLegend *lFlux_ratio = new TLegend(0.8, 0.10, 1.0, 0.91);
     lFlux_ratio->SetNColumns(1);
 	lFlux_ratio->SetBorderSize(0);
 	lFlux_ratio->SetFillStyle(0);
@@ -302,7 +302,7 @@ void plot_uboone_beamline(){
 
     // ------------------------------------------------------------------------------------------------------------
     // Loop over the beamline
-    for (int i = 8; i < 27; i++){
+    for (int i = 8; i < 30; i++){
 		if (useBeamlineCV && i == 15) continue; // used to see ratio of nova file CV to Beamline
         boolfile  = GetFile(f , Form("/uboone/data/users/kmistry/work/PPFX/uboone/beamline/run%d/output.root",i)); if (boolfile == false) continue;
         boolhist = GetHist(f, htemp, "nue/nue_CV_AV_TPC"); if (boolhist == false) gSystem->Exit(0);

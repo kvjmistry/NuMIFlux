@@ -1,5 +1,5 @@
 // Script with finctions needed for fluxsystematics script to run
-#include "plot_comp_functions.h"
+#include "/uboone/app/users/kmistry/PPFX/numi-validation/scripts/plot_comp_functions.h"
 // ------------------------------------------------------------------------------------------------------------
 class event {
 	public:
@@ -86,7 +86,7 @@ double GetWeight(int universe, int index, event event, HistWeights nue,  HistWei
 	ybin = hRatio->GetYaxis()->FindBin(event.Theta);
 	weight = hRatio->GetBinContent(xbin, ybin);
 
-	delete hRatio;
+	delete hRatio; // Essential for speed, clears memory!
 
 	// std::cout << weight << std::endl; // DANGEROUS!!
 
@@ -110,9 +110,12 @@ double IntegrateFlux(int universe, TFile* fCV, int index, double POTScale){
 		hHP2d = (TH2D*) hHP2dnue->Clone("hHP2d");
 		hHP2d->Add(hHP2dnuebar); // Combine the fluxes
 
-		flux  = hHP2d->Integral(0, hHP2d->GetNbinsX(), 0, hHP2d->GetNbinsY()); // Integrate over whole phase space
+		double xbin_th = hHP2d->GetXaxis()->FindBin( 0.75*0.2065); // find the x bin to integrate from (threshold)
+
+		flux  = hHP2d->Integral( xbin_th, hHP2d->GetNbinsX(), 0, hHP2d->GetNbinsY()); // Integrate over whole phase space (not quite any more)
 		
-		flux*= (POTScale / (GetPOT(fCV)*1.0e4)); // Scale to cm2 and the DATA POT
+		flux*= (POTScale / (GetPOT(fCV)*1.0e4 * (50./1000.))); // Scale to cm2, 50MeV and the DATA POT
+
 	}
 	// else we have a beamline variations indexes from 1 to N
 	else if (index > 1){
@@ -128,9 +131,8 @@ double IntegrateFlux(int universe, TFile* fCV, int index, double POTScale){
 
 		flux  = hBeamline2d->Integral(0, hBeamline2d->GetNbinsX(), 0, hBeamline2d->GetNbinsY()); // Integrate over whole phase space
 		
-		flux*= (POTScale / (GetPOT(fBeamline)*1.0e4)); // Scale to cm2 and the DATA POT
+		flux*= (POTScale / (GetPOT(fBeamline)*1.0e4  * (50./1000.))); // Scale to cm2 and the DATA POT
 
-		// fBeamline->Close();
 	}
 	else { // CV where index = 0
 		bool boolhist = GetHist(fCV, hCV2dnue, "nue/nue_CV_AV_TPC"); if (boolhist == false) gSystem->Exit(0);
@@ -138,10 +140,13 @@ double IntegrateFlux(int universe, TFile* fCV, int index, double POTScale){
 
 		hCV2d = (TH2D*) hCV2dnue->Clone("hCV2d");
 		hCV2d->Add(hCV2dnuebar); // Combine the fluxes
-		
-		flux  = hCV2d->Integral(0, hCV2d->GetNbinsX(), 0, hCV2d->GetNbinsY()); // Integrate over whole phase space
 
-		flux*= (POTScale / (GetPOT(fCV)*1.0e4)); // Scale to cm2 and the DATA POT
+		double xbin_th = hCV2d->GetXaxis()->FindBin( 0.75*0.2065); // find the x bin to integrate from (threshold)
+		
+		flux  = hCV2d->Integral(xbin_th, hCV2d->GetNbinsX(), 0, hCV2d->GetNbinsY()); // Integrate over whole phase space (not quite any more)
+
+		flux*= (POTScale / (GetPOT(fCV)*1.0e4 * (50./1000.))); // Scale to cm2, 50MeV and the DATA POT
+
 	}
 
 	return flux;

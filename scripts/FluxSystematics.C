@@ -9,7 +9,9 @@ Match the tyoe of event, generate a weight from the histogram and recalculate th
 The intenstion is to treat the hadron production and unisim beamline variations separately
 and then add them all together at the end. 
 */
-#include "FluxSyst_functions.h"
+#include "/uboone/app/users/kmistry/PPFX/numi-validation/scripts/FluxSyst_functions.h"
+#include <iterator> 
+#include <map> 
 // ------------------------------------------------------------------------------------------------------------
 void FluxSystematics(){
 	
@@ -59,14 +61,26 @@ void FluxSystematics(){
 	const double mc_scale_factor{0.1301};               // Scale factor to apply to the mc background
 	const double dirt_scale_factor = 0.16411;
 
+	// Neutrino info
+	std::vector<std::string> class_type;
+	std::vector<int> evtnum;
+	std::vector<int> mc_nu_id;
+	std::vector<double> mc_nu_dir_x;
+	std::vector<double> mc_nu_dir_y;
+	std::vector<double> mc_nu_dir_z;
+	std::vector<double> mc_nu_energy;    
+	std::vector<event> event;
+
 	// DEBUG
 	bool DEBUG{true};
 	bool UseGSimpleFlux{false};
+	bool UseHP{false};
 	if (UseGSimpleFlux) std::cout << "\033[1;37mUsing GSimple Flux in the CV calcualtion not dk2nu\033[0m"<< std::endl; 
 
 	// Histograms
 	TGraph* gModelXsec;             		          // Graph of the Model vs cross section
 	TH2D *hCV2dnue, *hCV2dnuebar, *hCV2d;
+	TH1D* hLowestE = new TH1D("","", 1000, 0 , 0.5);
 
 	// TTree
 	TTree *DataTree;
@@ -91,20 +105,14 @@ void FluxSystematics(){
 	// Load in the file containing the event number for Signal_Generated, N_gen or Signal_Selected N_sig
 	if (DEBUG) std::cout << "\nNow reading in event files!" << std::endl;
 
-	std::vector<std::string> class_type;
-	std::vector<int> evtnum;
-	std::vector<int> mc_nu_id;
-	std::vector<double> mc_nu_dir_x;
-	std::vector<double> mc_nu_dir_y;
-	std::vector<double> mc_nu_dir_z;
-	std::vector<double> mc_nu_energy;    
-	std::vector<event> event;
 	
 	// Read in the selected list
 	ReadEventList("filelists/selected_events_spaced.txt", evtnum, class_type, mc_nu_id, mc_nu_dir_x, mc_nu_dir_y, mc_nu_dir_z, mc_nu_energy    );
 	
 	// Read in the generated list
 	ReadEventList("filelists/neutrino_in_tpc_list_spaced.txt", evtnum, class_type, mc_nu_id, mc_nu_dir_x, mc_nu_dir_y, mc_nu_dir_z, mc_nu_energy    );
+	
+	// Now loop over the event lists and classify  
 	for (unsigned int i = 0; i < class_type.size(); i++){
 	
 		class event temp; // create a temp event class
@@ -143,6 +151,7 @@ void FluxSystematics(){
 				temp.nu_flav = mc_nu_id[i];
 				event.push_back(temp);
 				N_sig_CV++;
+				hLowestE->Fill(mc_nu_energy[i]);
 			}
 			// Dirt
 			else if (class_type[i] == "Dirt"){
@@ -179,8 +188,9 @@ void FluxSystematics(){
 	bool boolfile  = GetFile(fCV , "/uboone/data/users/kmistry/work/PPFX/uboone/with_tilt_2Dhists/output.root"); if (boolfile == false) gSystem->Exit(0);
 
 	// Loop over the parameters
-	for (unsigned int i = 0; i < params.size() - 7; i++){
-		if (i > 1) continue; // skip the beamline uncertainties for now...
+	for (unsigned int i = 0; i < params.size() - 4; i++){
+		// if (i == 1) continue; // skip the beamline uncertainties for now...
+		if (i == 1) UseHP = true;
 
 		std::string param = params.at(i); // Get the parameter
 		if (DEBUG) std::cout << "\n++++++++++++++++++++++++++" << std::endl;
@@ -200,12 +210,12 @@ void FluxSystematics(){
     		if (j % 1000 == 0 && i == 1) std::cout << "On entry " << j/1000 << "k"<< std::endl;
 			// std::cout << event[j].type<< std::endl;
 			
-			// Call the Add weights function
-			if      (event[j].type == "gen")  AddWeights(N_gen,  Universes, i, event[j],  nue, nuebar, numu, numubar);  // Gen
-			else if (event[j].type == "sig")  AddWeights(N_sig,  Universes, i, event[j],  nue, nuebar, numu, numubar);  // Sig
-			else if (event[j].type == "sel")  AddWeights(N_sel,  Universes, i, event[j],  nue, nuebar, numu, numubar);  // Sel
-			else if (event[j].type == "bkg")  AddWeights(N_bkg,  Universes, i, event[j],  nue, nuebar, numu, numubar);  // Bkg
-			else if (event[j].type == "dirt") AddWeights(N_dirt, Universes, i, event[j],  nue, nuebar, numu, numubar);  // Dirt
+			// Call the Add weights function to reweight the event
+			if      (event[j].type == "gen")  AddWeights(N_gen,  Universes, i, event[j], nue, nuebar, numu, numubar);  // Gen
+			else if (event[j].type == "sig")  AddWeights(N_sig,  Universes, i, event[j], nue, nuebar, numu, numubar);  // Sig
+			else if (event[j].type == "sel")  AddWeights(N_sel,  Universes, i, event[j], nue, nuebar, numu, numubar);  // Sel
+			else if (event[j].type == "bkg")  AddWeights(N_bkg,  Universes, i, event[j], nue, nuebar, numu, numubar);  // Bkg
+			else if (event[j].type == "dirt") AddWeights(N_dirt, Universes, i, event[j], nue, nuebar, numu, numubar);  // Dirt
 			else std::cout << "unknown type :("<< std::endl;
 		
 		} // END of event loop
@@ -217,12 +227,21 @@ void FluxSystematics(){
 		Efficiency.resize(N_gen.size()); 
 		Flux.resize(N_gen.size()); 
 
+		// Loop over the universes (for beamline and CV this will be 1)
 		for (unsigned int k{0}; k < N_gen.size(); k++){
 			if (i == 1) std::cout << "\033[1;32mUniverse:\t" << k << "\n\033[0m"<< std::endl;
 
 			double flux = IntegrateFlux(k, fCV, i, POTScale);
+
+			// If we have a beamline variation, we want to modify apply a weight to the HP CV flux by Beamline Flux / Nominal
+			if (param != "CV" && param != "HP" ){
+				std::cout <<param <<std::endl;
+				flux =  IntegrateFlux(0, fCV, 0, POTScale) * (IntegrateFlux(k, fCV, i, POTScale) / IntegrateFlux(k, fCV, 9, POTScale)); // Index for nominal is 9 index for cv is 0
+			}
+
 			Flux[k] = flux; // save the flux
 			std::cout << "\nflux: " << flux << std::endl;
+
 
 			// Recalculations due to not weighting non MC genie stuff and other bugs
 			N_gen[k] = N_gen[k];  
@@ -265,23 +284,44 @@ void FluxSystematics(){
 	// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	// Now we want to calucalte the uncertainties
 	// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	
 	// First get the standard deviation of the efficiency and the Data cross section from the HP
-	double HP_XSEC_STD = STD_Calculator(vec_Data_x_sec[1], vec_Data_x_sec[0][0]); // vec<double>, double
-	double Eff_STD     = STD_Calculator(vec_Efficiency[1], vec_Efficiency[0][0]); 
-	double HP_Gen_STD     = STD_Calculator(vec_gen[1], vec_gen[0][0]);
-	double HP_Sig_STD     = STD_Calculator(vec_sig[1], vec_sig[0][0]);
-	double HP_Dirt_STD    = STD_Calculator(vec_dirt[1], vec_dirt[0][0]);
-	double HP_Bkg_STD     = STD_Calculator(vec_bkg[1], vec_bkg[0][0]);
-	double HP_Flux_STD     = STD_Calculator(vec_flux[1], vec_flux[0][0]);
+	if (UseHP){
+		double HP_XSEC_STD    = STD_Calculator(vec_Data_x_sec[1], vec_Data_x_sec[0][0]); // vec<double>, double
+		double Eff_STD        = STD_Calculator(vec_Efficiency[1], vec_Efficiency[0][0]); 
+		double HP_Gen_STD     = STD_Calculator(vec_gen[1], vec_gen[0][0]);
+		double HP_Sig_STD     = STD_Calculator(vec_sig[1], vec_sig[0][0]);
+		double HP_Dirt_STD    = STD_Calculator(vec_dirt[1], vec_dirt[0][0]);
+		double HP_Bkg_STD     = STD_Calculator(vec_bkg[1], vec_bkg[0][0]);
+		double HP_Flux_STD    = STD_Calculator(vec_flux[1], vec_flux[0][0]);
 
-	std::cout << "HP_XSEC_STD:\t" <<  HP_XSEC_STD << "\tHP XSEC Err:\t" << (100 * HP_XSEC_STD) / vec_Data_x_sec[0][0] << " \%"<<std::endl;
+		std::cout << "HP_XSEC_STD:\t" <<  HP_XSEC_STD << "\tHP XSEC Err:\t" << (100 * HP_XSEC_STD) / vec_Data_x_sec[0][0] << " \%"<<std::endl;
+		std::cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+		std::cout << "Eff_STD:\t" <<  Eff_STD << "\tEfficiency Err:\t" << (100 * Eff_STD) / vec_Efficiency[0][0] << " \%" << std::endl;
+		std::cout << "HP_Gen_STD:\t" <<  HP_Gen_STD << "\t\tHP Gen Err:\t" << (100 * HP_Gen_STD) / vec_gen[0][0] << " \%"<<std::endl;
+		std::cout << "HP_Sig_STD:\t" <<  HP_Sig_STD << "\t\tHP Sig Err:\t" << (100 * HP_Sig_STD) / vec_sig[0][0] << " \%"<<std::endl;
+		std::cout << "HP_Dirt_STD:\t" <<  HP_Dirt_STD << "\t\tHP Dirt Err:\t" << (100 * HP_Dirt_STD) / vec_dirt[0][0] << " \%"<<std::endl;
+		std::cout << "HP_Bkg_STD:\t" <<  HP_Bkg_STD << "\t\tHP Bkg Err:\t" << (100 * HP_Bkg_STD) / vec_bkg[0][0] << " \%"<<std::endl;
+		std::cout << "HP_Flux_STD:\t" <<  HP_Flux_STD << "\tHP Flux Err:\t" << (100 * HP_Flux_STD) / vec_flux[0][0] << " \%"<<std::endl;
+	}
+
+	// Now lets get the percent difference between the nominal beamline and the beamline variations
+	// nominal is given by index 9
 	std::cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
-	std::cout << "Eff_STD:\t" <<  Eff_STD << "\tEfficiency Err:\t" << (100 * Eff_STD) / vec_Efficiency[0][0] << " \%" << std::endl;
-	std::cout << "HP_Gen_STD:\t" <<  HP_Gen_STD << "\t\tHP Gen Err:\t" << (100 * HP_Gen_STD) / vec_gen[0][0] << " \%"<<std::endl;
-	std::cout << "HP_Sig_STD:\t" <<  HP_Sig_STD << "\t\tHP Sig Err:\t" << (100 * HP_Sig_STD) / vec_sig[0][0] << " \%"<<std::endl;
-	std::cout << "HP_Dirt_STD:\t" <<  HP_Dirt_STD << "\t\tHP Dirt Err:\t" << (100 * HP_Dirt_STD) / vec_dirt[0][0] << " \%"<<std::endl;
-	std::cout << "HP_Bkg_STD:\t" <<  HP_Bkg_STD << "\t\tHP Bkg Err:\t" << (100 * HP_Bkg_STD) / vec_bkg[0][0] << " \%"<<std::endl;
-	std::cout << "HP_Flux_STD:\t" <<  HP_Flux_STD << "\tHP Flux Err:\t" << (100 * HP_Flux_STD) / vec_flux[0][0] << " \%"<<std::endl;
+	std::cout << "Beamline Errors\n" << std::endl;
+	for (unsigned int i=2; i < 23; i++){
+		std::cout << params[i] << "\n" <<
+		"Data X-Sec:\t\t" <<  vec_Data_x_sec[i][0] <<
+		"\nPercent diff from Nominal:\t" <<  100 * (vec_Data_x_sec[i][0] - vec_Data_x_sec[9][0]) /  vec_Data_x_sec[9][0] << " \%"
+		<< "\n------------------------------------------------" 
+		<< "\n"<< std::endl;
+	}
+	
+
+
+	// TCanvas *c = new TCanvas();
+	// c->cd();
+	// hLowestE->Draw("hist");
 
 
 	gSystem->Exit(0);
