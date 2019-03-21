@@ -21,13 +21,11 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	bool unweighted{false};
 	// bool novafiles{true};
 
-
 	std::vector<std::string> inputmode = loopdir(inputfile, mode); // Grab the names of the input reweighters
 
 	// Pre declare variables
 	TString Getmode, Gethist_TPC, Getflux, Cov_names, g_simp_names, Gethist_TPC_uw, Gethist_TPC_Th;
-	TH1D *hCV_Flux, *hUW_Flux;
-	TH1D *h_g_simp, *hnovafileflux; 
+	TH1D *hCV_Flux, *hUW_Flux, *h_g_simp, *hnovafileflux;
 	TFile *f_gsimple, *f_novafiles;
 	TFile* f1 = TFile::Open(inputfile);
 
@@ -82,13 +80,7 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	// Get the POT in the file
 	// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	TTree* TPOT = (TTree*) f1->Get("POT");
-	if (TPOT == NULL) std::cout << "Error cant get POT info" << std::endl;
-
-	double fPOT{0};
-	TPOT->SetBranchAddress("POT", &fPOT); // Get the POT
-	TPOT->GetEntry(0);
-	std::cout << "TOTAL POT READ IN:\t" << fPOT << std::endl;
+	double fPOT = GetPOT(TFile* f);
 	// ------------------------------------------------------------------------------------------------------------
 	// CV Flux vs gsimple flux vs nova files flux
 	// ------------------------------------------------------------------------------------------------------------
@@ -103,6 +95,7 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	for (int i=1;i<hCV_Flux->GetNbinsX()+1;i++) {
 		hCV_Flux->SetBinContent(i, hCV_Flux->GetBinContent(i)/hCV_Flux->GetBinWidth(i));		
 	}
+	Normalise(hCV_Flux);
 
 
 	TH1D* horig = (TH1D*) hCV_Flux->Clone("horig"); // Clone for plotting so dont need to norm the ms histograms
@@ -112,7 +105,7 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 
 	// Norm
 	// 20 is to get the bins in 50 MeV from 1GeV, POT counting done wrong becuase of >1 file per job
-	hCV_Flux->Scale( (6.0e20)/ (fPOT*1.0e4) * (50./1000.) );  
+	hCV_Flux->Scale( (6.0e20)/ (fPOT*1.0e4) );  
 	// hCV_Flux->Scale( 3.14159* (6.0e20)/ (100000*950*1.0e4*20) );  // 671.36 is the window area, 20 is to get the bins in 50 MeV from 1GeV pi is fudge factor
 
 	hCV_Flux->Sumw2();
