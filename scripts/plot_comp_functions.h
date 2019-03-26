@@ -267,6 +267,55 @@ bool GetFile(TFile* &f , TString string){
 	}
 }
 // ------------------------------------------------------------------------------------------------------------
+double GetPOT(TFile* f){
+    TTree* TPOT = (TTree*) f->Get("POT");
+	if (TPOT == NULL) std::cout << "Error cant get POT info" << std::endl;
+
+	double fPOT{0};
+	TPOT->SetBranchAddress("POT", &fPOT); // Get the POT
+	TPOT->GetEntry(0);
+	std::cout << "TOTAL POT READ IN:\t" << fPOT << std::endl;
+
+    return fPOT;
+}
+// ------------------------------------------------------------------------------------------------------------
+// Overloaded to supress the POT message
+double GetPOT(TFile* f, bool disp){
+    TTree* TPOT = (TTree*) f->Get("POT");
+	if (TPOT == NULL) std::cout << "Error cant get POT info" << std::endl;
+
+	double fPOT{0};
+	TPOT->SetBranchAddress("POT", &fPOT); // Get the POT
+	TPOT->GetEntry(0);
+	if (disp) std::cout << "TOTAL POT READ IN:\t" << fPOT << std::endl;
+
+    return fPOT;
+}
+// ------------------------------------------------------------------------------------------------------------
+// Normalise a 1D histogram
+void Normalise(TH1D* &h){
+	
+	// Normalise flux by bin width (gives a flux/E [GeV])
+	for (int i=1;i<h->GetNbinsX()+1;i++) {
+		h->SetBinContent(i, h->GetBinContent(i)/h->GetBinWidth(i));
+		h->SetBinError(i, h->GetBinError(i)/h->GetBinWidth(i));
+		// std::cout << h->GetBinWidth(i) << std::endl;
+	}
+}
+// ------------------------------------------------------------------------------------------------------------
+// Normalise a 2D histogram
+void Normalise(TH2D* &h){
+	
+	for (int p=1; p<h->GetXaxis()->GetNbins()+1; p++) {
+			// Loop over columns
+			for (int q=1; q<h->GetYaxis()->GetNbins()+1; q++) {
+				h->SetBinContent(p,q, h->GetBinContent(p, q)/ ( h->GetXaxis()->GetBinWidth(p) * h->GetYaxis()->GetBinWidth(q) ));
+				h->SetBinError(p,q, h->GetBinError(p, q)/ ( h->GetXaxis()->GetBinWidth(p) * h->GetYaxis()->GetBinWidth(q) ));
+				
+			}
+		} 
+}
+// ------------------------------------------------------------------------------------------------------------
 void CalcCovariance(std::string inputmode,TString Cov_names, TFile* f, TH2D* &cov, TH1D* horig, const int nbins  ){
 	TH1D* hu; 					// Flux hist for each universe
 	const int nuni = 100; // num universes
@@ -597,6 +646,14 @@ void DrawErrorBand(TFile* f, TString mode, TLegend* leg, std::string inputmode){
 
 	bool bool_hist = GetHist(f, hcv, Form("%s/%s_CV_AV_TPC", mode_str.c_str(), mode_str.c_str()) ); if (bool_hist == false) gSystem->Exit(0);
 
+	Normalise(hcv);
+	Normalise(htemp);
+	Normalise(htemp_clone);
+
+	htemp->Scale(6.0e20 / (GetPOT(f, false) * 1.0e4));
+	htemp_clone->Scale(6.0e20 / (GetPOT(f, false) * 1.0e4));
+	hcv->Scale(6.0e20 / (GetPOT(f, false) * 1.0e4));
+
 	htemp->SetFillColor(18);
 	htemp->SetFillStyle(1001);
 	htemp->SetLineColor(kRed);
@@ -608,13 +665,13 @@ void DrawErrorBand(TFile* f, TString mode, TLegend* leg, std::string inputmode){
 	hcv->SetMarkerSize(0);
 	hcv->SetLineColor(kBlack);
 
-	htemp->GetXaxis()->SetRangeUser(0,20);
+	// htemp_clone->GetXaxis()->SetRangeUser(0, 6);
 	htemp->SetStats(0);
 	htemp->SetMarkerSize(0);
-	htemp->SetTitle(Form("Error band for %s",mode_str.c_str()));
-	htemp->GetXaxis()->SetTitle("#nu energy (GeV)");
+	// htemp->SetTitle(Form("Error band for %s",mode_str.c_str()));
+	htemp->GetXaxis()->SetTitle("#nu energy [GeV]");
 
-	htemp->GetYaxis()->SetTitle(Form("%s/m^{2}/1e7POT",mode_str.c_str()));
+	htemp->GetYaxis()->SetTitle(Form("%s / 6e20 POT / m^{2} / GeV",mode_str.c_str()));
 
 	htemp->Draw("e2");
 	htemp_clone->Draw("same,hist");
@@ -622,6 +679,12 @@ void DrawErrorBand(TFile* f, TString mode, TLegend* leg, std::string inputmode){
 
 	leg->AddEntry(htemp,"Mean Flux","LF");
 	leg->AddEntry(hcv,"CV Flux","l");
+
+	leg->SetBorderSize(0);
+	leg->SetFillStyle(0);
+	leg->SetTextFont(62); 
+
+	gPad->SetLogy();
 }
 // ------------------------------------------------------------------------------------------------------------
 // function to plot each neutrino flux on the same graph
@@ -640,13 +703,13 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
 
 
 	// 6e20 POT, 50/1000 for 50 MeV from 1GeV, 1e-4 for m2->cm2
-	h_flux->Scale( (6.0e20)/ (fPOT*1.0e4) * (50./1000.) );  
+	h_flux->Scale( (6.0e20)/ (fPOT*1.0e4) );  
 	
 
 	if (mode == "numu"){
 		h_flux->SetLineColor(kRed+1);
 		h_flux->SetLineWidth(2);
-		h_flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / 50 MeV / cm^{2}");
+		h_flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
 		leg->AddEntry(h_flux, "#nu_{#mu}","l");
 		h_flux->Draw("hist,same");
 	}
@@ -655,7 +718,7 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
 		h_flux->SetLineColor(kRed+1);
 		h_flux->SetLineWidth(2);
 		h_flux->SetLineStyle(2);
-		h_flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / 50 MeV / cm^{2}");
+		h_flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
 		leg->AddEntry(h_flux, "#nu_{e}","l");
 		h_flux->Draw("hist,same");
 
@@ -729,7 +792,7 @@ void CalcMeanHist(TFile* fIn, TH1D* &hMean_unwrap, int nBinsEnu, int nBinsTh, TS
 				hu->SetBinContent(p,q, hu->GetBinContent(p, q)/ ( hu->GetXaxis()->GetBinWidth(p) * hu->GetYaxis()->GetBinWidth(q) ));
 			}
 		} 
-		hu->Scale((6.0e20)/ (2.5e8*1.0e4)); // scale to right POT and m2
+		hu->Scale((6.0e20)/ (GetPOT(fIn,false) *1.0e4)); // scale to right POT and m2
 
 		// Unwrap the histogram to binindex
 		hu_unwrap = new TH1D("", "",nBinsEnu*nBinsTh, 0, nBinsEnu*nBinsTh );
@@ -820,24 +883,115 @@ void CalcFractionalError(TH2D* cov4d, TH1D* hCV, TH1D* &hFracError4d ){
 	hFracError4d->SetLineWidth(2);
 }
 // ------------------------------------------------------------------------------------------------------------
-// Function to get the POT
-double GetPOT(TFile* f){
-    TTree* TPOT = (TTree*) f->Get("POT");
-	if (TPOT == NULL) std::cout << "Error cant get POT info" << std::endl;
-
-	double fPOT{0};
-	TPOT->SetBranchAddress("POT", &fPOT); // Get the POT
-	TPOT->GetEntry(0);
-	std::cout << "TOTAL POT READ IN:\t" << fPOT << std::endl;
-
-    return fPOT;
-}
-// ------------------------------------------------------------------------------------------------------------
 double IntegrateHist1D(TH1D* h){
 
-double flux{0};
-	for (unsigned int i=1; i < h->GetNbinsX()+1; i++){
-		flux += h->GetBinContent(i);
-	}
+	// find the bin which has the energy of 0.75*0.2065
+	double xbin_th = h->GetXaxis()->FindBin( 0.75*0.2065);
+	// double xbin_th = h->GetXaxis()->FindBin( 0.75*0.6065);
+	// double ybin_th = h->GetXaxis()->FindBin( 3);
+
+	// std::cout << "xbin_th:\t" << xbin_th << std::endl;
+
+	double flux  = h->Integral(xbin_th,  h->GetNbinsX()+1);
 	return flux;
+}
+// ------------------------------------------------------------------------------------------------------------
+// Overload to give it an energy threshold
+double IntegrateHist1D(TH1D* h, double E_th){
+
+	// find the bin which has the energy of threshold
+	double xbin_th = h->GetXaxis()->FindBin( E_th);
+	
+	double flux  = h->Integral(xbin_th, h->GetNbinsX());
+	return flux;
+}
+// ------------------------------------------------------------------------------------------------------------
+double IntegrateHist2D(TH2D* h){
+
+	// find the bin which has the energy of 0.75*0.2065
+	// double xbin_th = h->GetXaxis()->FindBin( 0.75*0.2065);
+	// double ybin_th = h->GetXaxis()->FindBin( 920);
+
+	double xbin_th = h->GetXaxis()->FindBin( 0.75*0.2065);
+	// double ybin_th = h->GetXaxis()->FindBin( 0.3);
+
+	// std::cout << "xbin_th:\t" << xbin_th << std::endl;
+
+	double flux  = h->Integral(xbin_th, h->GetNbinsX()+1, 0, h->GetNbinsY()+1);
+	return flux;
+}
+// ------------------------------------------------------------------------------------------------------------
+// Unwrap histogram
+void UnwrapHist(TH2D* h2d, TH1D* &h_unwrap){
+	
+	int counter{0};
+	for (int i=1; i<h2d->GetXaxis()->GetNbins()+1; i++) { // Loop over rows
+		for (int j=1; j<h2d->GetYaxis()->GetNbins()+1; j++){// Loop over columns
+			counter++;
+			h_unwrap->SetBinContent(counter, h2d->GetBinContent(i , j)  );
+		}
+	}
+}
+// ------------------------------------------------------------------------------------------------------------
+// Function to increase to axes labels
+void IncreaseLabelSize(TH1D* h){
+
+	h->GetXaxis()->SetRangeUser(0,3.5);
+	h->GetXaxis()->SetLabelSize(0.05);
+	h->GetXaxis()->SetTitleSize(0.05);
+	h->GetYaxis()->SetLabelSize(0.05);
+	h->GetYaxis()->SetTitleSize(0.05);
+	gPad->SetLeftMargin(0.15);
+	gPad->SetBottomMargin(0.12);
+}
+void IncreaseLabelSize(TH2D* h){
+
+	h->GetXaxis()->SetRangeUser(0,3.5);
+	h->GetXaxis()->SetLabelSize(0.05);
+	h->GetXaxis()->SetTitleSize(0.05);
+	h->GetYaxis()->SetLabelSize(0.05);
+	h->GetYaxis()->SetTitleSize(0.05);
+	gPad->SetLeftMargin(0.15);
+	gPad->SetBottomMargin(0.12);
+	h->SetMarkerSize(1.8);
+	// gPad->SetGridx(); 
+}
+// ------------------------------------------------------------------------------------------------------------
+// Function to return a vector of tlines for a 2d hist. Contaons hardcoded bins for this analysis
+std::vector<TLine*> MakeTLineVector(TString mode){
+
+	std::vector<TLine*> vLine;
+	std::vector<double> Ebins, Thbins;
+
+	if (mode == "nue" || mode =="nuebar"){ // nue, nuebar
+		Ebins = { 0.00 ,0.06, 0.125,  0.25, 0.5, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 3.50};
+	} 
+	else{ // numu or numubar
+		// Ebins = {0.00, 0.025, 0.03, 0.235 ,0.24, 0.50, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 3.00, 4.00};
+		Ebins = {0.00, 0.025, 0.03, 0.235 ,0.24, 0.50}; // for zoomed version
+
+	}
+
+	Thbins = { 20, 40, 120,  160 };
+
+	double Th0 = Thbins[0]; 
+	double Th1 = Thbins[Thbins.size()-1];
+
+	double E0 = Ebins[0]; 
+	double E1 = Ebins[Ebins.size()-1]; 
+	
+	for (unsigned int i = 0; i < Thbins.size() - 1; i++){
+
+		double y0 = Thbins[i];
+		TLine *l2  = new TLine(E1, y0, E0 , y0 );
+		vLine.push_back(l2);
+
+		for (unsigned int j = 0; j < Ebins.size() - 1 ; j++){
+			double x0 = Ebins[j];
+			TLine *l  = new TLine(x0, Th0, x0, Th1 );
+			vLine.push_back(l);
+		}
+	}
+
+	return vLine;
 }

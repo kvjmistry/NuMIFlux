@@ -164,15 +164,15 @@ int main(int argc, char** argv) {
 
 		// FLux histograms
 		Enu_CV_Window[i] = new TH1D(Form("%s_CV_Window",flav[i].c_str()),"",n, bin); // Energy
-		Enu_CV_AV_TPC[i] = new TH1D(Form("%s_CV_AV_TPC",flav[i].c_str()),"",n, bin);
+		// Enu_CV_AV_TPC[i] = new TH1D(Form("%s_CV_AV_TPC",flav[i].c_str()),"",n, bin);
 
 		Enu_UW_Window[i] = new TH1D(Form("%s_unweighted_Window",flav[i].c_str()),"",n, bin);
-		Enu_UW_AV_TPC[i] = new TH1D(Form("%s_unweighted_AV_TPC",flav[i].c_str()),"",n, bin);
+		// Enu_UW_AV_TPC[i] = new TH1D(Form("%s_unweighted_AV_TPC",flav[i].c_str()),"",n, bin);
 
 		
 		// Use these for a finer binning
-		// Enu_CV_AV_TPC[i] = new TH1D(Form("%s_CV_AV_TPC",flav[i].c_str()),"",4000, 0, 20);
-		// Enu_UW_AV_TPC[i] = new TH1D(Form("%s_unweighted_AV_TPC",flav[i].c_str()),"",4000, 0, 20);
+		Enu_CV_AV_TPC[i] = new TH1D(Form("%s_CV_AV_TPC",flav[i].c_str()),"",4000, 0, 20);
+		Enu_UW_AV_TPC[i] = new TH1D(Form("%s_unweighted_AV_TPC",flav[i].c_str()),"",4000, 0, 20);
 
 		Th_CV_Window[i] = new TH1D(Form("Th_%s_CV_Window",flav[i].c_str()),"",n_th, bin_th); // Theta
 		Th_CV_AV_TPC[i] = new TH1D(Form("Th_%s_CV_AV_TPC",flav[i].c_str()),"",n_th, bin_th);

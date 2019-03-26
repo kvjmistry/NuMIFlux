@@ -31,11 +31,13 @@ LDFLAGS=$(shell root-config --libs) \
 
 EXEC1=bin/makehist
 EXEC2=bin/makehist_uboone
-EXEC3=bin/makehist_uboone_noEW
+EXEC3=bin/makehist_uboone_parent
 EXEC4=bin/makehist_uboone_2D
 EXEC5=bin/checkfiles
+EXEC6=bin/makehist_uboone_detweights
+EXEC7=bin/makehist_uboone_detweights_2D
 
-all: $(EXEC1) $(EXEC2) $(EXEC3) $(EXEC4) $(EXEC5)
+all: $(EXEC1) $(EXEC2) $(EXEC3) $(EXEC4) $(EXEC5) $(EXEC6) $(EXEC7)
 	
 $(EXEC1): src/geo/GeoVector.cxx src/geo/GeoAABox.cxx src/geo/GeoHalfLine.cxx src/geo/GeoLine.cxx src/geo/GeoLineSegment.cxx src/geo/GeoCone.cxx src/geo/GeoSphere.cxx src/geo/GeoTrajectory.cxx src/geo/GeoAlgo.cxx src/makehist.cpp
 	@echo Building $(EXEC1)
@@ -47,7 +49,7 @@ $(EXEC2): src/geo/GeoVector.cxx src/geo/GeoAABox.cxx src/geo/GeoHalfLine.cxx src
 	@mkdir -p bin
 	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
 
-$(EXEC3): src/geo/GeoVector.cxx src/geo/GeoAABox.cxx src/geo/GeoHalfLine.cxx src/geo/GeoLine.cxx src/geo/GeoLineSegment.cxx src/geo/GeoCone.cxx src/geo/GeoSphere.cxx src/geo/GeoTrajectory.cxx src/geo/GeoAlgo.cxx src/makehist_uboone_noEW.cpp
+$(EXEC3): src/geo/GeoVector.cxx src/geo/GeoAABox.cxx src/geo/GeoHalfLine.cxx src/geo/GeoLine.cxx src/geo/GeoLineSegment.cxx src/geo/GeoCone.cxx src/geo/GeoSphere.cxx src/geo/GeoTrajectory.cxx src/geo/GeoAlgo.cxx src/makehist_uboone_parent.cpp
 	@echo Building $(EXEC3)
 	@mkdir -p bin
 	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
@@ -62,5 +64,16 @@ $(EXEC5):  src/geo/GeoVector.cxx src/geo/GeoAABox.cxx src/geo/GeoHalfLine.cxx sr
 	@mkdir -p bin
 	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
 
+$(EXEC6): src/makehist_uboone_detweights.cpp
+	@echo Building $(EXEC6)
+	@mkdir -p bin
+	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
+
+$(EXEC7): src/makehist_uboone_detweights_2D.cpp
+	@echo Building $(EXEC7)
+	@mkdir -p bin
+	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
+
+
 clean:
-	rm bin/makehist bin/makehist_uboone bin/makehist_uboone_noEW bin/makehist_uboone_2D bin/checkfiles
+	rm bin/makehist bin/makehist_uboone bin/makehist_uboone_parent bin/makehist_uboone_2D bin/checkfiles bin/makehist_uboone_detweights bin/makehist_uboone_detweights_2D

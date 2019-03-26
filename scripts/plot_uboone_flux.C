@@ -77,49 +77,48 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 
 	}
 	
-	// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	// Get the POT in the file
-	// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	double fPOT = GetPOT(TFile* f);
 	// ------------------------------------------------------------------------------------------------------------
 	// CV Flux vs gsimple flux vs nova files flux
 	// ------------------------------------------------------------------------------------------------------------
 	TCanvas* c1 = new TCanvas();
 	TLegend* lFlux = new TLegend(0.5, 0.65, 0.9, 0.9);
 
-	// Check if sucessfully got histo
+	// --------------------- CV ------------------------- //
 	bool boolhist = GetHist(f1, hCV_Flux, Gethist_TPC); if (boolhist == false) gSystem->Exit(0);
 	hCV_Flux->SetDirectory(0);
+
+	// Get the POT in the file
+	double fPOT = GetPOT(f1);
 	
 	// Normalise flux by bin width (gives a flux/E [GeV])
-	for (int i=1;i<hCV_Flux->GetNbinsX()+1;i++) {
-		hCV_Flux->SetBinContent(i, hCV_Flux->GetBinContent(i)/hCV_Flux->GetBinWidth(i));		
-	}
 	Normalise(hCV_Flux);
 
-
 	TH1D* horig = (TH1D*) hCV_Flux->Clone("horig"); // Clone for plotting so dont need to norm the ms histograms
-		
-	bool boolfile  = GetFile(f_gsimple , "/uboone/data/users/kmistry/work/PPFX/uboone/NuMIFlux_update_morebins.root"); if (boolfile == false) gSystem->Exit(0);
-	boolhist = GetHist(f_gsimple, h_g_simp, g_simp_names); if (boolhist == false) gSystem->Exit(0);
 
-	// Norm
-	// 20 is to get the bins in 50 MeV from 1GeV, POT counting done wrong becuase of >1 file per job
+	// Scale
 	hCV_Flux->Scale( (6.0e20)/ (fPOT*1.0e4) );  
 	// hCV_Flux->Scale( 3.14159* (6.0e20)/ (100000*950*1.0e4*20) );  // 671.36 is the window area, 20 is to get the bins in 50 MeV from 1GeV pi is fudge factor
 
-	hCV_Flux->Sumw2();
+	// Pretty
 	hCV_Flux->SetLineColor(kRed+1);
 	hCV_Flux->SetLineWidth(2);
-	hCV_Flux->SetTitle(";E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / 50 MeV / cm^{2}");
-	h_g_simp->SetLineWidth(2);
-	gPad->SetLogy();
-	gPad->Update();
-	hCV_Flux->Draw("");
+	if (mode == "numu")		hCV_Flux->SetTitle("#nu_{#mu}; E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
+	if (mode == "nue")		hCV_Flux->SetTitle("#nu_{e}; E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
+	if (mode == "numubar")	hCV_Flux->SetTitle("#bar{#nu_{#mu}}; E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
+	if (mode == "nuebar")	hCV_Flux->SetTitle("#bar{#nu_{e}}; E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
 	hCV_Flux->Draw("hist,same");
+		
+	// --------------------- Gsimple ------------------------- //
+	bool boolfile  = GetFile(f_gsimple , "/uboone/data/users/kmistry/work/PPFX/uboone/NuMIFlux_update_morebins.root"); if (boolfile == false) gSystem->Exit(0);
+	boolhist = GetHist(f_gsimple, h_g_simp, g_simp_names); if (boolhist == false) gSystem->Exit(0);
+	// Normalise(h_g_simp);
+	h_g_simp->SetLineWidth(2);
 	//h_g_simp->Draw("hist, same");
 
-	// choose whether to draw the flux using nova files which have a threshold
+	gPad->SetLogy();
+	gPad->Update();
+	
+	// --------------------- Nova Threshold Files ------------------------- //
 	if (novafiles){
 		bool boolfile  = GetFile(f_novafiles, "/uboone/data/users/kmistry/work/PPFX/uboone/bugfix_release_novafiles/output.root"); if (boolfile == false) gSystem->Exit(0);
 		boolhist = GetHist(f_novafiles, hnovafileflux, Gethist_TPC); if (boolhist == false) gSystem->Exit(0);
@@ -140,6 +139,7 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 
 	}
 
+	// Legend
 	lFlux->SetNColumns(1);
 	lFlux->SetBorderSize(0);
 	lFlux->SetFillStyle(0);
@@ -148,11 +148,6 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	//lFlux->AddEntry(h_g_simp, "G Simple Flux (no tilt wght)","l");
 	lFlux->Draw();
 	
-	if (mode == "numu")		hCV_Flux->SetTitle("#nu_{#mu}");
-	if (mode == "nue")		hCV_Flux->SetTitle("#nu_{e}");
-	if (mode == "numubar")	hCV_Flux->SetTitle("#bar{#nu_{#mu}}");
-	if (mode == "nuebar")	hCV_Flux->SetTitle("#bar{#nu_{e}}");
-
 	// ------------------------------------------------------------------------------------------------------------
 	// Draw all fluxes on one plot
 	// ------------------------------------------------------------------------------------------------------------
@@ -160,10 +155,10 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	TLegend* l_plotall = new TLegend(0.8, 0.65, 0.95, 0.9);
 
 	c_plotall->cd();
-	PlotFluxSame(c_plotall, l_plotall, f1, "numu", fPOT, "numu/numu_CV_AV_TPC" );
+	PlotFluxSame(c_plotall, l_plotall, f1, "numu",    fPOT, "numu/numu_CV_AV_TPC" );
 	PlotFluxSame(c_plotall, l_plotall, f1, "numubar", fPOT, "numubar/numubar_CV_AV_TPC" );
-	PlotFluxSame(c_plotall, l_plotall, f1, "nue", fPOT, "nue/nue_CV_AV_TPC" );
-	PlotFluxSame(c_plotall, l_plotall, f1, "nuebar", fPOT, "nuebar/nuebar_CV_AV_TPC" );
+	PlotFluxSame(c_plotall, l_plotall, f1, "nue",     fPOT, "nue/nue_CV_AV_TPC" );
+	PlotFluxSame(c_plotall, l_plotall, f1, "nuebar",  fPOT, "nuebar/nuebar_CV_AV_TPC" );
 
 	l_plotall->SetNColumns(1);
 	l_plotall->SetBorderSize(0);
@@ -178,27 +173,23 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	TLegend* l_uw_v_w = new TLegend(0.6, 0.65, 0.75, 0.9);
 
 	c_uw_v_w->cd();
+	
 	// Check if sucessfully got histo
 	boolhist = GetHist(f1, hUW_Flux, Gethist_TPC_uw); if (boolhist == false) gSystem->Exit(0);
 	
 	// Normalise flux by bin width (gives a flux/E [GeV])
-	for (int i=1;i<hUW_Flux->GetNbinsX()+1;i++) {
-		hUW_Flux->SetBinContent(i, hUW_Flux->GetBinContent(i)/hUW_Flux->GetBinWidth(i));		
-	}
+	Normalise(hUW_Flux);
 
-	// 6e20 POT, 50/1000 for 50 MeV from 1GeV, 1e-4 for m2->cm2
-	hUW_Flux->Scale( (6.0e20)/ (fPOT*1.0e4) * (50./1000.) );  
-
-
+	// 6e20 POT, 1e-4 for m2->cm2
+	hUW_Flux->Scale( (6.0e20)/ (fPOT*1.0e4));  
 	hUW_Flux->SetLineColor(kBlue+1);
 	hUW_Flux->SetLineWidth(2);
-	hUW_Flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / 50 MeV / cm^{2}");
-	gPad->SetLogy();
-	gPad->Update();
+	hUW_Flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
 	hCV_Flux->GetXaxis()->SetRangeUser(0,5);
-	
 	hCV_Flux->Draw("hist");
 	hUW_Flux->Draw("hist,same");
+	gPad->SetLogy();
+	gPad->Update();
 	
 	l_uw_v_w->AddEntry(hUW_Flux, "Unweighted","l");
 	l_uw_v_w->AddEntry(hCV_Flux, "PPFX","l");
@@ -208,13 +199,9 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	l_uw_v_w->SetTextFont(62); 
 	l_uw_v_w->Draw();
 
-	// Lets integrate the Gsimple flux and the dk2nu flux and see how differnent they really are!
-	
-	
 	// ------------------------------------------------------------------------------------------------------------
 	// Correlations, Covariance & uncertainties
 	// ------------------------------------------------------------------------------------------------------------
-
 	f1->cd();
 
 	// Varables and histograms
@@ -228,20 +215,11 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	std::vector<TH1D*> herr ;	// Fractional Uncertenties 
 
 	// Set bin widths to be the same as NOvA
-	for (int i=1; i<nbins+1; i++) {
-		edges[i-1] = hCV_Flux->GetBinLowEdge(i);
-	}
-
+	for (int i=1; i<nbins+1; i++) edges[i-1] = hCV_Flux->GetBinLowEdge(i);
+	
 	// Get bin Edges
 	edges[nbins] = hCV_Flux->GetBinLowEdge(nbins-1) + 2 * (hCV_Flux->GetBinWidth(nbins-1));
 	
-	// Legened
-	TLegend* lfrac = new TLegend(0.5, 0.65, 0.9, 0.9);
-	lfrac->SetNColumns(3);
-	lfrac->SetBorderSize(0);
-	lfrac->SetFillStyle(0);
-	lfrac->SetTextFont(62); 
-
 	// Resize
 	cor.resize(inputmode.size());
 	cov.resize(inputmode.size());
@@ -253,6 +231,13 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 		cov[l]  = new TH2D(Form("%s_cov",inputmode[l].c_str()), ";E_{#nu} (GeV);E_{#nu} (GeV)", nbins, edges, nbins, edges);
 		herr[l] = new TH1D(Form("%s_herr",inputmode[l].c_str()),";E_{#nu} (GeV);Fractional Uncertainty", nbins, edges);
 	}
+
+	// Legened
+	TLegend* lfrac = new TLegend(0.5, 0.65, 0.9, 0.9);
+	lfrac->SetNColumns(3);
+	lfrac->SetBorderSize(0);
+	lfrac->SetFillStyle(0);
+	lfrac->SetTextFont(62); 
 
 	// Loop over all input modes, get cov matrix and then get fractional uncertainties
 	for (unsigned int l = 0; l < inputmode.size(); l++){
@@ -326,7 +311,7 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 
 
 	// Draw the legend
-	lfrac->Draw();
+	// lfrac->Draw();
 
 	// ------------------------------------------------------------------------------------------------------------
 	// Override the errors to use Leos method
@@ -342,7 +327,7 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 
 			herr[l]->SetLineColor(kBlack);
 			herr[l]->SetLineWidth(2);
-			lfrac->AddEntry(herr[l], "PPFXMaster", "l");
+			// lfrac->AddEntry(herr[l], "PPFXMaster", "l");
 			if (mode == "numu")		herr[l]->SetTitle("#nu_{#mu}; Energy [GeV];Fractional Uncertainty");
 			if (mode == "nue")		herr[l]->SetTitle("#nu_{e}; Energy [GeV];Fractional Uncertainty");
 			if (mode == "numubar")	herr[l]->SetTitle("#bar{#nu_{#mu}}; Energy [GeV];Fractional Uncertainty");
@@ -392,8 +377,8 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	// Make a 4D Covariance matrix for re-weighing
 	// ------------------------------------------------------------------------------------------------------------
 	// Call caclulate covzriance matrix function. For now write function here.
-	TH1D *hCV2d, *hu, *hCV_unwrap, *hu_unwrap; 	// Flux hist for each universe
-	TH2D *cov4d;
+	TH1D *hCV_unwrap, *hu_unwrap; 	// Flux hist for each universe
+	TH2D *cov4d, *hCV2d, *hu;
 	TFile* f2d;
 	std::string mode_str;
 	if (mode == "numu") mode_str = "numu";
@@ -401,39 +386,25 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	else if (mode == "nue") mode_str = "nue";
 	else mode_str = "nuebar";
 
-	boolfile  = GetFile(f2d , "/uboone/data/users/kmistry/work/PPFX/uboone/with_tilt_2Dhists/output.root"); if (boolfile == false) gSystem->Exit(0);
+	boolfile  = GetFile(f2d , "/uboone/data/users/kmistry/work/PPFX/uboone/DetectorWeights_withtilt/2D/output.root"); if (boolfile == false) gSystem->Exit(0);
 	// boolfile  = GetFile(f2d , "/uboone/data/users/kmistry/work/PPFX/uboone/beamline/run0008/output.root"); if (boolfile == false) gSystem->Exit(0);
-
 
 	// Get the CV 2D matrix
 	boolhist = GetHist(f2d, hCV2d, Gethist_TPC);   if (boolhist == false) gSystem->Exit(0);
 	const int nBinsEnu = hCV2d->GetXaxis()->GetNbins(); // Enu
-	const int nBinsTh = hCV2d->GetYaxis()->GetNbins(); // Theta
+	const int nBinsTh  = hCV2d->GetYaxis()->GetNbins(); // Theta
 	int nuni{100};
 	
 	//------------------------------
 	// Normalise 2d hist by bin area / deg / GeV
-	// Loop over rows
-	for (int i=1; i<nBinsEnu+1; i++) {
-
-		// Loop over columns
-		for (int j=1; j<nBinsTh+1; j++) {
-			hCV2d->SetBinContent(i,j, hCV2d->GetBinContent(i, j)/ ( hCV2d->GetXaxis()->GetBinWidth(i) * hCV2d->GetYaxis()->GetBinWidth(j) ));
-		}
-
-	} 
-	hCV2d->Scale((6.0e20)/ (2.5e8*1.0e4)); // scale to right POT and m2
+	Normalise(hCV2d);
+	double POT_2d = GetPOT(f2d);
+	hCV2d->Scale((6.0e20)/ (POT_2d * 1.0e4)); // scale to right POT and m2
 	//------------------------------
 	// Unwrap the histogram to binindex
 	hCV_unwrap = new TH1D("", "",nBinsEnu*nBinsTh, 0, nBinsEnu*nBinsTh );
-	int counter{0};
-	for (int i=1; i<nBinsEnu+1; i++) { // Loop over rows
-		for (int j=1; j<nBinsTh+1; j++){// Loop over columns
-			counter++;
-			hCV_unwrap->SetBinContent(counter, hCV2d->GetBinContent(i , j)  );
-		}
-	}
-
+	UnwrapHist( hCV2d, hCV_unwrap);
+	
 	// Draw the CV Unwrapped
 	TCanvas* c_CV_unwrap= new TCanvas();
 	c_CV_unwrap->cd();
@@ -445,7 +416,10 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	// Draw the CV in 2D
 	TCanvas* c_CV2d= new TCanvas();
 	c_CV2d->cd();
-	hCV2d->SetTitle("CV 2D; Energy [GeV]; Theta [deg] ");
+	if (mode == "numu")		hCV2d->SetTitle("#nu_{#mu} CV 2D; Energy [GeV]; Theta [deg] ");
+	if (mode == "nue")		hCV2d->SetTitle("#nu_{e} CV 2D; Energy [GeV]; Theta [deg] ");
+	if (mode == "numubar")	hCV2d->SetTitle("#bar{#nu_{#mu}} CV 2D; Energy [GeV]; Theta [deg] ");
+	if (mode == "nuebar")	hCV2d->SetTitle("#bar{#nu_{e}} CV 2D; Energy [GeV]; Theta [deg] ");
 	gPad->SetLogz();
 	gPad->Update();
 	hCV2d->Draw("colz");
@@ -456,35 +430,20 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 
 	// Loop over universes
 	for (int k=0; k < nuni; k++) {
+		
 		char name[500];
 		snprintf(name, 500,"%s/PPFXMaster/Active_TPC_Volume/%s_PPFXMaster_Uni_%i_AV_TPC" ,mode_str.c_str(), mode_str.c_str(), k); // Get uni i
-		
 		
 		// Check if sucessfully got histo
 		boolhist = GetHist(f2d, hu, name); if (boolhist == false) gSystem->Exit(0);
 		//------------------------------
 		// Normalise 2d hist by bin area / deg / GeV
-		// Loop over rows
-		for (int p=1; p<nBinsEnu+1; p++) {
-			// Loop over columns
-			for (int q=1; q<nBinsTh+1; q++) {
-				hu->SetBinContent(p,q, hu->GetBinContent(p, q)/ ( hu->GetXaxis()->GetBinWidth(p) * hu->GetYaxis()->GetBinWidth(q) ));
-			}
-		} 
-		hu->Scale((6.0e20)/ (2.5e8*1.0e4)); // scale to right POT and m2
+		Normalise(hu);
+		hu->Scale((6.0e20)/ (POT_2d*1.0e4)); // scale to right POT and m2
 		//------------------------------
 		// Unwrap the histogram to binindex
 		hu_unwrap = new TH1D("", "",nBinsEnu*nBinsTh, 0, nBinsEnu*nBinsTh );
-
-		counter = 0;
-		// Loop over rows
-		for (int i=1; i<nBinsEnu+1; i++) { 
-			// Loop over columns
-			for (int j=1; j<nBinsTh+1; j++){ 
-				counter ++;
-				hu_unwrap->SetBinContent( counter, hu->GetBinContent(i , j)  );
-			}
-		}
+		UnwrapHist(hu, hu_unwrap);
 		//------------------------------
 		// Now calculate the covariance matrix
 		CalcCovariance_4D(cov4d, hCV_unwrap, hu_unwrap, nBinsEnu*nBinsTh, nBinsEnu*nBinsTh, k  );
@@ -493,7 +452,11 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	
 	TCanvas* c_cov= new TCanvas();
 	c_cov->cd();
-	cov4d->SetTitle("4D Covariance Matrix ; Bin i; Bin j");
+	if (mode == "numu")		cov4d->SetTitle("#nu_{#mu} 4D Covariance Matrix ; Bin i; Bin j");
+	if (mode == "nue")		cov4d->SetTitle("#nu_{e} 4D Covariance Matrix ; Bin i; Bin j");
+	if (mode == "numubar")	cov4d->SetTitle("#bar{#nu_{#mu}} 4D Covariance Matrix ; Bin i; Bin j");
+	if (mode == "nuebar")	cov4d->SetTitle("#bar{#nu_{e}} 4D Covariance Matrix ; Bin i; Bin j");
+
 	gStyle->SetPalette(kDeepSea);
 	cov4d->Draw("colz");
 	gPad->SetLogz();
@@ -505,7 +468,10 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	c_corr4d->cd();
 	TH2D *hcorr4d = (TH2D*) cov4d->Clone("hCorr4d");
 	CalcCorrelation(hcorr4d, cov4d, nBinsEnu*nBinsTh );
-	hcorr4d->SetTitle("4D Correlation Matrix ; Bin i; Bin j");
+	if (mode == "numu")		hcorr4d->SetTitle("#nu_{#mu} 4D Correlation Matrix ; Bin i; Bin j");
+	if (mode == "nue")		hcorr4d->SetTitle("#nu_{e} 4D Correlation Matrix ; Bin i; Bin j");
+	if (mode == "numubar")	hcorr4d->SetTitle("#bar{#nu_{#mu}} 4D Correlation Matrix ; Bin i; Bin j");
+	if (mode == "nuebar")	hcorr4d->SetTitle("#bar{#nu_{e}} 4D Correlation Matrix ; Bin i; Bin j");
 	hcorr4d->Draw("colz");
 	// gPad->SetLogz();
 	// gPad->Update();
@@ -515,7 +481,10 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	c_fraccov4d->cd();
 	TH2D *hfraccov4d = (TH2D*) cov4d->Clone("hfraccov4d");
 	CalcFracCovariance(hCV_unwrap, hfraccov4d, nBinsEnu*nBinsTh );
-	hfraccov4d->SetTitle("4D Fractional Covariance Matrix ; Bin i; Bin j");
+	if (mode == "numu")		hfraccov4d->SetTitle("#nu_{#mu} 4D Fractional Covariance Matrix ; Bin i; Bin j");
+	if (mode == "nue")		hfraccov4d->SetTitle("#nu_{e} 4D Fractional Covariance Matrix ; Bin i; Bin j");
+	if (mode == "numubar")	hfraccov4d->SetTitle("#bar{#nu_{#mu}} 4D Fractional Covariance Matrix ; Bin i; Bin j");
+	if (mode == "nuebar")	hfraccov4d->SetTitle("#bar{#nu_{e}} 4D Fractional Covariance Matrix ; Bin i; Bin j");
 	hfraccov4d->Draw("colz");
 
 	//------------------------------
@@ -523,7 +492,7 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	TCanvas *c_binidx = new TCanvas();
 	c_binidx->cd();
 	TH2D *hbinidx = (TH2D*) hCV2d->Clone("hCVClone");
-	counter = 0;
+	int counter = 0;
 	// Loop over rows
 	for (int i=1; i<nBinsEnu+1; i++) {  // Enu
 		// Loop over columns
@@ -532,10 +501,26 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 			hbinidx->SetBinContent( i, j, counter );
 		}
 	}
-	hbinidx->SetTitle("Bin Indexes; Energy [GeV]; Theta [deg]");
+	// hbinidx->SetTitle("Bin Indexes; Energy [GeV]; Theta [deg]");
+	if (mode == "numu")		hbinidx->SetTitle("#nu_{#mu} Bin Indexes Zoomed; Energy [GeV]; Theta [deg]");
+	if (mode == "nue")		hbinidx->SetTitle("#nu_{e} Bin Indexes ; Energy [GeV]; Theta [deg]");
+	if (mode == "numubar")	hbinidx->SetTitle("#bar{#nu_{#mu}} Bin Indexes Zoomed; Energy [GeV]; Theta [deg]");
+	if (mode == "nuebar")	hbinidx->SetTitle("#bar{#nu_{e}} Bin Indexes ; Energy [GeV]; Theta [deg]");
+	IncreaseLabelSize(hbinidx);
 	hbinidx->Draw("text00");
-	gPad->SetLogx();
-	gPad->Update();
+
+	std::vector<TLine*> vLine = MakeTLineVector(mode);
+	for (unsigned int i =0; i < vLine.size(); i++){
+       
+        vLine[i]->SetLineColor(kBlue+1); // Line specifiers
+        vLine[i]->SetLineStyle(3);
+        vLine[i]->Draw("SAME");
+    }
+
+	
+	hbinidx->GetXaxis()->SetRangeUser(0,0.5);
+	// gPad->SetLogx();
+	// gPad->Update();
 
 
 	// ------------------------------------------------------------------------------------------------------------
@@ -582,8 +567,6 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 	CalcFractionalError(cov4d, hCV_unwrap, hFracError4d );
 	c_FracError4d->cd();
 	hFracError4d->Draw("hist");
-
-
 
 	// ------------------------------------------------------------------------------------------------------------
 	// Update the CV flux prediction to include stat+sys errors
@@ -672,9 +655,10 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 			c_cov->Print("plots/CovarianceMarix4D_NuMu_MIPPOff.pdf");			
 			c_corr4d->Print("plots/CorrelationMarix4D_NuMu_MIPPOff.pdf");
 			c_FracError4d->Print("plots/FracCovarianceMarix4D_NuMu_MIPPOff.pdf");
-			c_binidx->Print("plots/BinIndex_NuMu.pdf");
+			c_binidx->Print("plots/BinIndex_NuMu_Zoomed.pdf");
 			c_fraccov4d->Print("plots/FracCovariance4d_NuMu_MIPPOff.pdf");
 			c_CV2d->Print("plots/CV2d_NuMu_MIPPOff.pdf");
+			cband->Print("plots/CV_vs_Mean_Flux_NuMu_MIPPOff.pdf");
 			std::cout << "\n"<< std::endl;
 		}
 		else if (mode == "nue"){
@@ -689,6 +673,7 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 			c_binidx->Print("plots/BinIndex_Nue.pdf");
 			c_fraccov4d->Print("plots/FracCovariance4d_Nue_MIPPOff.pdf");
 			c_CV2d->Print("plots/CV2d_Nue_MIPPOff.pdf");
+			cband->Print("plots/CV_vs_Mean_Flux_Nue_MIPPOff.pdf");
 			std::cout << "\n"<< std::endl;
 
 		}
@@ -701,9 +686,10 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 			c_cov->Print("plots/CovarianceMarix4D_Numubar_MIPPOff.pdf");
 			c_corr4d->Print("plots/CorrelationMarix4D_Numubar_MIPPOff.pdf");
 			c_FracError4d->Print("plots/FracCovarianceMarix4D_Numubar_MIPPOff.pdf");
-			c_binidx->Print("plots/BinIndex_Numubar.pdf");
+			c_binidx->Print("plots/BinIndex_Numubar_Zoomed.pdf");
 			c_fraccov4d->Print("plots/FracCovariance4d_Numubar_MIPPOff.pdf");
 			c_CV2d->Print("plots/CV2d_Numubar_MIPPOff.pdf");
+			cband->Print("plots/CV_vs_Mean_Flux_Numubar_MIPPOff.pdf");
 			std::cout << "\n"<< std::endl;
 
 		}
@@ -719,6 +705,7 @@ void plot_uboone_flux( TString mipp, TString inputfile, TString prodmode, TStrin
 			c_binidx->Print("plots/BinIndex_Nuebar.pdf");
 			c_fraccov4d->Print("plots/FracCovariance4d_Nuebar_MIPPOff.pdf");
 			c_CV2d->Print("plots/CV2d_Nuebar_MIPPOff.pdf");
+			cband->Print("plots/CV_vs_Mean_Flux_Nuebar_MIPPOff.pdf");
 			std::cout << "\n"<< std::endl;
 
 		}

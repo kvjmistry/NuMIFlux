@@ -278,13 +278,15 @@ void plot_uboone_beamline(){
 	lFlux_ratio->SetFillStyle(0);
 	lFlux_ratio->SetTextFont(62); 
 
+	const char* mode = "nuebar";
+
     // ------------------------------------------------------------------------------------------------------------
     // CV
     // boolfile  = GetFile(f , "/uboone/data/users/kmistry/work/PPFX/uboone/with_tilt_2Dhists/output.root"); if (boolfile == false) gSystem->Exit(0); 
-	if (useBeamlineCV) {boolfile  = GetFile(f , "/uboone/data/users/kmistry/work/PPFX/uboone/beamline/run15/output.root"); if (boolfile == false) gSystem->Exit(0);} // Beamline CV
+	if (useBeamlineCV) {boolfile  = GetFile(f , "/uboone/data/users/kmistry/work/PPFX/uboone/beamline_modified/run15/output.root"); if (boolfile == false) gSystem->Exit(0);} // Beamline CV
 	else boolfile  = GetFile(f , "/uboone/data/users/kmistry/work/PPFX/uboone/bugfix_release_novafiles/2dhists/output.root"); if (boolfile == false) gSystem->Exit(0); // Nova files CV
 	
-    boolhist = GetHist(f, htemp, "nue/nue_CV_AV_TPC"); if (boolhist == false) gSystem->Exit(0);
+    boolhist = GetHist(f, htemp, Form("%s/%s_CV_AV_TPC",mode, mode)); if (boolhist == false) gSystem->Exit(0);
     
     // Get POT and Unwrap histogram
     POT = GetPOT(f);
@@ -294,8 +296,8 @@ void plot_uboone_beamline(){
     hCV_clone->SetDirectory(0);
 
     // Now Draw
-	if (useBeamlineCV) h_unwrap->SetTitle("Beamline CV;Bin index; #nu / 6 #times 10^{20} POT / 50 MeV / deg / cm^{2}");
-	else h_unwrap->SetTitle("Threshold File CV;Bin index; #nu / 6 #times 10^{20} POT / 50 MeV / deg / cm^{2}");;
+	if (useBeamlineCV) h_unwrap->SetTitle(Form("%s with Beamline CV;Bin index; #nu / 6 #times 10^{20} POT / GeV / deg / cm^{2}",mode));
+	else h_unwrap->SetTitle("Threshold File CV;Bin index; #nu / 6 #times 10^{20} POT / GeV / deg / cm^{2}");;
     c_beamline->cd();
     DrawSpecifiers(h_unwrap, lFlux, "CV","hist,same");
     f->Close();
@@ -304,16 +306,18 @@ void plot_uboone_beamline(){
     // Loop over the beamline
     for (int i = 8; i < 30; i++){
 		if (useBeamlineCV && i == 15) continue; // used to see ratio of nova file CV to Beamline
-        boolfile  = GetFile(f , Form("/uboone/data/users/kmistry/work/PPFX/uboone/beamline/run%d/output.root",i)); if (boolfile == false) continue;
-        boolhist = GetHist(f, htemp, "nue/nue_CV_AV_TPC"); if (boolhist == false) gSystem->Exit(0);
+        boolfile  = GetFile(f , Form("/uboone/data/users/kmistry/work/PPFX/uboone/beamline_modified/run%d/output.root",i)); if (boolfile == false) continue;
+        boolhist = GetHist(f, htemp, Form("%s/%s_CV_AV_TPC",mode, mode)); if (boolhist == false) gSystem->Exit(0);
         
+		// if (i != 14 && i!=23) continue;
+
         // Get POT and Unwrap histogram
+		std::cout << params[i - 7] << " ";
         POT = GetPOT(f);
         UnwrapTH2D( htemp, h_unwrap, POT );
 
         htemp_unwrap = (TH1D*) hCV_clone->Clone("htemp_unwrap");
 		
-
         DivideHists(hCV_clone, h_unwrap, htemp_unwrap); // CV_clone, Beamline uni i, out
 
         // Now Draw
@@ -323,9 +327,9 @@ void plot_uboone_beamline(){
     
         c_beamline_ratio->cd();
         htemp_unwrap->SetMarkerStyle(7);
-        htemp_unwrap->GetYaxis()->SetRangeUser(0.0, 1.5);
+        htemp_unwrap->GetYaxis()->SetRangeUser(0.0, 2);
 		gPad->SetRightMargin(0.2);
-		if (useBeamlineCV) htemp_unwrap->SetTitle("Beamline CV;Bin index; Ratio Beamline/CV");
+		if (useBeamlineCV) htemp_unwrap->SetTitle(Form("%s with Beamline CV;Bin index; Ratio Beamline/CV", mode));
 		else htemp_unwrap->SetTitle("Threshold File CV;Bin index; Ratio Beamline/CV");
 
 		for (unsigned int i=1; i<htemp_unwrap->GetNbinsX()+1; i++ ) {if (htemp_unwrap->GetBinContent(i) == 0) htemp_unwrap->SetBinContent(i, 1);} // Get zero bins to 1 
@@ -351,9 +355,32 @@ void plot_uboone_beamline(){
 	// ++++++++++++++++++++++++++++++++++
 	// create plots folder if it does not exist
 	gSystem->Exec("if [ ! -d \"plots\" ]; then echo \"\nPlots folder does not exist... creating\"; mkdir plots; fi"); 
-	if (useBeamlineCV) c_beamline->Print("plots/nue_Beamline_2D_unwrapped_Flux_BeamlineCV.pdf");
-	else c_beamline->Print("plots/nue_Beamline_2D_unwrapped_Flux_HPCV.pdf");
-	if (useBeamlineCV) c_beamline_ratio->Print("plots/nue_Beamline_2D_unwrapped_Flux_ratio_BeamlineCV.pdf");
-	else c_beamline_ratio->Print("plots/nue_Beamline_2D_unwrapped_Flux_ratio_HPCV.pdf");
+	if (useBeamlineCV) c_beamline->Print(Form("plots/%s_Beamline_2D_unwrapped_Flux_BeamlineCV.pdf",mode));
+	else c_beamline->Print(Form("plots/%s_Beamline_2D_unwrapped_Flux_HPCV.pdf",mode));
+	if (useBeamlineCV) c_beamline_ratio->Print(Form("plots/%s_Beamline_2D_unwrapped_Flux_ratio_BeamlineCV.pdf",mode));
+	else c_beamline_ratio->Print(Form("plots/%s_Beamline_2D_unwrapped_Flux_ratio_HPCV.pdf",mode));
 
 } // End
+                //   POT
+// Horn_p2kA:        4.825e+08   146M   EVENTS
+// Horn_m2kA:        4.895e+08   148M   EVENTS
+// Horn1_x_p3mm      4.96e+08    151M   EVENTS
+// Horm1_x_m3mm      4.655e+08   141M   EVENTS
+// Horn1_y_p3mm      5e+08       152M   EVENTS
+// Horn1_y_m3mm      4.99e+08    151M   EVENTS
+// Beam_spot_1_1mm   4.135e+08   126M   EVENTS
+// Nominal           4.925e+08   149M   EVENTS
+// Beam_spot_1_5mm   4.885e+08   147M   EVENTS
+// Horn2_x_p3mm      4.995e+08   152M   EVENTS
+// Horm2_x_m3mm      4.92e+08    149M   EVENTS
+// Horn2_y_p3mm      4.995e+08   150M   EVENTS
+// Horn2_y_m3mm      4.985e+08   153M   EVENTS
+// Horns_0mm_water   5e+08       145M   EVENTS
+// Horns_2mm_water   4.795e+08   150M   EVENTS
+// Old_Horn TOTAL    4.96e+08    150M   EVENTS
+// Beam_shift_x_p1mm 4.96e+08    150M   EVENTS
+// Beam_shift_x_m1mm 4.96e+08    150M   EVENTS
+// Beam_shift_y_p1mm 4.975e+08   150M   EVENTS
+// Beam_shift_y_m1mm 4.955e+08   150M   EVENTS
+// Target_z_p7mm     4.805e+08   146M   EVENTS
+// Target_z_m7mm     4.995e+08   152M   EVENTS
