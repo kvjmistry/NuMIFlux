@@ -27,6 +27,7 @@ void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThin
 	TH1D *h_g_simp, *hnovafileflux, *hppfx, *hppfx_mod; 
 	TFile *f_gsimple, *f_novafiles, *f_ppfx, *f_ppfx_mod;
 	bool boolfile, boolhist;
+	double rebin{10}; // number to rebin the histograms by
 
 	// Select neutrino type to run with 
 	switch (return_mode(mode)){
@@ -82,15 +83,18 @@ void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThin
 	boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/DetectorWeights_withtilt/output.root"); if (boolfile == false) gSystem->Exit(0);
 	double fPOT = GetPOT(f_ppfx_mod);
 	boolhist = GetHist(f_ppfx_mod, h_dk2nu_flux, Gethist_TPC_dk2nu); if (boolhist == false) gSystem->Exit(0);
+	h_dk2nu_flux->Rebin(rebin);
 	Normalise(h_dk2nu_flux);
 
 	// Get Gsimple files	
 	boolfile  = GetFile(f_gsimple , "/uboone/data/users/kmistry/work/PPFX/uboone/NuMIFlux_update_morebins.root"); if (boolfile == false) gSystem->Exit(0);
 	boolhist = GetHist(f_gsimple, h_g_simp, g_simp_names); if (boolhist == false) gSystem->Exit(0);
+	h_g_simp->Rebin(rebin);
 	Normalise(h_g_simp);
 
 	// PPFX flux
 	boolhist = GetHist(f_ppfx_mod, hppfx, Gethist_TPC); if (boolhist == false) gSystem->Exit(0);
+	hppfx->Rebin(rebin);
 	Normalise(hppfx);
 	hppfx->SetDirectory(0);
 
@@ -101,12 +105,13 @@ void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThin
 	// Plottings
 	h_dk2nu_flux->SetLineColor(kRed+1);
 	h_dk2nu_flux->SetLineWidth(2);
-	h_dk2nu_flux->SetTitle(";E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
+	h_dk2nu_flux->SetTitle(";E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / 50 MeV / cm^{2}");
+	// h_dk2nu_flux->SetTitle(";E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
 	IncreaseLabelSize(h_dk2nu_flux);
+	h_dk2nu_flux->GetXaxis()->SetRangeUser(0,10);
 	h_dk2nu_flux->Draw("hist");
 
 	h_g_simp->SetLineWidth(2);
-	h_g_simp->GetXaxis()->SetRangeUser(0,3.5);
 	h_g_simp->Draw("hist, same");
 
 	hppfx->SetLineColor(kGreen+1);

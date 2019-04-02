@@ -358,14 +358,14 @@ int main(int argc, char** argv) {
 		else {
 			std::cout << "FILE : " << argv[i] << std::endl; 
 			filename.push_back(string(argv[i]));
-			totalPOT+=100000; // 100 000 POT per dk2nu file 500 000 if running over nova files
+			totalPOT+=500000; // 100 000 POT per dk2nu file 500 000 if running over nova files
 			filein->Close();
 		}
 	}
 
 	std::cout << "\nTotal POT read in:\t" << totalPOT << std::endl;
 
-	std::cout << "\nUsing 1e5 POT per dk2nu file, the flux will be wrong if this is not the case!\n" << std::endl;
+	std::cout << "\nUsing 5e5 POT per dk2nu file, the flux will be wrong if this is not the case!\n" << std::endl;
 
 	// Histograms for each flavor
 	std::vector<TH1D*> Enu_CV_AV_TPC;

@@ -952,7 +952,7 @@ void IncreaseLabelSize(TH2D* h){
 	h->GetYaxis()->SetLabelSize(0.05);
 	h->GetYaxis()->SetTitleSize(0.05);
 	gPad->SetLeftMargin(0.15);
-	gPad->SetBottomMargin(0.12);
+	gPad->SetBottomMargin(0.2);
 	h->SetMarkerSize(1.8);
 	// gPad->SetGridx(); 
 }

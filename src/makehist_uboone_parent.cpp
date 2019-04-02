@@ -365,20 +365,23 @@ int main(int argc, char** argv) {
 		else {
 			// std::cout << "FILE : " << argv[i] << std::endl; 
 			filename.push_back(string(argv[i]));
-			totalPOT+=100000; // 50* 100 000 POT per dk2nu file
+			totalPOT+=500000; // 50* 100 000 POT per dk2nu file
 			filein->Close();
 		}
 	}
 
 	std::cout << "\nTotal POT read in:\t" << totalPOT << std::endl;
 
-	std::cout << "\nUsing 1e6 POT per dk2nu file, the flux will be wrong if this is not the case!\n" << std::endl;
+	std::cout << "\nUsing 5e5 POT per dk2nu file, the flux will be wrong if this is not the case!\n" << std::endl;
 
 	// Histograms for each flavor
 	std::vector<TH1D*> Enu_CV_Window;
 	std::vector<TH1D*> Enu_CV_AV_TPC;
 	std::vector<TH1D*> Enu_UW_Window;
 	std::vector<TH1D*> Enu_UW_AV_TPC;
+
+	std::vector<TH1D*> Th_CV_AV_TPC;
+	std::vector<TH1D*> Th_UW_AV_TPC;
 
 	// 5Mev Bins
 	std::vector<TH1D*> Enu_CV_Window_rebin;
@@ -390,7 +393,7 @@ int main(int argc, char** argv) {
 	std::vector<TH1D*> Enu_CV_Window_rebin_intersect;
 
 	// Flux by Parent
-	std::vector<string> parent = {"PI_Plus", "PI_Minus", "Mu_Plus", "Mu_Minus", "KaonPM", "K0L"};
+	std::vector<string> parent = {"PI_Plus", "PI_Minus", "Mu_Plus", "Mu_Minus", "Kaon_Plus", "Kaon_Minus" , "K0L"};
 	std::vector<std::vector<TH1D*> > Enu_Parent_AV_TPC;		// Flux by Parent
 	std::vector<std::vector<TH1D*> > Th_Parent_AV_TPC; 		// Flux by parent in theta
 	std::vector<std::vector<TH1D*> > zpos_Parent_AV_TPC; 	// Flux by parent in z Pos at decay (production is unimplemented for now)
@@ -444,6 +447,9 @@ int main(int argc, char** argv) {
 	Enu_CV_AV_TPC.resize(4);
 	Enu_UW_Window.resize(4);
 	Enu_UW_AV_TPC.resize(4);
+
+	Th_CV_AV_TPC.resize(4);
+	Th_UW_AV_TPC.resize(4);
 	
 	Enu_CV_Window_rebin.resize(4);
 	Enu_CV_AV_TPC_rebin.resize(4);
@@ -475,6 +481,8 @@ int main(int argc, char** argv) {
 		Enu_CV_AV_TPC[i] = new TH1D(Form("%s_CV_AV_TPC",flav[i].c_str()),"",n, bin);
 		Enu_UW_Window[i] = new TH1D(Form("%s_UW_Window",flav[i].c_str()),"",n, bin);
 		Enu_UW_AV_TPC[i] = new TH1D(Form("%s_UW_AV_TPC",flav[i].c_str()),"",n, bin);
+		Th_CV_AV_TPC [i] = new TH1D(Form("Th_%s_CV_TPC", flav[i].c_str()), "", 18, 0, 180);
+		Th_UW_AV_TPC [i] = new TH1D(Form("Th_%s_UW_TPC", flav[i].c_str()), "", 18, 0, 180);
 
 		// new binning schmeme to be the same as marcos
 		Enu_CV_Window_rebin[i] = new TH1D(Form("%s_CV_Window_rebin",flav[i].c_str()),"",4000, 0, 20);
@@ -494,7 +502,7 @@ int main(int argc, char** argv) {
 		// Parent
 		for(unsigned k = 0; k < parent.size(); k++){
 			Enu_Parent_AV_TPC[i][k]  = new TH1D(Form("Enu_%s_%s_AV_TPC",     flav[i].c_str(), parent[k].c_str()),"", 4000, 0, 20);
-			Th_Parent_AV_TPC[i][k]   = new TH1D(Form("Th_%s_%s_AV_TPC",      flav[i].c_str(), parent[k].c_str()),"", 40 , 0, 180);
+			Th_Parent_AV_TPC[i][k]   = new TH1D(Form("Th_%s_%s_AV_TPC",      flav[i].c_str(), parent[k].c_str()),"", 18 , 0, 180);
 			zpos_Parent_AV_TPC[i][k] = new TH1D(Form("zpos_%s_%s_AV_TPC",    flav[i].c_str(), parent[k].c_str()),"", 400 , 0, 80000);
 			impwght_Parent[i][k]     = new TH1D(Form("impwght_Parent_%s_%s", flav[i].c_str(), parent[k].c_str()),"", 1 , 0, -1);
 			Targ_mom_Parent[i][k]    = new TH1D(Form("Targ_mom_Parent_%s_%s",flav[i].c_str(), parent[k].c_str()),"", 4000, 0, 20);
@@ -667,8 +675,10 @@ int main(int argc, char** argv) {
 			Enu_UW_AV_TPC[pdg]      ->Fill(Enu, dk2nu_weight);
 			Enu_CV_AV_TPC_rebin[pdg]->Fill(Enu, cv_weight);
 			Enu_UW_AV_TPC_rebin[pdg]->Fill(Enu, dk2nu_weight);
+			Th_CV_AV_TPC[pdg]->Fill(theta, cv_weight);
+			Th_UW_AV_TPC[pdg]->Fill(theta, dk2nu_weight);
 
-			// INDEXING: 0: PI_Plus 1: PI_Minus 2: Mu Plus 3: Mu_Minus 4: Kaon+/- 5: K0L 
+			// INDEXING: 0: PI_Plus 1: PI_Minus 2: Mu Plus 3: Mu_Minus 4: Kaon_Plus 5: Kaon_Minus 6: K0L 
 			if (mcflux.fptype == 211){ // pi plus
 				Enu_Parent_AV_TPC[pdg][0]  ->Fill(Enu, cv_weight);
 				Th_Parent_AV_TPC[pdg][0]   ->Fill(theta, cv_weight);
@@ -713,7 +723,7 @@ int main(int argc, char** argv) {
 				if (Pmom_dk == 0 ) DAR_Enu_Parent[pdg][3]->Fill(Enu, cv_weight);
 
 			} 
-			else if (mcflux.fptype == 321 || mcflux.fptype == -321){ // K+/-
+			else if (mcflux.fptype == 321){ // K+
 				Enu_Parent_AV_TPC[pdg][4]  ->Fill(Enu, cv_weight);
 				Th_Parent_AV_TPC[pdg][4]   ->Fill(theta, cv_weight);
 				zpos_Parent_AV_TPC[pdg][4] ->Fill(mcflux.fvz, cv_weight);
@@ -724,7 +734,7 @@ int main(int argc, char** argv) {
 				if (Pmom_dk == 0 ) DAR_Enu_Parent[pdg][4]->Fill(Enu, cv_weight);
 				
 			}
-			else if (mcflux.fptype == 130 ){ // K0L
+			else if ( mcflux.fptype == -321){ // K-
 				Enu_Parent_AV_TPC[pdg][5]  ->Fill(Enu, cv_weight);
 				Th_Parent_AV_TPC[pdg][5]   ->Fill(theta, cv_weight);
 				zpos_Parent_AV_TPC[pdg][5] ->Fill(mcflux.fvz, cv_weight);
@@ -733,6 +743,17 @@ int main(int argc, char** argv) {
 
 				// Fill DAR Energy spectrum
 				if (Pmom_dk == 0 ) DAR_Enu_Parent[pdg][5]->Fill(Enu, cv_weight);
+				
+			}
+			else if (mcflux.fptype == 130 ){ // K0L
+				Enu_Parent_AV_TPC[pdg][6]  ->Fill(Enu, cv_weight);
+				Th_Parent_AV_TPC[pdg][6]   ->Fill(theta, cv_weight);
+				zpos_Parent_AV_TPC[pdg][6] ->Fill(mcflux.fvz, cv_weight);
+				impwght_Parent[pdg][6]     ->Fill(mcflux.fnimpwt);
+				Targ_mom_Parent[pdg][6]    ->Fill(Pmom_tg, cv_weight);
+
+				// Fill DAR Energy spectrum
+				if (Pmom_dk == 0 ) DAR_Enu_Parent[pdg][6]->Fill(Enu, cv_weight);
 
 			}
 			
@@ -790,6 +811,8 @@ int main(int argc, char** argv) {
 		Enu_CV_AV_TPC[f]->Write();
 		Enu_UW_Window[f]->Write();      
 		Enu_UW_AV_TPC[f]->Write();
+		Th_CV_AV_TPC[f]->Write();
+		Th_UW_AV_TPC[f]->Write();
 
 		Enu_CV_Window_rebin[f]->Write();      
 		Enu_CV_AV_TPC_rebin[f]->Write();
@@ -799,7 +822,7 @@ int main(int argc, char** argv) {
 		Enu_CV_Window_rebin_intersect[f]->Write();
 
 		// Parent
-		// INDEXING: 1: PI_Plus 2: PI_Minus 3: Mu Plus 4: Mu_Minus 5: Kaon+/- 6: K0L 
+		// INDEXING: 1: PI_Plus 2: PI_Minus 3: Mu Plus 4: Mu_Minus 5: Kaon_Plus 6: Kaon_Minus 7: K0L 
 		for(unsigned int k = 1; k < parent.size()+1; k++){
 			std::cout << parent[k-1] << std::endl;
 			subdir[f][k] = subdir[f][0]->mkdir(Form("%s",parent[k-1].c_str()));
@@ -816,8 +839,8 @@ int main(int argc, char** argv) {
 
 		// Make other plots folder for miscalanious variables
 		std::cout << "OtherPlots" << std::endl;
-		subdir[f][parent.size()+2] = subdir[f][0]->mkdir("OtherPlots");
-		subdir[f][parent.size()+2]->cd();
+		subdir.at(f).at(parent.size()+1) = subdir[f][0]->mkdir("OtherPlots");
+		subdir.at(f).at(parent.size()+1)->cd();
 		
 		NuMu_PiDAR_zpos->Write();
 		NuMu_KDAR_zpos->Write();
