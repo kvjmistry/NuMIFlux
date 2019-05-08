@@ -3,6 +3,12 @@
  *
  * Plots each individual weighting mode instead of a single one
  * does not plot the correlation matrix for each individual mode to speed up the time
+
+ Lots of this code has been mutilated, and so needs a big clear out of old code.
+ Nevertheless, the code still runs, and you can execute it with the commmand:
+ root -l '/uboone/app/users/kmistry/PPFX/numi-validation/scripts/plot_uboone_flux.C("mippoff","output.root",""," ", "nue")'
+ where output.root is a file that contains the 1d ppfx weighted verison of the flux. 
+ All those empty fields need to be removed
  * 
  * A. Mastbaum <mastbaum@uchicago.edu> 2018/11
  * Modified by K. Mistry 12/18

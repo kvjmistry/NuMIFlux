@@ -115,13 +115,13 @@ double IntegrateFlux(int universe, TFile* fCV, int index, double POTScale){
 
 		flux  = hHP2d->Integral( xbin_th, hHP2d->GetNbinsX()+1, 0, hHP2d->GetNbinsY()+1); // Integrate over whole phase space (not quite any more)
 		
-		flux*= (POTScale / (GetPOT(fCV)*1.0e4)); // Scale to cm2 and the DATA POT
+		flux*= (POTScale / (GetPOT(fCV)*1.0e4*50)); // Scale to cm2 and the DATA POT
 
 	}
 	// else we have a beamline variations indexes from 1 to N
 	else if (index > 1){
 
-		boolfile  = GetFile(fBeamline , Form( "/uboone/data/users/kmistry/work/PPFX/uboone/beamline_modified/run%i/output.root", index+6)); if (boolfile == false) gSystem->Exit(0);
+		boolfile  = GetFile(fBeamline , Form( "/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_2D_run%i.root", index-1)); if (boolfile == false) gSystem->Exit(0);
 
 		// Get the CV histogram in 2D
 		boolhist = GetHist(fBeamline, hBeamline2dnue, "nue/nue_CV_AV_TPC"); if (boolhist == false) gSystem->Exit(0);
@@ -134,7 +134,7 @@ double IntegrateFlux(int universe, TFile* fCV, int index, double POTScale){
 
 		flux  = hBeamline2d->Integral(xbin_th, hBeamline2d->GetNbinsX()+1, 0, hBeamline2d->GetNbinsY()+1); // Integrate over whole phase space
 		
-		flux*= (POTScale / (GetPOT(fBeamline)*1.0e4)); // Scale to cm2 and the DATA POT
+		flux*= (POTScale / (GetPOT(fBeamline)*1.0e4*50)); // Scale to cm2 and the DATA POT
 
 	}
 	else { // CV where index = 0
@@ -148,7 +148,7 @@ double IntegrateFlux(int universe, TFile* fCV, int index, double POTScale){
 		
 		flux  = hCV2d->Integral(xbin_th, hCV2d->GetNbinsX()+1, 0, hCV2d->GetNbinsY()+1); // Integrate over whole phase space (not quite any more)
 
-		flux*= (POTScale / (GetPOT(fCV)*1.0e4)); // Scale to cm2 and the DATA POT
+		flux*= (POTScale / (GetPOT(fCV)*1.0e4*50)); // Scale to cm2 and the DATA POT
 
 	}
 
@@ -161,18 +161,18 @@ double CalcDataXSec(double sel, double bkg , double flux,
 					double targets, double intime_cosmics_bkg, double intime_cosmic_scale_factor,
 					double dirt, double dirt_scale_factor, double mc_scale_factor, double efficiency ){
 
-	std::cout << 
-	"DEBUG:\n"<<
-	"sel:\t" << sel << "\n" << 
-	"bkg:\t" << bkg  << "\n" << 
-	"flux:\t" << flux << "\n" << 
-	"targets:\t" << targets << "\n" << 
-	"intime_cosmics_bkg:\t" << intime_cosmics_bkg << "\n" << 
-	"intime cosmic scale factor:\t" << intime_cosmic_scale_factor << "\n" << 
-	"dirt:\t" << dirt << "\n" << 
-	"dirt scale factor:\t" << dirt_scale_factor << "\n" << 
-	"mc scale factor:\t" << mc_scale_factor << "\n" << 
-	"efficiency:\t" << efficiency << std::endl;
+	// std::cout << 
+	// "DEBUG:\n"<<
+	// "sel:\t" << sel << "\n" << 
+	// "bkg:\t" << bkg  << "\n" << 
+	// "flux:\t" << flux << "\n" << 
+	// "targets:\t" << targets << "\n" << 
+	// "intime_cosmics_bkg:\t" << intime_cosmics_bkg << "\n" << 
+	// "intime cosmic scale factor:\t" << intime_cosmic_scale_factor << "\n" << 
+	// "dirt:\t" << dirt << "\n" << 
+	// "dirt scale factor:\t" << dirt_scale_factor << "\n" << 
+	// "mc scale factor:\t" << mc_scale_factor << "\n" << 
+	// "efficiency:\t" << efficiency << std::endl;
 
 	// std::cout << "Total Scaled background:\t" <<  (intime_cosmics_bkg * intime_cosmic_scale_factor) - (dirt * dirt_scale_factor) - (bkg * mc_scale_factor) << std::endl;	
 
@@ -237,7 +237,7 @@ double GetTheta(double detx, double dety, double detz){
 
 	
 
-	// From detector to beam coords -- need to check
+	// From detector to beam coords
 	rotmatrix = {
 		0.921038538,	4.625400126e-05,	-0.3894714486,
    		0.0227135048,	0.9982916247,		0.05383241394,
@@ -250,6 +250,7 @@ double GetTheta(double detx, double dety, double detz){
 	newZ = TVector3(rotmatrix[6], rotmatrix[7], rotmatrix[8]);
 
 	RotDet2Beam.RotateAxes(newX, newY, newZ); // Return the TRotation
+	RotDet2Beam.Invert(); // Invert back to the det to beam rot matrix
 	
 	// Rotate to beam coords
 	BeamCoords = RotDet2Beam * detxyz;
@@ -265,7 +266,8 @@ double GetTheta(double detx, double dety, double detz){
 
 	// Override because the angle is coming out weird from the above calculation...
 	// Translate beam zero to detector origin for dot product
-	TVector3 temp= {0 + 5502 ,0 + 7259,1 + 67270};
+	//TVector3 temp= {0 + 5502 ,0 + 7259,1 + 67270};
+	TVector3 temp = {0 , 0 , 1};
 	double theta = detxyz.Angle(temp) * 180 / 3.1415926;
 
 	// std::cout << theta << std::endl;
@@ -323,8 +325,9 @@ void PrecalcHistRatio(HistWeights &flav, const char* mode){
 	// File with HP
 	// boolfile  = GetFile(fCV , "/uboone/data/users/kmistry/work/PPFX/uboone/with_tilt_2Dhists/output.root"); if (boolfile == false) gSystem->Exit(0); // with tilt
 	// boolfile  = GetFile(fCV , "/uboone/data/users/kmistry/work/PPFX/uboone/bugfix_release_notilt/output.root"); if (boolfile == false) gSystem->Exit(0); // notilt
-	boolfile  = GetFile(fCV , "/uboone/data/users/kmistry/work/PPFX/uboone/DetectorWeights_withtilt/2D/output.root"); if (boolfile == false) gSystem->Exit(0); // Updated flux with tilt 
-	
+	// boolfile  = GetFile(fCV , "/uboone/data/users/kmistry/work/PPFX/uboone/DetectorWeights_withtilt/2D/more_stats_pi_to_nue/output.root"); if (boolfile == false) gSystem->Exit(0); // Updated flux with tilt 
+	boolfile  = GetFile(fCV , "/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_2D_run0.root"); if (boolfile == false) gSystem->Exit(0); // Most up to date version of CV
+
 	boolhist = GetHist(fCV, hCV2d, Form("%s/%s_CV_AV_TPC", mode, mode)); if (boolhist == false) gSystem->Exit(0); // Get the CV
 
 	for (unsigned int i=0; i<100; i++){
@@ -334,16 +337,11 @@ void PrecalcHistRatio(HistWeights &flav, const char* mode){
 		flav.HP.push_back(hHP2d); // push back to vector
 	}
 	
-	// --- ---- ----- Beamline ---- --- --- ----- //
-	// Get the CV from the nova files
-	// boolfile  = GetFile(fCV_Beam , "/uboone/data/users/kmistry/work/PPFX/uboone/bugfix_release_novafiles/2dhists/output.root"); if (boolfile == false) gSystem->Exit(0); // nova files
-	boolfile  = GetFile(fCV_Beam , "/uboone/data/users/kmistry/work/PPFX/uboone/beamline_modified/run15/output.root"); if (boolfile == false) gSystem->Exit(0); // Nominal
-	boolhist = GetHist(fCV_Beam, hCV2d_Beam, Form("%s/%s_CV_AV_TPC",mode, mode)); if (boolhist == false) gSystem->Exit(0);
-	
-	for (unsigned int i=8; i<30; i++){
-		boolfile  = GetFile(fBeamline , Form("/uboone/data/users/kmistry/work/PPFX/uboone/beamline_modified/run%i/output.root", i)); if (boolfile == false) gSystem->Exit(0);
+	// --- ---- ----- Beamline ---- --- --- ----- //	
+	for (unsigned int i=1; i<24; i++){
+		boolfile  = GetFile(fBeamline , Form("/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_2D_run%i.root", i)); if (boolfile == false) gSystem->Exit(0);
 		boolhist = GetHist(fBeamline, hBeamline2d, Form("%s/%s_CV_AV_TPC",mode, mode)); if (boolhist == false) gSystem->Exit(0);
-		hBeamline2d->Divide(hCV2d_Beam); // Divide hists
+		hBeamline2d->Divide(hCV2d); // Divide hists
 		// DivideHists(hCV2d, hHP2d, hRatio);
 		flav.Beamline.push_back(hBeamline2d); // push back to vector
 	}

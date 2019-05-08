@@ -1,9 +1,15 @@
-/**
- * Extract flux histograms from art ROOT files generateed with dk2nu,
- * with ppfx weights.
- *
- * Authors: J. Zennamo, A. Mastbaum
- */
+/*
+Galley script to take all the flux read, ppfx weighted art root files
+and weights the flux based on the ppfx weights and importance weights etc.
+
+This specific script overwrites the window flux method to compare the flux at
+the detector (smeared). It also breaks the flux down by parent to give the
+oppertunuty to investigate the flux by parent.
+
+All the window method and detector smeared weights are preserved. 
+
+* Authors: J. Zennamo, A. Mastbaum, K. Mistry
+*/
 
 #include <iostream>
 #include <cstdlib>
@@ -594,7 +600,8 @@ int main(int argc, char** argv) {
 
 				if (last.first.find("PPFXCV") != std::string::npos) {
 
-					if(last.second.at(0) > 30 || last.second.at(0) < 0){ // still fill even if bad weight, changed from >90 to >30
+					// if(last.second.at(0) > 30 || last.second.at(0) < 0){ // still fill even if bad weight, changed from >90 to >30
+					if(last.second.at(0) < 0){ // change this to only throw out negative weights
 						std::cout << "Bad CV weight, setting to 1: " << last.second.at(0) << std::endl;
 						cv_weight = 1;
 						window_weight = 1;

@@ -28,7 +28,7 @@ source: {
 		// can also give userbeam:[x,y,z] where x,y,z is the beam dir in detector coords
 		userbeam:   [0, 0, 0, 5502, 7259, 67270 ]
 
-		// Rotation matrix from detector coordinate system to beam coordinate system
+		// Rotation matrix from beam coordinate system to detector coordinate system
 		rotmatrix:	[	0.92103853804025682,		0.0227135048039241207,		0.38880857519374290,
 						0.0000462540012621546684,	0.99829162468141475,		-0.0584279894529063024,
 						-0.38947144863934974,		0.0538324139386641073,		0.91946400794392302 ]

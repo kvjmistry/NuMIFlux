@@ -1,74 +1,57 @@
-/**
- * NuMI Flux at uboone Plotting
- *
- * Plots each individual weighting mode instead of a single one
- * does not plot the correlation matrix for each individual mode to speed up the time
- * 
- * A. Mastbaum <mastbaum@uchicago.edu> 2018/11
- * Modified by K. Mistry 12/18
- */
+/*
+This script will plot the flux at microboone for the flux made using flugg/gsimple files
+and compare this with the dk2nu and ppfx predictions.
 
-#include "/uboone/app/users/kmistry/PPFX/numi-validation/scripts/plot_comp_functions.h"
+To run this script run the command root -l 'plot_gsimple_flux.C("nue")' 
+where nue, nuebar, numu and numubar are the available options.
+
+This file depends on the plot_comp_functions.h script so make
+sure this file is included in the same directory.
+
+*/
+
+#include "plot_comp_functions.h"
 
 // ----------------------------------------------------------------------------
 // Main
 void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThinKaon etc. numu/nue)
 	gStyle->SetOptStat(0); // say no to stats box
-	bool overwrite_errors{false};
-	// bool overwrite_errors{true};
-	bool novafiles{false};
-	//bool novafiles{true};
-	bool unweighted{false};
-	// bool novafiles{true};
 
 	// Pre declare variables
-	TString Getmode, Gethist_TPC, Getflux, Cov_names, g_simp_names, Gethist_TPC_dk2nu;
-	TH1D *h_dk2nu_flux;
-	TH1D *h_g_simp, *hnovafileflux, *hppfx, *hppfx_mod; 
-	TFile *f_gsimple, *f_novafiles, *f_ppfx, *f_ppfx_mod;
+	TString Gethist_TPC, g_simp_names, Gethist_TPC_dk2nu;
+	TH1D *h_dk2nu_flux, *h_g_simp, *hnovafileflux, *hppfx, *hppfx_mod; 
+	TFile *f_gsimple, *f_ppfx, *f_ppfx_mod;
 	bool boolfile, boolhist;
-	double rebin{10}; // number to rebin the histograms by
+	double rebin{1}; // number to rebin the histograms by
 
 	// Select neutrino type to run with 
 	switch (return_mode(mode)){
 		case enumu:
 			std::cout << "\nUsing NuMu Mode!\n" << std::endl;
-			Getmode = "numu"; 												// Folder name
-			Gethist_TPC = "numu/numu_CV_AV_TPC";							// AV in TPC flux prediction
-			Getflux = "flux_numu";											// CV flux from NOvA
-			Cov_names = "numu/%s/Active_TPC_Volume/numu_%s_Uni_%i_AV_TPC";  // Covariance matrix names
+			Gethist_TPC = "numu/numu_CV_AV_TPC_rebin";							// AV in TPC flux prediction
 			g_simp_names = "numuFluxHisto";									// G simple files
-			Gethist_TPC_dk2nu = "numu/numu_unweighted_AV_TPC";				// uw AV in TPC flux prediction
+			Gethist_TPC_dk2nu = "numu/numu_UW_AV_TPC_rebin";				// uw AV in TPC flux prediction
 			break;
 
 		case enue:
 			std::cout << "\nUsing Nue Mode!\n" << std::endl;
-			Getmode = "nue";
-			Gethist_TPC = "nue/nue_CV_AV_TPC";
-			Getflux = "flux_nue";
-			Cov_names = "nue/%s/Active_TPC_Volume/nue_%s_Uni_%i_AV_TPC";
+			Gethist_TPC = "nue/nue_CV_AV_TPC_rebin";
 			g_simp_names = "nueFluxHisto";
-			Gethist_TPC_dk2nu = "nue/nue_unweighted_AV_TPC";
+			Gethist_TPC_dk2nu = "nue/nue_UW_AV_TPC_rebin";
 			break;
 
 		case enumubar:
 			std::cout << "\nUsing NuMubar Mode!\n" << std::endl;
-			Getmode = "numubar";
-			Gethist_TPC = "numubar/numubar_CV_AV_TPC";
-			Getflux = "flux_numubar";
-			Cov_names = "numubar/%s/Active_TPC_Volume/numubar_%s_Uni_%i_AV_TPC";
+			Gethist_TPC = "numubar/numubar_CV_AV_TPC_rebin";
 			g_simp_names = "anumuFluxHisto";
-			Gethist_TPC_dk2nu = "numubar/numubar_unweighted_AV_TPC";
+			Gethist_TPC_dk2nu = "numubar/numubar_UW_AV_TPC_rebin";
 			break;
 
 		case enuebar:
 			std::cout << "\nUsing Nuebar Mode!\n" << std::endl;
-			Getmode = "nuebar";
-			Gethist_TPC = "nuebar/nuebar_CV_AV_TPC";
-			Getflux = "flux_nuebar";
-			Cov_names = "nuebar/%s/Active_TPC_Volume/nuebar_%s_Uni_%i_AV_TPC";
+			Gethist_TPC = "nuebar/nuebar_CV_AV_TPC_rebin";
 			g_simp_names = "anueFluxHisto";
-			Gethist_TPC_dk2nu = "nuebar/nuebar_unweighted_AV_TPC";
+			Gethist_TPC_dk2nu = "nuebar/nuebar_UW_AV_TPC_rebin";
 			break;
 
 	}
@@ -80,7 +63,8 @@ void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThin
 	TLegend* lFlux = new TLegend(0.5, 0.65, 0.9, 0.9);
 
 	// Dk2nu
-	boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/DetectorWeights_withtilt/output.root"); if (boolfile == false) gSystem->Exit(0);
+	// boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/DetectorWeights_withtilt/output.root"); if (boolfile == false) gSystem->Exit(0);
+	boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/parent/v2/output.root"); if (boolfile == false) gSystem->Exit(0); // file with all large weights kept and just the ones which are < 0 removed
 	double fPOT = GetPOT(f_ppfx_mod);
 	boolhist = GetHist(f_ppfx_mod, h_dk2nu_flux, Gethist_TPC_dk2nu); if (boolhist == false) gSystem->Exit(0);
 	h_dk2nu_flux->Rebin(rebin);
@@ -105,10 +89,10 @@ void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThin
 	// Plottings
 	h_dk2nu_flux->SetLineColor(kRed+1);
 	h_dk2nu_flux->SetLineWidth(2);
-	h_dk2nu_flux->SetTitle(";E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / 50 MeV / cm^{2}");
+	h_dk2nu_flux->SetTitle(";E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / 5 MeV / cm^{2}");
 	// h_dk2nu_flux->SetTitle(";E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
 	IncreaseLabelSize(h_dk2nu_flux);
-	h_dk2nu_flux->GetXaxis()->SetRangeUser(0,10);
+	h_dk2nu_flux->GetXaxis()->SetRangeUser(0,5);
 	h_dk2nu_flux->Draw("hist");
 
 	h_g_simp->SetLineWidth(2);
@@ -120,30 +104,6 @@ void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThin
 
 	gPad->SetLogy();
 	gPad->Update();
-
-	
-
-
-	// choose whether to draw the flux using nova files which have a threshold
-	if (novafiles){
-		bool boolfile  = GetFile(f_novafiles, "/uboone/data/users/kmistry/work/PPFX/uboone/bugfix_release_novafiles/output.root"); if (boolfile == false) gSystem->Exit(0);
-		boolhist = GetHist(f_novafiles, hnovafileflux, Gethist_TPC); if (boolhist == false) gSystem->Exit(0);
-		hnovafileflux->SetLineColor(kGreen+3);
-		hnovafileflux->SetLineWidth(2);
-
-		// Normalise flux by bin width (gives a flux/E [GeV])
-		for (int i=1;i<	hnovafileflux->GetNbinsX()+1;i++) {
-		hnovafileflux->SetBinContent(i, hnovafileflux->GetBinContent(i)/hnovafileflux->GetBinWidth(i));		
-		}
-		
-		// Norm
-		hnovafileflux->Scale( (3* 6.0e20)/ (2.5e8*1.0e4) * (50./1000.) );  
-		
-		lFlux->AddEntry(hnovafileflux, "PPFX Flux with NOvA files","l");
-		//hnovafileflux->Draw("hist,same");
-		//hnovafileflux->Draw("same");
-
-	}
 
 	lFlux->SetNColumns(1);
 	lFlux->SetBorderSize(0);
@@ -205,9 +165,8 @@ void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThin
 	else {
 		c1->Print("plots/CV_Flux_Prediction_Nuebar_MIPPOff.pdf");
 		std::cout << "\n"<< std::endl;
-
 	}
-	
+
 	c_plotall->Print("plots/CVFlux_All_Flavours.pdf");
 
 // gSystem->Exit(0);

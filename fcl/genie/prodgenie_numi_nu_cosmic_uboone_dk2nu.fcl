@@ -13,6 +13,7 @@ physics.producers.generator.TopVolume:          "volCryostat"
 physics.producers.generator.BeamName:           "numi"
 physics.producers.generator.EventGeneratorList: "Default+CCMEC+NCMEC"
 physics.producers.generator.FluxType:           "dk2nu"
-physics.producers.generator.FluxSearchPaths:    "/pnfs/uboone/scratch/users/kmistry/me000z200i/"
+#physics.producers.generator.FluxSearchPaths:    "/pnfs/uboone/scratch/users/kmistry/me000z200i/" # path to threshold files
+physics.producers.generator.FluxSearchPaths:    "/pnfs/uboone/persistent/uboonebeam/numi_dk2nu_zero_threshold/FHC/" # path the production files
 physics.producers.generator.FluxFiles:          ["g4numiv6_*.root"]
 physics.producers.generator.DetectorLocation:   "microboone-numi-v2"

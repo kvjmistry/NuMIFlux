@@ -16,24 +16,40 @@ and then add them all together at the end.
 void FluxSystematics(){
 	
 	// Declearation of variables
-	std::vector<std::string> params = { // A vector with the variations
+	// std::vector<std::string> params = { // A vector with the variations OLD ONES
+	// 	"CV",                
+	// 	"HP",
+	// 	"Horn_p2kA",         "Horn_m2kA",
+	// 	"Horn1_x_p3mm",      "Horm1_x_m3mm",
+	// 	"Horn1_y_p3mm",      "Horn1_y_m3mm",
+	// 	"Beam_spot_1_1mm",   "Nominal",          "Beam_spot_1_5mm",
+	// 	"Horn2_x_p3mm",      "Horm2_x_m3mm",
+	// 	"Horn2_y_p3mm",      "Horn2_y_m3mm",
+	// 	"Horns_0mm_water",   "Horns_2mm_water",
+	// 	"Old_Horn",
+	// 	"Beam_shift_x_p1mm", "Beam_shift_x_m1mm",
+	// 	"Beam_shift_y_p1mm", "Beam_shift_y_m1mm",
+	// 	"Target_z_p7mm",     "Target_z_m7mm",
+	// 	"Decay_pipe_Bfield",
+	// 	"Horn1_refined_descr",
+	// 	"Beam_divergence_54urad" };
+
+	std::vector<std::string> params = { // A vector with the variations NEW ONES with no threshold
 		"CV",                
 		"HP",
 		"Horn_p2kA",         "Horn_m2kA",
 		"Horn1_x_p3mm",      "Horm1_x_m3mm",
 		"Horn1_y_p3mm",      "Horn1_y_m3mm",
-		"Beam_spot_1_1mm",   "Nominal",          "Beam_spot_1_5mm",
+		"Beam_spot_1_1mm",   "Beam_spot_1_5mm",
 		"Horn2_x_p3mm",      "Horm2_x_m3mm",
 		"Horn2_y_p3mm",      "Horn2_y_m3mm",
 		"Horns_0mm_water",   "Horns_2mm_water",
-		"Old_Horn",
 		"Beam_shift_x_p1mm", "Beam_shift_x_m1mm",
 		"Beam_shift_y_p1mm", "Beam_shift_y_m1mm",
 		"Target_z_p7mm",     "Target_z_m7mm",
-		"Decay_pipe_Bfield",
 		"Horn1_refined_descr",
-		"Beam_divergence_54urad" };
-
+		"Decay_pipe_Bfield",
+		"Old_Horn"};
 
 	// Declare member data here.
 	int run, subrun, evt;
@@ -64,7 +80,7 @@ void FluxSystematics(){
 	const double targets_data{3.4723e+31};
 
 	// DATA
-	const double intime_cosmics_bkg{83};                // Number of intime cosmics for background
+	const double intime_cosmics_bkg{81};                // Number of intime cosmics for background
 	const double num_selected_data{214};                // The number of selected events in data
 	const double intime_cosmic_scale_factor{1.0154};    // Scale factor to apply to the intime cosimic background
 	const double mc_scale_factor{0.1301};               // Scale factor to apply to the mc background
@@ -196,13 +212,16 @@ void FluxSystematics(){
 	// Get the file with the CV and Hadron Production uncertainties
 	// bool boolfile  = GetFile(fCV , "/uboone/data/users/kmistry/work/PPFX/uboone/with_tilt_2Dhists/output.root"); if (boolfile == false) gSystem->Exit(0); // with tilt
 	// bool boolfile  = GetFile(fCV , "/uboone/data/users/kmistry/work/PPFX/uboone/bugfix_release_notilt/output.root"); if (boolfile == false) gSystem->Exit(0); // notilt
-	bool boolfile  = GetFile(fCV , "/uboone/data/users/kmistry/work/PPFX/uboone/DetectorWeights_withtilt/2D/output.root"); if (boolfile == false) gSystem->Exit(0); // with tilt and modified window calc
+	// bool boolfile  = GetFile(fCV , "/uboone/data/users/kmistry/work/PPFX/uboone/DetectorWeights_withtilt/2D/more_stats_pi_to_nue/output.root"); if (boolfile == false) gSystem->Exit(0); // with tilt and modified window calc
+	bool boolfile  = GetFile(fCV , "/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_2D_run0.root"); if (boolfile == false) gSystem->Exit(0); // Most up to date version of CV
 
 	std::cout << "Params size:\t" << params.size() << std::endl;
 	// Loop over the parameters
-	for (unsigned int i = 0; i < params.size() - 3; i++){
+	for (unsigned int i = 0; i < params.size(); i++){
 		// if (i >= 1) continue; // skip the beamline uncertainties for now...
 		if (i == 1) UseHP = true;
+
+		std::cout << "index:\t" << i << std::endl;
 
 		std::string param = params.at(i); // Get the parameter
 		if (DEBUG) std::cout << "\n++++++++++++++++++++++++++" << std::endl;
@@ -277,10 +296,10 @@ void FluxSystematics(){
 			// }
 			// else {
 				std::cout << "\nN_gen:\t" << N_gen[k] << "  \% change from nominal:\t" << 100*(N_gen[k] - 7103)/7104 << std::endl;
-				std::cout << "N_sel:\t" << N_sel[k] << "      \% change from nominal:\t" << 1000*(N_sel[k] - 214)/214 << std::endl;
-				std::cout << "N_sig:\t" << N_sig[k] << "   \% change from nominal:\t" << 1000*(N_sig[k] - 642)/642 << std::endl;
-				std::cout << "N_bkg:\t" << N_bkg[k] << "   \% change from nominal:\t" << 1000*(N_bkg[k] - 356)/356 << std::endl;
-				std::cout << "N_dirt:\t" << N_dirt[k] << "   \% change from nominal:\t" << 1000*(N_dirt[k] - 30)/30 << "\n"<< std::endl;
+				std::cout << "N_sel:\t" << N_sel[k] << "      \% change from nominal:\t" << 100*(N_sel[k] - 214)/214 << std::endl;
+				std::cout << "N_sig:\t" << N_sig[k] << "   \% change from nominal:\t" << 100*(N_sig[k] - 642)/642 << std::endl;
+				std::cout << "N_bkg:\t" << N_bkg[k] << "   \% change from nominal:\t" << 100*(N_bkg[k] - 356)/356 << std::endl;
+				std::cout << "N_dirt:\t" << N_dirt[k] << "   \% change from nominal:\t" << 100*(N_dirt[k] - 30)/30 << "\n"<< std::endl;
 
 			// }
 
@@ -334,81 +353,81 @@ void FluxSystematics(){
 	// nominal is given by index 9
 	std::cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
 	std::cout << "Beamline Errors\n" << std::endl;
-	for (unsigned int i=2; i < params.size() - 3; i++){
+	for (unsigned int i=2; i < params.size(); i++){
 		std::cout << params[i] << "\n" <<
 			"Data X-Sec:\t\t\t\033[1;33m" <<  vec_Data_x_sec[i][0] <<
-			"\033[0m\nPercent diff from Nominal:\t" <<  100 * (vec_Data_x_sec[i][0] - vec_Data_x_sec[9][0]) /  vec_Data_x_sec[9][0] << " \%"
+			"\033[0m\nPercent diff from Nominal:\t" <<  100 * (vec_Data_x_sec[i][0] - vec_Data_x_sec[0][0]) /  vec_Data_x_sec[0][0] << " \%"
 			<< "\n------------------------------------------------" 
 			<< "\n"<< std::endl;
 	}
 
 
-	// Make a plot of the beamline variation uncertainties
-	std::vector<std::string> param_max = {
-		"Horn 2kA",
-		"Horn 1 x 3mm",
-		"Horn 1 y 3mm",
-		"Beam Spot 2mm",
-		"Horn 2 x 3mm",
-		"Horn 2 y 3mm",
-		"Horns water",
-		"Old Horn",
-		"Beam Shift x 1mm",
-		"Beam Shift y 1mm",
-		"Target z 7mm",
-		" ",
-		"Total Error"
-	};
+	// // Make a plot of the beamline variation uncertainties
+	// std::vector<std::string> param_max = {
+	// 	"Horn 2kA",
+	// 	"Horn 1 x 3mm",
+	// 	"Horn 1 y 3mm",
+	// 	"Beam Spot 2mm",
+	// 	"Horn 2 x 3mm",
+	// 	"Horn 2 y 3mm",
+	// 	"Horns water",
+	// 	"Old Horn",
+	// 	"Beam Shift x 1mm",
+	// 	"Beam Shift y 1mm",
+	// 	"Target z 7mm",
+	// 	" ",
+	// 	"Total Error"
+	// };
 
-	std::vector<double> param_max_val = {
-		1.5,
-		3.5,
-		0.7,
-		10.4,
-		0.9,
-		0.8,
-		1.7,
-		3.3,
-		2.5,
-		1.8,
-		1.6,
-		0
-	};
+	// std::vector<double> param_max_val = {
+	// 	1.5,
+	// 	3.5,
+	// 	0.7,
+	// 	10.4,
+	// 	0.9,
+	// 	0.8,
+	// 	1.7,
+	// 	3.3,
+	// 	2.5,
+	// 	1.8,
+	// 	1.6,
+	// 	0
+	// };
 
-	double tot_beamline_err{0};
+	// double tot_beamline_err{0};
 
-	for (unsigned int i = 0; i < param_max_val.size(); i++){
+	// for (unsigned int i = 0; i < param_max_val.size(); i++){
 
-		tot_beamline_err+=param_max_val[i]*param_max_val[i];
+	// 	tot_beamline_err+=param_max_val[i]*param_max_val[i];
 	
-	}
-	tot_beamline_err = std::sqrt(tot_beamline_err);
-	param_max_val.push_back(tot_beamline_err);
+	// }
+	// tot_beamline_err = std::sqrt(tot_beamline_err);
+	// param_max_val.push_back(tot_beamline_err);
 
-	TH1D *hBeamline = new TH1D("Beamline","", param_max_val.size()+1, 0, param_max_val.size()+1);
+	// TH1D *hBeamline = new TH1D("Beamline","", param_max_val.size()+1, 0, param_max_val.size()+1);
 
-	for (unsigned int i = 0; i < param_max_val.size(); i++){
-		hBeamline->Fill(param_max[i].c_str(), param_max_val[i]);
+	// for (unsigned int i = 0; i < param_max_val.size(); i++){
+	// 	hBeamline->Fill(param_max[i].c_str(), param_max_val[i]);
 
-	}
-	gStyle->SetOptStat(0); // say no to stats box
-	TCanvas* c = new TCanvas();
-	hBeamline->SetLineColor(kViolet-6);
-	hBeamline->SetLineWidth(3);
-	hBeamline->GetYaxis()->SetTitle("Percentage Uncertainty %");
-	hBeamline->LabelsOption("v");
-	gPad->SetBottomMargin(0.3);
+	// }
+	// gStyle->SetOptStat(0); // say no to stats box
+	// TCanvas* c = new TCanvas();
+	// hBeamline->SetLineColor(kViolet-6);
+	// hBeamline->SetLineWidth(3);
+	// hBeamline->GetYaxis()->SetTitle("Percentage Uncertainty %");
+	// hBeamline->LabelsOption("v");
+	// gPad->SetBottomMargin(0.3);
 
-	hBeamline->GetXaxis()->SetLabelSize(0.05);
-	hBeamline->GetXaxis()->SetTitleSize(0.05);
-	hBeamline->GetYaxis()->SetLabelSize(0.05);
-	hBeamline->GetYaxis()->SetTitleSize(0.05);
-	hBeamline->SetMarkerSize(1.8);
-	gPad->SetLeftMargin(0.15);
+	// hBeamline->GetXaxis()->SetLabelSize(0.05);
+	// hBeamline->GetXaxis()->SetTitleSize(0.05);
+	// hBeamline->GetYaxis()->SetLabelSize(0.05);
+	// hBeamline->GetYaxis()->SetTitleSize(0.05);
+	// hBeamline->SetMarkerSize(1.8);
+	// gPad->SetLeftMargin(0.15);
 
-	hBeamline->Draw("hist, text00");
+	// hBeamline->Draw("hist, text00");
 
-	c->Print("plots/Beamline_Uncertainties.pdf");
+	// c->Print("plots/Beamline_Uncertainties.pdf");
 
 	// gSystem->Exit(0);
 } // END

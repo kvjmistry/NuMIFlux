@@ -32,7 +32,7 @@ physics: {
 outputs: {
   out1: {
     module_type: RootOutput
-    fileName: "%ifb_EW_%tc.root"
+    fileName: "%ifb_EW.root"
     dataTier: "generated"
     compressionLevel: 1
   }
