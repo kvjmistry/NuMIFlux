@@ -1,4 +1,6 @@
 *.swp
 *.root
 *.DS_Store
-
+scripts/plots
+scripts/filelists
+bin
