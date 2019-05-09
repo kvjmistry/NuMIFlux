@@ -52,17 +52,19 @@ int main(int argc, char** argv) {
 	InputTag  evtwght_tag { "eventweight" };
 
 	double totalPOT{0};
+	bool input_flag{false}; // flag to see if a detector has been specified
 
 	vector<string> badfiles;
 	vector<string> filename;
 	for (int i = 1; i < argc; i++) {
 
-		std::string input = argv[i];
+		std::string input = string(argv[i]);
 
 		// Initialise the detector type 
 		if (input == "uboone" || input == "nova" ){
-			std::string detector_type = argv[i];
+			std::string detector_type = string(argv[i]);
 			Initialise(detector_type, Detector_);
+			input_flag = true;
 			continue;
 		}
 
@@ -84,6 +86,10 @@ int main(int argc, char** argv) {
 	std::cout << "\nTotal POT read in:\t" << totalPOT << std::endl;
 
 	std::cout << "\nUsing 5e5 POT per dk2nu file, the flux will be wrong if this is not the case!\n" << std::endl;
+
+	// If no detector is specified then use uboone as default
+	if (input_flag == false)
+		Initialise("uboone", Detector_);
 
 	// Set up intersection method stuff
 	geoalgo::GeoAlgo const _geo_algo_instance;
@@ -136,17 +142,31 @@ int main(int argc, char** argv) {
 	std::vector<string> flav = { "numu", "nue", "numubar", "nuebar" };
 
 	std::vector< std::vector<double> > bins; bins.resize(4);
-	bins[0] = { // numu
-		0.00, 0.025, 0.03, 0.235 ,0.24, 0.50, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 3.00, 4.00, 5.00, 6.00, 7.00, 10.00 };
+	
+	if (Detector_.detector_name == "uboone"){
+		bins[0] = { // numu
+			0.00, 0.025, 0.03, 0.235 ,0.24, 0.50, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 3.00, 4.00, 5.00, 6.00, 7.00, 10.00 };
 
-	bins[1] = {  // nue
-		0.00 ,0.06, 0.125, 0.25, 0.5, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 3.50, 4.00, 5.00 };
+		bins[1] = {  // nue
+			0.00 ,0.06, 0.125, 0.25, 0.5, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 3.50, 4.00, 5.00 };
 
-	bins[2] = {// numubar
-		0.00, 0.025, 0.03, 0.235 ,0.24, 0.50, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 3.00, 4.00, 5.00, 6.00, 7.00, 10.00 };
+		bins[2] = {// numubar
+			0.00, 0.025, 0.03, 0.235 ,0.24, 0.50, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 3.00, 4.00, 5.00, 6.00, 7.00, 10.00 };
 
-	bins[3] = {  // nuebar
-		0.00 ,0.06, 0.125,  0.25, 0.5, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 3.50, 4.00, 5.00 };
+		bins[3] = {  // nuebar
+			0.00 ,0.06, 0.125,  0.25, 0.5, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 3.50, 4.00, 5.00 };
+	}
+	else {
+		bins[0] = {
+		0.0,  0.6,  0.8,  1.0,  1.2,  1.4,  1.6,  1.8,  2.0,  2.2,  2.4,  2.6,
+		2.8,  3.0,  3.2,  3.4,  3.6,  3.8,  4.0,  4.2,  4.4,  4.6,  4.8,  5.0,
+		6.0,  7.0,  8.0,  9.0,  10.0,  11.0,  12.0,  13.0,  14.0,  15.0,  16.0,
+		17.0,  18.0,  19.0,  20.0
+		};
+		bins[1] = {  0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0};
+		bins[2] = {  0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0};
+		bins[3] = {  0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0};
+	}
 
 	std::vector<string> labels;
 	// labels = {"ms_PPFX","Total"};

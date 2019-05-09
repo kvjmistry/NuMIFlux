@@ -106,7 +106,8 @@ void Initialise(std::string detector_type, Detector &Detector_){
 		zRange.first  =      0;
 		zRange.second = 1036.8;
 
-		Trans_Det2Beam = { -31387.58422, -3316.402543, -60100.2414}; //cm
+		// Trans_Det2Beam = { -31387.58422, -3316.402543, -60100.2414}; //cm
+		Trans_Det2Beam = { 5502, 7259, 67270}; //cm in beam coords
 
 		// Rotation matrix using the 0,0,0 position for MicroBooNE (beam to det input)
 		Rot_row_x = { 0.92103853804025681562, 0.022713504803924120662, 0.38880857519374290021  };

@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
 	bins[3] = {  // nuebar
 		0.00 ,0.06, 0.125,  0.25, 0.5, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 3.50, 5.00 };
 
-	bins[4] = {  20, 40, 120,  160 }; // theta -- removed edge theta bins where no events live and split into 3 bins for stats
+	bins[4] = {  0, 20, 110,  160 }; // theta -- removed edge theta bins where no events live and split into 3 bins for stats
 	// bins[4] = {  20, 30, 40,50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 160 }; // theta -- removed edge theta bins where no events live OLD Bins
 
 	std::vector<string> labels;
@@ -249,7 +249,7 @@ int main(int argc, char** argv) {
 			calcEnuWgt(mcflux, xyz_beam, Enu, detwgt);
 
 			// Get the tiltweight -- unused here?
-			tiltwght = Get_tilt_wgt(xyz_beam, mcflux, Enu, Detector_);
+			// tiltwght = Get_tilt_wgt(xyz_beam, mcflux, Enu, Detector_);
 
 			// Weight of neutrino parent (importance weight) * Neutrino weight for a decay forced at center of near detector 
 			cv_weight *= mcflux.fnimpwt * detwgt / 3.1415926;
@@ -292,7 +292,7 @@ int main(int argc, char** argv) {
 
 			// TPC AV
 			Enu_Th_CV_AV_TPC[pdg]->Fill(Enu, theta, cv_weight);
-			Enu_Th_UW_AV_TPC[pdg]->Fill(Enu, theta, mcflux.fnimpwt * detwgt * tiltwght);
+			Enu_Th_UW_AV_TPC[pdg]->Fill(Enu, theta, mcflux.fnimpwt * detwgt / 3.1415926);
 
 			// Now fill multisims
 			// Options        
