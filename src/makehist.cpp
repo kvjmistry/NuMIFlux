@@ -80,11 +80,11 @@ TVector3 FromDetToBeam( const TVector3 det, bool rotate_only ) {
 }
 //___________________________________________________________________________
 // Get the window normal for the tiltweight
-double Get_tilt_wgt( const TVector3& detxyz, auto const& mcflux, auto const& mctruth){
+double Get_tilt_wgt( const TVector3& detxyz, auto const& mcflux, double enu){
 
 	TVector3 xyzDk(mcflux.fvx,mcflux.fvy,mcflux.fvz);  // origin of decay
 	
-	TVector3 p3beam = mctruth.GetNeutrino().Nu().E() * ( detxyz - xyzDk ).Unit();
+	TVector3 p3beam = enu * ( detxyz - xyzDk ).Unit();
 
 	// Hardcoded for testing, but in priciple would want
 	TVector3 windownorm = { 0.528218812, 0.8308577046, 0.175101003}; 
@@ -290,6 +290,8 @@ int main(int argc, char** argv) {
 			double detwgt; // New weight at a window value
 			double tiltwght;
 			double dk2nu_cv = 1;
+
+			double enu = mctruth.GetNeutrino().Nu().E();
 			
 			// Now get the momentum to calculate theta
 			TVector3 mom_det = {mctruth.GetNeutrino().Nu().Px(),mctruth.GetNeutrino().Nu().Py(),mctruth.GetNeutrino().Nu().Pz()};
@@ -340,10 +342,10 @@ int main(int argc, char** argv) {
 			TVector3 xyz_beam = FromDetToBeam(xyz_det,false);
 
 			// Get the new weight at the detector
-			calcEnuWgt(mcflux, xyz_beam, detwgt);
+			calcEnuWgt(mcflux, xyz_beam, enu,  detwgt);
 
 			// Get the tiltweight
-			tiltwght = Get_tilt_wgt(xyz_beam, mcflux, mctruth);
+			tiltwght = Get_tilt_wgt(xyz_beam, mcflux, enu);
 
 			// Weight of neutrino parent (importance weight) * Neutrino weight for a decay forced at center of near detector 
 			cv_weight *= mcflux.fnimpwt * detwgt * tiltwght; 
@@ -399,8 +401,8 @@ int main(int argc, char** argv) {
 			// ++++++++++++++++++++++++++++++++
 
 			// TPC AV
-			Enu_CV_AV_TPC[pdg]->Fill(mctruth.GetNeutrino().Nu().E(), cv_weight);
-			Enu_UW_AV_TPC[pdg]->Fill(mctruth.GetNeutrino().Nu().E(), dk2nu_cv);
+			Enu_CV_AV_TPC[pdg]->Fill(enu, cv_weight);
+			Enu_UW_AV_TPC[pdg]->Fill(enu, dk2nu_cv);
 			Th_CV_AV_TPC[pdg]->Fill(theta, cv_weight);
 			Th_UW_AV_TPC[pdg]->Fill(theta, dk2nu_cv);
 
@@ -412,7 +414,7 @@ int main(int argc, char** argv) {
 				// Universes
 				for (unsigned i=0; i<Weights[l].size(); i++) {
 				
-					Enu_Syst_AV_TPC[pdg][l][i]->Fill(mctruth.GetNeutrino().Nu().E(), Weights[l][i]*cv_weight);
+					Enu_Syst_AV_TPC[pdg][l][i]->Fill(enu, Weights[l][i]*cv_weight);
 					Th_Syst_AV_TPC[pdg][l][i]->Fill(theta, Weights[l][i]*cv_weight);
 					
 				}

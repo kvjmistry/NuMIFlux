@@ -24,7 +24,7 @@ void plot_nova_flux(const char* mode) {
 
     double fPOT = GetPOT(f);
     // double normfactor = 1.0e6 / (fPOT*50);
-    double normfactor = 1.0e6 / (fPOT);
+    double normfactor =  1.0e6 / (fPOT);
 
     // Now get the flux for intersection
 	TH1D* h_intersection_flux;

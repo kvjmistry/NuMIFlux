@@ -75,7 +75,7 @@ $(EXEC7): src/makehist_uboone_detweights_2D.cpp
 	@mkdir -p bin
 	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
 
-$(EXEC8): src/geo/GeoVector.cxx src/geo/GeoAABox.cxx src/geo/GeoHalfLine.cxx src/geo/GeoLine.cxx src/geo/GeoLineSegment.cxx src/geo/GeoCone.cxx src/geo/GeoSphere.cxx src/geo/GeoTrajectory.cxx src/geo/GeoAlgo.cxx src/makehist_nova.cpp
+$(EXEC8): src/geo/GeoVector.cxx src/geo/GeoAABox.cxx src/geo/GeoHalfLine.cxx src/geo/GeoLine.cxx src/geo/GeoLineSegment.cxx src/geo/GeoCone.cxx src/geo/GeoSphere.cxx src/geo/GeoTrajectory.cxx src/geo/GeoAlgo.cxx src/makehist_nova.cpp src/functions_makehist.h
 	@echo Building $(EXEC8)
 	@mkdir -p bin
 	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^

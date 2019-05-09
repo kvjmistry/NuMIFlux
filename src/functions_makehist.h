@@ -76,6 +76,7 @@ class Detector {
 //___________________________________________________________________________
 // Create detector definition
 void Initialise(std::string detector_type, Detector &Detector_){
+	std::cout << "Initialising detector for:\t" << detector_type << std::endl;
 
 	// Fiducial Volume Definition
 	std::pair<float, float>  xRange; 
@@ -126,7 +127,8 @@ void Initialise(std::string detector_type, Detector &Detector_){
 		zRange.first  =   25;
 		zRange.second = 1150;
 
-		Trans_Det2Beam = {1226.9447, 6100.1882, -99113.1313}; //cm
+		// Trans_Det2Beam = {1226.9447, 6100.1882, -99113.1313}; //cm
+		 Trans_Det2Beam = {1171.74545 ,       -331.51325 ,      99293.47347}; // new test with beam coords
 
 		// Rotation matrix using the 0,0,0 position for NOvA (beam to det input)
 		Rot_row_x = {9.9990e-01, -8.2300e-04, -1.4088e-02 };
@@ -137,17 +139,36 @@ void Initialise(std::string detector_type, Detector &Detector_){
 		Win_pt1   = { 500,  500,  -500 };
 		Win_pt2   = { -500, -250, -500 };
 
+		// Window normal for nova (for debug comparisons)
+		// Window Normal:	 X 0.01411202435 Y 0.05809720554 Z 0.9982111828
+		// Window area is 74
+
 	}
 	else{
 		std::cout << "Unknown detector type given, EXITING....." << std::endl;
 		exit(1);
 	}
+	std::cout << "\nFiducial Volume:\n"
+		"X:\t(" << xRange.first << ", "<< xRange.second << ")" << "\n" <<
+		"Y:\t(" << yRange.first << ", "<< yRange.second << ")" << "\n" <<
+		"Z:\t(" << zRange.first << ", "<< zRange.second << ")\n" << "\n"<<
+		"R_{beam to det} = \n" << 
+		" [ " << Rot_row_x.X() << " " << Rot_row_x.Y() << " " << Rot_row_x.Z() << " ] " << "\n" <<
+		" [ " << Rot_row_y.X() << " " << Rot_row_y.Y() << " " << Rot_row_y.Z() << " ] " << "\n" <<
+		" [ " << Rot_row_z.X() << " " << Rot_row_z.Y() << " " << Rot_row_z.Z() << " ] " << "\n\n" <<
+		"Translation from target to detector in detector coords = \n" <<
+		" [ " << Trans_Det2Beam.X() << ", " << Trans_Det2Beam.Y() << ", " << Trans_Det2Beam.Z() << " ] " << "\n\n" <<
+		"Window (in det coords) = \n" << 
+		" [ " << Win_Base.X() << " " << Win_Base.Y() << " " << Win_Base.Z() << " ] " << "\n" <<
+		" [ " << Win_pt1.X()  << " " << Win_pt1.Y()  << " " << Win_pt1.Z()  << " ] " << "\n" <<
+		" [ " << Win_pt2.X()  << " " << Win_pt2.Y()  << " " << Win_pt2.Z()  << " ] " << "\n" <<
+		std::endl; 
 
 	Detector_ = Detector(detector_type, xRange, yRange, zRange, Trans_Det2Beam, Rot_row_x, Rot_row_y, Rot_row_z, Win_Base, Win_pt1, Win_pt2 );
 
 }
 //___________________________________________________________________________
-int calcEnuWgt(auto const& mcflux, const TVector3& xyz, double& wgt_xy){
+int calcEnuWgt(auto const& mcflux, const TVector3& xyz, double &enu, double& wgt_xy){
 	// Neutrino Energy and Weight at arbitrary point
 	// Arguments:
 	//    dk2nu    :: contains current decay information
@@ -189,7 +210,7 @@ int calcEnuWgt(auto const& mcflux, const TVector3& xyz, double& wgt_xy){
 	double ypos = xyz.Y();
 	double zpos = xyz.Z();
 
-	double enu    = 0.0;  // don't know what the final value is
+	enu    = 0.0;  // don't know what the final value is
 	wgt_xy = 0.0;  // but set these in case we return early due to error
 
 	// in principle we should get these from the particle DB
@@ -385,7 +406,7 @@ TVector3 FromDetToBeam( const TVector3 det, bool rotate_only, Detector Detector_
 	TRotation R;
 	bool debug{false};
 	
-	R.RotateAxes(Detector_.Rot_row_x, Detector_.Rot_row_y, Detector_.Rot_row_z); // Also inverts to det to beam
+	R.RotateAxes(Detector_.Rot_row_x, Detector_.Rot_row_y, Detector_.Rot_row_z); // Also inverts so now to det to beam
 	R.Invert(); // go back to beam to det
 	if (debug) {
 		std::cout << "R_{beam to det} = " << std::endl;
@@ -404,17 +425,18 @@ TVector3 FromDetToBeam( const TVector3 det, bool rotate_only, Detector Detector_
 	}
 
 	if (rotate_only) beam = R * det;              // Only rotate the vector
-	else beam = R * (det - Detector_.Trans_Det2Beam);
+	// else beam = R * (det - Detector_.Trans_Det2Beam);
+	else beam = R * det + Detector_.Trans_Det2Beam; // new test
 
 	return beam;
 }
 //___________________________________________________________________________
-// Get the window normal for the tiltweight
-double Get_tilt_wgt( const TVector3& detxyz, auto const& mcflux, auto const& mctruth, Detector Detector_){
+// Get the window normal for the tiltweight --check
+double Get_tilt_wgt( const TVector3& detxyz, auto const& mcflux, double enu, Detector Detector_){
 
 	TVector3 xyzDk(mcflux.fvx, mcflux.fvy, mcflux.fvz);  // origin of decay in beam coords
 	
-	TVector3 p3beam = mctruth.GetNeutrino().Nu().E() * ( detxyz - xyzDk ).Unit(); // Momentum in beam coords
+	TVector3 p3beam = enu  * ( detxyz - xyzDk ).Unit(); // Momentum in beam coords
 
 	// Convert from user to beam coord and from 3 points to base + 2 directions
 	TVector3 fWin_Base_beam = FromDetToBeam( Detector_.Win_Base, false,  Detector_ );
@@ -428,6 +450,10 @@ double Get_tilt_wgt( const TVector3& detxyz, auto const& mcflux, auto const& mct
 	// Get the window normal
 	TVector3 fWindowNormal = fFluxWindowDir1.Cross(fFluxWindowDir2).Unit();
 
+	// Window normal debug
+	// std::cout << "window normal:" <<std::endl;
+	// std::cout << " [ " << fWindowNormal.X() << " " << fWindowNormal.Y() << " " << fWindowNormal.Z() << " ] " << std::endl;
+
 	double tiltweight =  p3beam.Unit().Dot( fWindowNormal );
 
 	return tiltweight;
@@ -438,14 +464,18 @@ double Get_tilt_wgt( const TVector3& detxyz, auto const& mcflux, auto const& mct
 // The intension is that this will fix the normalistion problems
 // Returns the weight/pi
 double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalgo::AABox volAVTPC, auto const& mcflux, auto const& mctruth, Detector Detector_ ){
+
 	TRotation R;
 	int retries{0};
-	double Enu = mctruth.GetNeutrino().Nu().E();
+	double enu = mctruth.GetNeutrino().Nu().E();
 	TVector3 x3beam;
 	TRandom3 fRnd;
+	
+	// Now get the weight
+	double weight;
 
 	R.RotateAxes(Detector_.Rot_row_x, Detector_.Rot_row_y, Detector_.Rot_row_z); // R is now det to beam
-	TRotation R_Beam_2_Det = R.Inverse();
+	TRotation R_Beam_2_Det = R.Invert();
 
 	// Convert from user to beam coord and from 3 points to base + 2 directions
 	TVector3 fWin_Base_beam = FromDetToBeam( Detector_.Win_Base, false,  Detector_ );
@@ -462,25 +492,28 @@ double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalg
 
 		retries++;
 		// Pick a new point on the window in beam coords
-		x3beam = fWin_Base_beam + (fRnd.Uniform() * fWin_pt1_beam) + (fRnd.Uniform() *fWin_pt2_beam);
+		x3beam = fWin_Base_beam + (fRnd.Uniform() * fFluxWindowDir1) + (fRnd.Uniform() * fFluxWindowDir2);
+
+		calcEnuWgt(mcflux, x3beam, enu, weight);
 
 		// Get the nu ray direction in beam coords
-		TVector3 NuRay_Dir = { (x3beam.X() - mcflux.fvx), (x3beam.Y() - mcflux.fvy), (x3beam.Z() - mcflux.fvz)  };
+		TVector3 xyzDk(mcflux.fvx,mcflux.fvy,mcflux.fvz);  // Origin of decay in beam coords
+		TVector3 NuRay_Dir =  enu * (x3beam - xyzDk).Unit();
 		
-		// Convert to a momentum and detector coordinates
-		NuRay_Dir = R_Beam_2_Det * (Enu * NuRay_Dir.Unit());
+		// Convert to detector coordinates
+		NuRay_Dir = R_Beam_2_Det * NuRay_Dir;
 
 		// Now convert xbeam to detector coordinates too
-		TVector3 x3beam_det = R_Beam_2_Det * x3beam + Detector_.Trans_Det2Beam;
-
-		// std::cout << "vx:\t" <<mctruth.GetNeutrino().Nu().Vx() << "  "<<  mcflux.fvx<<  "   " <<x3beam_det.X() << std::endl;
-		// std::cout << "vy:\t" <<mctruth.GetNeutrino().Nu().Vy() << "  "<<  mcflux.fvy<<  "   " <<x3beam_det.Y() << std::endl;
-		// std::cout << "vz:\t" <<mctruth.GetNeutrino().Nu().Vz() << "  "<<  mcflux.fvz<<  "   " <<x3beam_det.Z() << std::endl;
+		TVector3 x3beam_det = R_Beam_2_Det * (x3beam - Detector_.Trans_Det2Beam);
+	
+		// std::cout << "vx:\t" <<mctruth.GetNeutrino().Nu().Vx() << "  "<<  mcflux.fvx<<  "   " <<x3beam_det.X()/100.0 << std::endl;
+		// std::cout << "vy:\t" <<mctruth.GetNeutrino().Nu().Vy() << "  "<<  mcflux.fvy<<  "   " <<x3beam_det.Y()/100.0 << std::endl;
+		// std::cout << "vz:\t" <<mctruth.GetNeutrino().Nu().Vz() << "  "<<  mcflux.fvz<<  "   " <<x3beam_det.Z()/100.0 << std::endl;
 
 		// Make the neutrino ray
-		geoalgo::HalfLine ray(x3beam_det.X(), // point on window in detector coordinates
-					x3beam_det.Y(),
-					x3beam_det.Z(),
+		geoalgo::HalfLine ray(x3beam_det.X()/100.0, // point on window in detector coordinates units have to be m
+					x3beam_det.Y()/100.0,
+					x3beam_det.Z()/100.0,
 					NuRay_Dir.X(),  // px in detector coordinates
 					NuRay_Dir.Y(),  // py
 					NuRay_Dir.Z()); // pz
@@ -499,9 +532,8 @@ double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalg
 		
 		// Got an interception, so break!
 		if (intercept) {
-			std::cout << "Passed with " << retries << " retries"<<  std::endl;
+			// std::cout << "Passed with " << retries << " retries"<<  std::endl;
 			break;
-			
 		}
 		if (retries > 1000) {
 			// If there are more than 1000 attempts and still no intersection then give up!
@@ -510,9 +542,6 @@ double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalg
 		} 
 	}
 	
-	// Now get the weight
-	double weight;
-	calcEnuWgt(mcflux, x3beam, weight);
 	return weight/3.1415926;
 }
 //___________________________________________________________________________
