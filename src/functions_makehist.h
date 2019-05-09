@@ -545,3 +545,14 @@ double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalg
 	return weight/3.1415926;
 }
 //___________________________________________________________________________
+// Function to check the status of weights, if they are bad, set to zero
+void check_weight(double &weight){
+	
+	if (weight < 0) weight = 0; // get rid of them pesky negative weights
+	
+	if (std::isnan(weight) == 1) { // catch NaN values
+		std::cout << "got a nan:\t" << weight << std::endl;
+		weight = 0;
+	}
+}
+//___________________________________________________________________________

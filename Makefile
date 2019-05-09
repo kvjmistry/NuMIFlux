@@ -31,7 +31,7 @@ LDFLAGS=$(shell root-config --libs) \
 
 EXEC1=bin/makehist
 EXEC2=bin/makehist_uboone
-EXEC3=bin/makehist_uboone_parent
+EXEC3=bin/makehist_parent
 EXEC4=bin/makehist_uboone_2D
 EXEC5=bin/checkfiles
 EXEC6=bin/makehist_uboone_detweights
@@ -50,7 +50,7 @@ $(EXEC2): src/geo/GeoVector.cxx src/geo/GeoAABox.cxx src/geo/GeoHalfLine.cxx src
 	@mkdir -p bin
 	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
 
-$(EXEC3): src/geo/GeoVector.cxx src/geo/GeoAABox.cxx src/geo/GeoHalfLine.cxx src/geo/GeoLine.cxx src/geo/GeoLineSegment.cxx src/geo/GeoCone.cxx src/geo/GeoSphere.cxx src/geo/GeoTrajectory.cxx src/geo/GeoAlgo.cxx src/makehist_uboone_parent.cpp
+$(EXEC3): src/geo/GeoVector.cxx src/geo/GeoAABox.cxx src/geo/GeoHalfLine.cxx src/geo/GeoLine.cxx src/geo/GeoLineSegment.cxx src/geo/GeoCone.cxx src/geo/GeoSphere.cxx src/geo/GeoTrajectory.cxx src/geo/GeoAlgo.cxx src/makehist_parent.cpp src/functions_makehist.h
 	@echo Building $(EXEC3)
 	@mkdir -p bin
 	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^

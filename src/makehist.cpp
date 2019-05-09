@@ -28,102 +28,37 @@
 
 using namespace art;
 using namespace std;
-//___________________________________________________________________________
-// Contains hard coded routines because it is a hacky test function
-TVector3 RandomInDet() {
 
-	// Randomly choose point in microboone
-	double x = gRandom->Uniform(0.0    , 256.35);    //cm
-	double y = gRandom->Uniform(-116.5 , 116.5);     //cm
-	double z = gRandom->Uniform(0.0    , 1036.8);    //cm
 
-	return TVector3(x, y, z);
-}
-//___________________________________________________________________________
-TVector3 FromDetToBeam( const TVector3 det, bool rotate_only ) {
-
-    TVector3 beam;
-    TRotation R;
-	bool debug{false};
-
-    // Rotation matrix using the 0,0,0 position for MicroBooNE (det to beam input)
-    TVector3 newX(0.92103853804025682, 0.0000462540012621546684, -0.38947144863934974);
-    TVector3 newY(0.0227135048039241207, 0.99829162468141475, 0.0538324139386641073);
-    TVector3 newZ(0.38880857519374290, -0.0584279894529063024, 0.91946400794392302);
-
-    R.RotateAxes(newX,newY,newZ); // Also inverts to beam to det
-    if (debug) {
-        cout << "R_{beam to det} = " << endl;
-        cout << " [ " << R.XX() << " " << R.XY() << " " << R.XZ() << " ] " << endl;
-        cout << " [ " << R.YX() << " " << R.YY() << " " << R.YZ() << " ] " << endl;
-        cout << " [ " << R.ZX() << " " << R.ZY() << " " << R.ZZ() << " ] " << endl;
-        cout << endl;
-    }
-    R.Invert(); // R is now the inverse
-    if (debug) {
-        cout << "R_{det to beam} = " << endl;
-        cout << " [ " << R.XX() << " " << R.XY() << " " << R.XZ() << " ] " << endl;
-        cout << " [ " << R.YX() << " " << R.YY() << " " << R.YZ() << " ] " << endl;
-        cout << " [ " << R.ZX() << " " << R.ZY() << " " << R.ZZ() << " ] " << endl;
-        cout << endl;
-    }
-    
-	// Now R allows to go from detector to beam coordinates.
-    // NuMIDet is vector from NuMI target to uB detector (in beam coordinates)
-    TVector3 NuMIDet (55.02, 72.59,  672.70); //m
-    NuMIDet *= 100.; // To have NuMIDet in cm
-
-	if (rotate_only) beam = R * det; // Only rotate the vector
-    else beam = R * det + NuMIDet;
-
-    return beam;
-}
-//___________________________________________________________________________
-// Get the window normal for the tiltweight
-double Get_tilt_wgt( const TVector3& detxyz, auto const& mcflux, double enu){
-
-	TVector3 xyzDk(mcflux.fvx,mcflux.fvy,mcflux.fvz);  // origin of decay
-	
-	TVector3 p3beam = enu * ( detxyz - xyzDk ).Unit();
-
-	// Hardcoded for testing, but in priciple would want
-	TVector3 windownorm = { 0.528218812, 0.8308577046, 0.175101003}; 
-
-	double tiltweight =  p3beam.Unit().Dot( windownorm );
-
-	return tiltweight;
-
-}
+// USAGE:
+// makehist <detector_type> <root_files>
+// <detector_type>: uboone OR nova
+// Make sure that the root files contain the correct flux reader module ran over the right geometry
 //___________________________________________________________________________
 int main(int argc, char** argv) {
 
-	std::pair<float, float>  _xRange;
-	std::pair<float, float>  _yRange;
-	std::pair<float, float>  _zRange;
-
-	// MicroBooNE Fiducial Volume
-	_xRange.first  =     -0;
-	_xRange.second = 256.35;
-	_yRange.first  = -116.5;
-	_yRange.second =  116.5;
-	_zRange.first  =      0;
-	_zRange.second = 1036.8;
-
+	Detector Detector_;
+	
 	InputTag mctruths_tag { "flux" };
 	InputTag  evtwght_tag { "eventweight" };
 
 	double totalPOT{0};
 	double Kaontotal{0};
 
-
 	vector<string> badfiles;
 	vector<string> filename;
 	
 	// Load in the input arguments
-	for (int i=1; i<argc; i++) { 
+	for (int i = 1; i < argc; i++) {
 		
+		std::string input = argv[i];
 		
-		
+		// Initialise the detector type 
+		if (input == "uboone" || input == "nova" ){
+			std::string detector_type = argv[i];
+			Initialise(detector_type, Detector_);
+			continue;
+		}
 		
 		std::cout << "FILE : " << argv[i] << std::endl; 
 		TFile *filein=new TFile(argv[i]);
@@ -141,8 +76,11 @@ int main(int argc, char** argv) {
 	}
 
 	std::cout << "\nTotal POT read in:\t" << totalPOT << std::endl;
-
 	std::cout << "\nUsing 5e5 POT per dk2nu file, the flux will be wrong if this is not the case!\n" << std::endl;
+
+	geoalgo::GeoAlgo const _geo_algo_instance;
+
+	geoalgo::AABox volAVTPC( Detector_.xRange.first, Detector_.yRange.first, Detector_.zRange.first, Detector_.xRange.second, Detector_.yRange.second, Detector_.zRange.second);
 
 	// Histograms for each flavor
 	std::vector<TH1D*> Enu_CV_AV_TPC;
@@ -295,16 +233,10 @@ int main(int argc, char** argv) {
 			
 			// Now get the momentum to calculate theta
 			TVector3 mom_det = {mctruth.GetNeutrino().Nu().Px(),mctruth.GetNeutrino().Nu().Py(),mctruth.GetNeutrino().Nu().Pz()};
-			TVector3 mom_beam = FromDetToBeam(mom_det, true);
+			TVector3 mom_beam = FromDetToBeam(mom_det, true, Detector_);
 
-			double costheta_beam = mom_beam.Z() / std::sqrt(mom_beam.X()*mom_beam.X() + mom_beam.Y()*mom_beam.Y() + mom_beam.Z()*mom_beam.Z());
-			double theta_beam = std::acos(costheta_beam) * 180 / 3.14159265;
-
-			double costheta = mctruth.GetNeutrino().Nu().Pz() / mctruth.GetNeutrino().Nu().P();
+			double costheta = mom_beam.Z() / std::sqrt(mom_beam.X()*mom_beam.X() + mom_beam.Y()*mom_beam.Y() + mom_beam.Z()*mom_beam.Z());
 			double theta = std::acos(costheta) * 180 / 3.14159265;
-
-			std::cout << "theta_current:\t" << theta << "\ttheta_new:\t" << theta_beam << "\tdecay pos:\t"<< mcflux.fvz/100.0 << std::endl;
-			std::cout << "mctruth px:\t" << mctruth.GetNeutrino().Nu().Px() << "\tnew px:\t" << mom_beam.X() << std::endl;
 			
 			// Count the total Kaons
 			if (mcflux.fptype == 321 || mcflux.fptype == -321) Kaontotal+=mcflux.fnimpwt;
@@ -336,16 +268,16 @@ int main(int argc, char** argv) {
 
 			// Now re-calcuate weight at the window
 			// Pick a random point in the TPC (in detector coordinates)
-			TVector3 xyz_det = RandomInDet();
+			TVector3 xyz_det = RandomInDet(Detector_);
 			
 			// From detector to beam coordinates
-			TVector3 xyz_beam = FromDetToBeam(xyz_det,false);
+			TVector3 xyz_beam = FromDetToBeam(xyz_det, false, Detector_);
 
 			// Get the new weight at the detector
-			calcEnuWgt(mcflux, xyz_beam, enu,  detwgt);
+			calcEnuWgt(mcflux, xyz_beam, enu, detwgt);
 
 			// Get the tiltweight
-			tiltwght = Get_tilt_wgt(xyz_beam, mcflux, enu);
+			tiltwght = Get_tilt_wgt(xyz_beam, mcflux, enu, Detector_);
 
 			// Weight of neutrino parent (importance weight) * Neutrino weight for a decay forced at center of near detector 
 			cv_weight *= mcflux.fnimpwt * detwgt * tiltwght; 
@@ -393,8 +325,6 @@ int main(int argc, char** argv) {
 				}
 
 			} // End loop over weights
-
-			
 
 			// ++++++++++++++++++++++++++++++++
 			// Now got weights, fill histograms
