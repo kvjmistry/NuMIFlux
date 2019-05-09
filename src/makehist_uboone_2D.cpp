@@ -16,6 +16,7 @@
 #include "TGraph.h"
 #include "TH2D.h"
 #include "TFile.h"
+#include "TRandom.h"
 #include "canvas/Utilities/InputTag.h"
 #include "gallery/Event.h"
 #include "gallery/ValidHandle.h"
@@ -27,37 +28,33 @@
 #include "geo/GeoAABox.h"
 #include "geo/GeoHalfLine.h"
 #include "geo/GeoAlgo.h"
+#include "functions_makehist.h"
 
 using namespace art;
 using namespace std;
 
+// USAGE:
+// makehist_uboone_2D <root_files>
+// Make sure that the root files contain the correct flux reader module ran over the right geometry
+
+//___________________________________________________________________________
 int main(int argc, char** argv) {
 
-	std::pair<float, float>  _xRange;
-	std::pair<float, float>  _yRange;
-	std::pair<float, float>  _zRange;
-
-	// MicroBooNE Fiducial Volume
-	_xRange.first  =     -0;
-	_xRange.second = 256.35;
-	_yRange.first  = -116.5;
-	_yRange.second =  116.5;
-	_zRange.first  =      0;
-	_zRange.second = 1036.8;
-
-	geoalgo::GeoAlgo const _geo_algo_instance;
-
-	geoalgo::AABox volAVTPC( _xRange.first, _yRange.first, _zRange.first, _xRange.second, _yRange.second, _zRange.second);
+	Detector Detector_;
+	std::string detector_type = "uboone";
+	Initialise(detector_type, Detector_);
 
 	InputTag mctruths_tag { "flux" };
 	InputTag  evtwght_tag { "eventweight" };
 
 	double totalPOT{0};
 
-
 	vector<string> badfiles;
 	vector<string> filename;
-	for (int i=1; i<argc; i++) { 
+	
+	for (int i = 1; i < argc; i++) { 
+		std::cout << "FILE : " << argv[i] << std::endl; 
+		
 		TFile *filein=new TFile(argv[i]);
 		if (filein->IsZombie()) {
 			std::cout << "ERROR: File is ZOMBIE:\t" << argv[i] << std::endl;
@@ -65,7 +62,7 @@ int main(int argc, char** argv) {
 			filein->Close();
 		}
 		else {
-			std::cout << "FILE : " << argv[i] << std::endl; 
+			
 			filename.push_back(string(argv[i]));
 			// totalPOT+=100000; // 100 000 POT per dk2nu file
 			totalPOT+=500000;
@@ -145,7 +142,6 @@ int main(int argc, char** argv) {
 
 		// FLux histograms
 		Enu_Th_CV_AV_TPC[i] = new TH2D(Form("%s_CV_AV_TPC",flav[i].c_str()),"",n, bin, n_th, bin_th);
-
 		Enu_Th_UW_AV_TPC[i] = new TH2D(Form("%s_unweighted_AV_TPC",flav[i].c_str()),"",n, bin, n_th, bin_th);
 
 		Enu_Th_Syst_AV_TPC[i].resize(labels.size());
@@ -182,7 +178,6 @@ int main(int argc, char** argv) {
 
 		auto const& mctruths = *ev.getValidHandle<vector<simb::MCTruth>>(mctruths_tag);   
 		auto const& mcfluxs = *ev.getValidHandle<vector<simb::MCFlux>>(mctruths_tag);   
-		bool EW = true;
 		auto const& evtwghts = *ev.getValidHandle<vector<evwgh::MCEventWeight>>(evtwght_tag);  
 
 		// Loop over MCTruths
@@ -190,10 +185,8 @@ int main(int argc, char** argv) {
 			auto const& mctruth = mctruths.at(i);
 			auto const& mcflux = mcfluxs.at(i);
 			evwgh::MCEventWeight evtwght;
-
-			if (EW) {
-				evtwght = evtwghts.at(i);
-			}
+			evtwght = evtwghts.at(i);
+			
 
 			int pdg;
 			if     (mctruth.GetNeutrino().Nu().PdgCode() == 14) pdg = 0; // numu
@@ -208,129 +201,110 @@ int main(int argc, char** argv) {
 				continue;
 			}
 
-			geoalgo::HalfLine ray(mctruth.GetNeutrino().Nu().Vx(),
-					mctruth.GetNeutrino().Nu().Vy(),
-					mctruth.GetNeutrino().Nu().Vz(),
-					mctruth.GetNeutrino().Nu().Px(),
-					mctruth.GetNeutrino().Nu().Py(),
-					mctruth.GetNeutrino().Nu().Pz());
-
-			// Count nu intersections with tpc
-			auto vec = _geo_algo_instance.Intersection(volAVTPC, ray); 
-			bool intercept = false;
-
-			if (vec.size() == 0) { intercept = false; } // no intersections
-			if (vec.size() == 2) { intercept = true; }  // 2 intersections
-			if (vec.size() != 2 && vec.size() != 0) {   // other intersection
-				std::cout << "Neutrino ray has " << vec.size()
-					<< " intersection with the detector volume"
-					<< std::endl;
-			}
-
 			double cv_weight = 1; 
+			double detwgt; // New weight at a window value
+			double tiltwght;
+
+			double Enu = mctruth.GetNeutrino().Nu().E();
 
 			// Now get the momentums to calculate theta
-			double costheta = mctruth.GetNeutrino().Nu().Pz() / mctruth.GetNeutrino().Nu().P();
+			TVector3 mom_det = {mctruth.GetNeutrino().Nu().Px(),mctruth.GetNeutrino().Nu().Py(),mctruth.GetNeutrino().Nu().Pz()};
+			TVector3 mom_beam = FromDetToBeam(mom_det, true, Detector_);
+
+			double costheta = mom_beam.Z() / std::sqrt( mom_beam.X()*mom_beam.X() + mom_beam.Y()*mom_beam.Y() + mom_beam.Z()*mom_beam.Z());
 			double theta = std::acos(costheta) * 180 / 3.14159265;
 			
-			if(EW) {
+			// Fill Weight vector with 1's to create size=labels
+			for (unsigned l=0; l<labels.size(); l++) {
+				std::fill(Weights[l].begin(), Weights[l].end(), 1);
+			}
 
-				// Fill Weight vector with 1's to create size=labels
-				for (unsigned l=0; l<labels.size(); l++) {
-					std::fill(Weights[l].begin(), Weights[l].end(), 1);
-				}
+			// Get the cv_weight
+			for (auto last : evtwght.fWeight) {
 
-				// Get the cv_weight
-				for (auto last : evtwght.fWeight) {
+				if (last.first.find("PPFXCV") != std::string::npos) {
 
-					if (last.first.find("PPFXCV") != std::string::npos) {
-
-						if(last.second.at(0) > 30 || last.second.at(0) < 0){ // still fill even if bad weight, changed from >90 to >30
-							std::cout << "Bad CV weight, setting to 1: " << last.second.at(0) << std::endl;
-							cv_weight = 1;
-							// cv_weight = last.second.at(0);
-						}
-						else {
-							// std::cout << "CV weight:\t" << last.second.at(0) << std::endl;
-							cv_weight = last.second.at(0);
-						}  
-
+					if(last.second.at(0) > 30 || last.second.at(0) < 0){ // still fill even if bad weight, changed from >90 to >30
+						std::cout << "Bad CV weight, setting to 1: " << last.second.at(0) << std::endl;
+						cv_weight = 1;
+						// cv_weight = last.second.at(0);
 					}
+					else {
+						// std::cout << "CV weight:\t" << last.second.at(0) << std::endl;
+						cv_weight = last.second.at(0);
+					}  
 
-				} 
-				
-				 
-				// Weight of neutrino parent (importance weight) * Neutrino weight for a decay forced at center of near detector 
-				cv_weight *= mcflux.fnimpwt * mcflux.fnwtfar; // mcflux.fnwtfar == mcflux.fnwtnear
-
-				// if (cv_weight < 0) std::cout << "Still got a negative weight:\t" << cv_weight << " pdg" << pdg << " Enu:\t" << mctruth.GetNeutrino().Nu().E()<< std::endl;
-				if (cv_weight < 0) cv_weight = 0; // get rid of them pesky negative weights
-				if ( std::isnan(cv_weight) == 1) { // catch NaN values
-					std::cout << "got a nan:\t"<<cv_weight <<std::endl;
-					cv_weight = 0;
-				
 				}
-
-				// Loop over all event weight objs
-				for (auto last : evtwght.fWeight) { 
-
-					// Loop over all options
-					for (unsigned l=0; l<labels.size(); l++) { 
-
-						// Look for string name wishing to push back
-						if (last.first.find(labels[l].c_str()) != std::string::npos) {
-
-							// Loop over ms universes
-							for (unsigned i=0; i<last.second.size(); i++) { 
-
-								// Fill weights 0 < w < 30 otherwise fill 1's
-								if (last.second.at(i) > 0 && last.second.at(i) < 30){ 
-									Weights[l][i] *= last.second.at(i);          
-								}     
-								else {
-									// std::cout << "Bad Univ weight, setting to 1: " << last.second.at(i) << std::endl;
-									Weights[l][i] *= 1;
-									// Weights[l][i] *= last.second.at(i);  
-								}
-
-							} // End loop over universes
-
-						}
-
-					}
-
-				} // End loop over weights
 
 			} 
+			
+			// Now re-calcuate weight at the window
+			// Pick a random point in the TPC (in detector coordinates)
+			TVector3 xyz_det = RandomInDet(Detector_);
+			
+			// From detector to beam coordinates
+			TVector3 xyz_beam = FromDetToBeam(xyz_det, false, Detector_);
+
+			// Get the new weight at the detector
+			calcEnuWgt(mcflux, xyz_beam, Enu, detwgt);
+
+			// Get the tiltweight -- unused here?
+			tiltwght = Get_tilt_wgt(xyz_beam, mcflux, Enu, Detector_);
+
+			// Weight of neutrino parent (importance weight) * Neutrino weight for a decay forced at center of near detector 
+			cv_weight *= mcflux.fnimpwt * detwgt / 3.1415926;
+
+			check_weight(cv_weight);
+
+			// Loop over all event weight objs
+			for (auto last : evtwght.fWeight) { 
+
+				// Loop over all options
+				for (unsigned l=0; l<labels.size(); l++) { 
+
+					// Look for string name wishing to push back
+					if (last.first.find(labels[l].c_str()) != std::string::npos) {
+
+						// Loop over ms universes
+						for (unsigned i=0; i<last.second.size(); i++) { 
+
+							// Fill weights 0 < w < 30 otherwise fill 1's
+							if (last.second.at(i) > 0 && last.second.at(i) < 30){ 
+								Weights[l][i] *= last.second.at(i);          
+							}     
+							else {
+								// std::cout << "Bad Univ weight, setting to 1: " << last.second.at(i) << std::endl;
+								Weights[l][i] *= 1;
+								// Weights[l][i] *= last.second.at(i);  
+							}
+
+						} // End loop over universes
+
+					}
+
+				}
+
+			} // End loop over weights
 
 			// ++++++++++++++++++++++++++++++++
 			// Now got weights, fill histograms
 			// ++++++++++++++++++++++++++++++++
 
 			// TPC AV
-			if (intercept) {
-				Enu_Th_CV_AV_TPC[pdg]->Fill(mctruth.GetNeutrino().Nu().E(),theta, cv_weight);
-				Enu_Th_UW_AV_TPC[pdg]->Fill(mctruth.GetNeutrino().Nu().E(),theta, mcflux.fnimpwt * mcflux.fnwtfar);
-
-				
-			}
+			Enu_Th_CV_AV_TPC[pdg]->Fill(Enu, theta, cv_weight);
+			Enu_Th_UW_AV_TPC[pdg]->Fill(Enu, theta, mcflux.fnimpwt * detwgt * tiltwght);
 
 			// Now fill multisims
-			if (EW) {
+			// Options        
+			for (unsigned l=0; l<labels.size(); l++) {
 
-				// Options        
-				for (unsigned l=0; l<labels.size(); l++) {
+				// Universes
+				for (unsigned i=0; i<Weights[l].size(); i++) {
+					Enu_Th_Syst_AV_TPC[pdg][l][i]->Fill(Enu,theta, Weights[l][i]*cv_weight);
 
-					// Universes
-					for (unsigned i=0; i<Weights[l].size(); i++) {
-
-						if (intercept) {
-							Enu_Th_Syst_AV_TPC[pdg][l][i]->Fill(mctruth.GetNeutrino().Nu().E(),theta, Weights[l][i]*cv_weight);
-
-						}
-					}
 				}
 			}
+			
 
 		} // End loop over mctruth
 

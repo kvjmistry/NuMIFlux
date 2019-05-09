@@ -35,8 +35,7 @@ EXEC3=bin/makehist_parent
 EXEC4=bin/makehist_uboone_2D
 EXEC5=bin/checkfiles
 EXEC6=bin/makehist_uboone_detweights
-EXEC7=bin/makehist_uboone_detweights_2D
-EXEC8=bin/makehist_nova
+EXEC7=bin/makehist_nova
 
 all: $(EXEC1) $(EXEC2) $(EXEC3) $(EXEC4) $(EXEC5) $(EXEC6) $(EXEC7) $(EXEC8)
 	
@@ -55,7 +54,7 @@ $(EXEC3): src/geo/GeoVector.cxx src/geo/GeoAABox.cxx src/geo/GeoHalfLine.cxx src
 	@mkdir -p bin
 	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
 
-$(EXEC4):  src/geo/GeoVector.cxx src/geo/GeoAABox.cxx src/geo/GeoHalfLine.cxx src/geo/GeoLine.cxx src/geo/GeoLineSegment.cxx src/geo/GeoCone.cxx src/geo/GeoSphere.cxx src/geo/GeoTrajectory.cxx src/geo/GeoAlgo.cxx src/makehist_uboone_2D.cpp
+$(EXEC4):  src/geo/GeoVector.cxx src/geo/GeoAABox.cxx src/geo/GeoHalfLine.cxx src/geo/GeoLine.cxx src/geo/GeoLineSegment.cxx src/geo/GeoCone.cxx src/geo/GeoSphere.cxx src/geo/GeoTrajectory.cxx src/geo/GeoAlgo.cxx src/makehist_uboone_2D.cpp src/functions_makehist.h
 	@echo Building $(EXEC4)
 	@mkdir -p bin
 	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
@@ -70,13 +69,8 @@ $(EXEC6): src/makehist_uboone_detweights.cpp
 	@mkdir -p bin
 	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
 
-$(EXEC7): src/makehist_uboone_detweights_2D.cpp
+$(EXEC7): src/geo/GeoVector.cxx src/geo/GeoAABox.cxx src/geo/GeoHalfLine.cxx src/geo/GeoLine.cxx src/geo/GeoLineSegment.cxx src/geo/GeoCone.cxx src/geo/GeoSphere.cxx src/geo/GeoTrajectory.cxx src/geo/GeoAlgo.cxx src/makehist_nova.cpp src/functions_makehist.h
 	@echo Building $(EXEC7)
-	@mkdir -p bin
-	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
-
-$(EXEC8): src/geo/GeoVector.cxx src/geo/GeoAABox.cxx src/geo/GeoHalfLine.cxx src/geo/GeoLine.cxx src/geo/GeoLineSegment.cxx src/geo/GeoCone.cxx src/geo/GeoSphere.cxx src/geo/GeoTrajectory.cxx src/geo/GeoAlgo.cxx src/makehist_nova.cpp src/functions_makehist.h
-	@echo Building $(EXEC8)
 	@mkdir -p bin
 	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
 
