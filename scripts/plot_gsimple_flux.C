@@ -28,30 +28,30 @@ void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThin
 	switch (return_mode(mode)){
 		case enumu:
 			std::cout << "\nUsing NuMu Mode!\n" << std::endl;
-			Gethist_TPC = "numu/numu_CV_AV_TPC_rebin";							// AV in TPC flux prediction
+			Gethist_TPC = "numu/numu_CV_AV_TPC_5MeV_bin";							// AV in TPC flux prediction
 			g_simp_names = "numuFluxHisto";									// G simple files
-			Gethist_TPC_dk2nu = "numu/numu_UW_AV_TPC_rebin";				// uw AV in TPC flux prediction
+			Gethist_TPC_dk2nu = "numu/numu_UW_AV_TPC_5MeV_bin";				// uw AV in TPC flux prediction
 			break;
 
 		case enue:
 			std::cout << "\nUsing Nue Mode!\n" << std::endl;
-			Gethist_TPC = "nue/nue_CV_AV_TPC_rebin";
+			Gethist_TPC = "nue/nue_CV_AV_TPC_5MeV_bin";
 			g_simp_names = "nueFluxHisto";
-			Gethist_TPC_dk2nu = "nue/nue_UW_AV_TPC_rebin";
+			Gethist_TPC_dk2nu = "nue/nue_UW_AV_TPC_5MeV_bin";
 			break;
 
 		case enumubar:
 			std::cout << "\nUsing NuMubar Mode!\n" << std::endl;
-			Gethist_TPC = "numubar/numubar_CV_AV_TPC_rebin";
+			Gethist_TPC = "numubar/numubar_CV_AV_TPC_5MeV_bin";
 			g_simp_names = "anumuFluxHisto";
-			Gethist_TPC_dk2nu = "numubar/numubar_UW_AV_TPC_rebin";
+			Gethist_TPC_dk2nu = "numubar/numubar_UW_AV_TPC_5MeV_bin";
 			break;
 
 		case enuebar:
 			std::cout << "\nUsing Nuebar Mode!\n" << std::endl;
-			Gethist_TPC = "nuebar/nuebar_CV_AV_TPC_rebin";
+			Gethist_TPC = "nuebar/nuebar_CV_AV_TPC_5MeV_bin";
 			g_simp_names = "anueFluxHisto";
-			Gethist_TPC_dk2nu = "nuebar/nuebar_UW_AV_TPC_rebin";
+			Gethist_TPC_dk2nu = "nuebar/nuebar_UW_AV_TPC_5MeV_bin";
 			break;
 
 	}
@@ -64,7 +64,8 @@ void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThin
 
 	// Dk2nu
 	// boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/DetectorWeights_withtilt/output.root"); if (boolfile == false) gSystem->Exit(0);
-	boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/parent/v2/output.root"); if (boolfile == false) gSystem->Exit(0); // file with all large weights kept and just the ones which are < 0 removed
+	// boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/parent/v3/output_parent_all.root"); if (boolfile == false) gSystem->Exit(0); // file with all large weights kept and just the ones which are < 0 removed
+	boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/parent/v3/output.root"); if (boolfile == false) gSystem->Exit(0);
 	double fPOT = GetPOT(f_ppfx_mod);
 	boolhist = GetHist(f_ppfx_mod, h_dk2nu_flux, Gethist_TPC_dk2nu); if (boolhist == false) gSystem->Exit(0);
 	h_dk2nu_flux->Rebin(rebin);
@@ -83,7 +84,7 @@ void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThin
 	hppfx->SetDirectory(0);
 
 	// Scalings
-	h_dk2nu_flux->Scale( (6.0e20)/ (fPOT*1.0e4) );  
+	h_dk2nu_flux->Scale((6.0e20)/ (fPOT*1.0e4) );  
 	hppfx->Scale( (6.0e20)/ (fPOT*1.0e4) );  
 
 	// Plottings
