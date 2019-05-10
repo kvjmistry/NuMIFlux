@@ -12,6 +12,7 @@ All the window method and detector smeared weights are preserved.
 */
 
 #include <iostream>
+#include <iomanip>      // std::setprecision
 #include <cstdlib>
 #include <string>
 #include <vector>
@@ -236,9 +237,9 @@ int main(int argc, char** argv) {
 		// Parent
 		for(unsigned k = 0; k < parent.size(); k++){
 			Enu_Parent_AV_TPC[i][k]  = new TH1D(Form("Enu_%s_%s_AV_TPC",     flav[i].c_str(), parent[k].c_str()),"", 4000, 0, 20);
-			Th_Parent_AV_TPC[i][k]   = new TH1D(Form("Th_%s_%s_AV_TPC",      flav[i].c_str(), parent[k].c_str()),"", 18 , 0, 180);
-			zpos_Parent_AV_TPC[i][k] = new TH1D(Form("zpos_%s_%s_AV_TPC",    flav[i].c_str(), parent[k].c_str()),"", 400 , 0, 80000);
-			impwght_Parent[i][k]     = new TH1D(Form("impwght_Parent_%s_%s", flav[i].c_str(), parent[k].c_str()),"", 1 , 0, -1);
+			Th_Parent_AV_TPC[i][k]   = new TH1D(Form("Th_%s_%s_AV_TPC",      flav[i].c_str(), parent[k].c_str()),"", 18,   0, 180);
+			zpos_Parent_AV_TPC[i][k] = new TH1D(Form("zpos_%s_%s_AV_TPC",    flav[i].c_str(), parent[k].c_str()),"", 400,  0, 80000);
+			impwght_Parent[i][k]     = new TH1D(Form("impwght_Parent_%s_%s", flav[i].c_str(), parent[k].c_str()),"", 1000, 0, 1000);
 			Targ_mom_Parent[i][k]    = new TH1D(Form("Targ_mom_Parent_%s_%s",flav[i].c_str(), parent[k].c_str()),"", 4000, 0, 20);
 			DAR_Enu_Parent[i][k]     = new TH1D(Form("DAR_Enu_%s_%s_AV_TPC", flav[i].c_str(), parent[k].c_str()),"", 4000, 0, 20);
 		}
@@ -360,6 +361,8 @@ int main(int argc, char** argv) {
 
 			// Get the tiltweight
 			tiltwght = Get_tilt_wgt(xyz_beam, mcflux, Enu, Detector_);
+
+			// if (tiltwght > 0.95) std::cout << "tiltweight:\t" << std::setprecision(5) << tiltwght << "\tzpos:\t" << mcflux.fvz <<"\ttheta:\t" << theta << std::endl;
 
 			// Weight of neutrino parent (importance weight) * Neutrino weight for a decay forced at center of near detector 
 			cv_weight        *= mcflux.fnimpwt * detwgt / 3.1415926; // for ppfx cases

@@ -233,14 +233,14 @@ int main(int argc, char** argv) {
 			cv_weight_notilt    *= mcflux.fnimpwt * detwgt / 3.1415926; // for ppfx cases
 			// window_weight       *= mcflux.fnimpwt * mcflux.fnwtfar; // mcflux.fnwtfar == mcflux.fnwtnear
 			
+			// window_weight                   *= mcflux.fnimpwt * Recalc_Intersection_wgt(_geo_algo_instance, volAVTPC, mcflux, mctruth, Detector_ ); // Recalculated for every event, already divide by Pi
 			double window_weight_recalc;
-			// window_weight                   *= mcflux.fnimpwt * window_weight_recalc; // Recalculated for every event, already divide by Pi
-			if (intercept) window_weight       *= mcflux.fnimpwt * mcflux.fnwtfar; // mcflux.fnwtfar == mcflux.fnwtnear
+			if (intercept) window_weight       *= mcflux.fnimpwt * mcflux.fnwtfar * tiltwght; // mcflux.fnwtfar == mcflux.fnwtnear
 			else {
 				window_weight_recalc           = Recalc_Intersection_wgt(_geo_algo_instance, volAVTPC, mcflux, mctruth, Detector_ );
 				window_weight                 *= mcflux.fnimpwt * window_weight_recalc; // Recalculated for every event
-				
 			}
+			
 			intercept = true; // override above calculations
 			
 			// Error handling

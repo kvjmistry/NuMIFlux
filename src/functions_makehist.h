@@ -469,8 +469,10 @@ double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalg
 	TRotation R;
 	int retries{0};
 	double enu = mctruth.GetNeutrino().Nu().E();
-	TVector3 x3beam;
+	TVector3 x3beam, x3beam_det;
 	TRandom3 fRnd;
+
+	bool debug{false};
 	
 	// Now get the weight
 	double weight;
@@ -505,16 +507,23 @@ double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalg
 		NuRay_Dir = R_Beam_2_Det * NuRay_Dir;
 
 		// Now convert xbeam to detector coordinates too
-		TVector3 x3beam_det = R_Beam_2_Det * (x3beam - Detector_.Trans_Det2Beam);
-	
-		// std::cout << "vx:\t" <<mctruth.GetNeutrino().Nu().Vx() << "  "<<  mcflux.fvx<<  "   " <<x3beam_det.X()/100.0 << std::endl;
-		// std::cout << "vy:\t" <<mctruth.GetNeutrino().Nu().Vy() << "  "<<  mcflux.fvy<<  "   " <<x3beam_det.Y()/100.0 << std::endl;
-		// std::cout << "vz:\t" <<mctruth.GetNeutrino().Nu().Vz() << "  "<<  mcflux.fvz<<  "   " <<x3beam_det.Z()/100.0 << std::endl;
+		x3beam_det = R_Beam_2_Det * (x3beam - Detector_.Trans_Det2Beam);
+
+		// debug, mom *1k to improve readability
+		if (debug) std::cout << "retry no:\t" << retries << std::endl;
+		if (debug) std::cout << "px:\t" <<mctruth.GetNeutrino().Nu().Px()*1000 << "  " << "  " << NuRay_Dir.X()*1000 << std::endl; 
+		if (debug) std::cout << "py:\t" <<mctruth.GetNeutrino().Nu().Py()*1000 << "  " << "  " << NuRay_Dir.Y()*1000 << std::endl;
+		if (debug) std::cout << "pz:\t" <<mctruth.GetNeutrino().Nu().Pz()*1000 << "  " << "  " << NuRay_Dir.Z()*1000 <<  std::endl;
+		if (debug) std::cout << "vx:\t" <<mctruth.GetNeutrino().Nu().Vx() << "  " << "  " << x3beam_det.X() << std::endl;
+		if (debug) std::cout << "vy:\t" <<mctruth.GetNeutrino().Nu().Vy() << "  " << "  " << x3beam_det.Y() << std::endl;
+		if (debug) std::cout << "vz:\t" <<mctruth.GetNeutrino().Nu().Vz() << "  " << "  " << x3beam_det.Z() << std::endl;
+		if (debug) std::cout << "Enu:\t" << enu << std::endl;
+		if (debug) std::cout << "Weight:\t" << weight << std::endl;
 
 		// Make the neutrino ray
-		geoalgo::HalfLine ray(x3beam_det.X()/100.0, // point on window in detector coordinates units have to be m
-					x3beam_det.Y()/100.0,
-					x3beam_det.Z()/100.0,
+		geoalgo::HalfLine ray(x3beam_det.X(), // point on window in detector coordinates units have to be m (maybe divide by 100??)
+					x3beam_det.Y(),
+					x3beam_det.Z(),
 					NuRay_Dir.X(),  // px in detector coordinates
 					NuRay_Dir.Y(),  // py
 					NuRay_Dir.Z()); // pz
@@ -522,6 +531,8 @@ double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalg
 		// Count nu intersections with tpc
 		auto vec = _geo_algo_instance.Intersection(volAVTPC, ray); 
 		bool intercept = false;
+
+		if (debug) std::cout << "vec size:\t" << vec.size()<< "\n"<< std::endl;
 
 		if (vec.size() == 0) { intercept = false; } // no intersections
 		if (vec.size() == 2) { intercept = true; }  // 2 intersections
@@ -543,7 +554,9 @@ double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalg
 		} 
 	}
 	
-	return weight/3.1415926;
+	double tiltweight = Get_tilt_wgt( x3beam, mcflux, enu, Detector_);
+
+	return weight * tiltweight / 3.1415926 ;
 }
 //___________________________________________________________________________
 // Function to check the status of weights, if they are bad, set to zero

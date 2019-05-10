@@ -35,6 +35,7 @@ void plot_nova_flux(const char* mode) {
     h_intersection_flux->Scale(normfactor);
     lFlux->AddEntry(h_intersection_flux, "Intersection/Window","l");
     h_intersection_flux->Draw("hist");
+    h_intersection_flux->Draw("e,same");
 
 
     // Now get the flux for deteweights
@@ -47,6 +48,7 @@ void plot_nova_flux(const char* mode) {
     h_detweights_flux->Scale(normfactor );
     lFlux->AddEntry(h_detweights_flux, "Detector Smear","l");
     h_detweights_flux->Draw("hist, same");
+    h_detweights_flux->Draw("e, same");
 
     // Now get the flux for deteweights_notilt
 	TH1D* h_detweights_notilt_flux;
@@ -58,6 +60,7 @@ void plot_nova_flux(const char* mode) {
     h_detweights_notilt_flux->Scale(normfactor );
     lFlux->AddEntry(h_detweights_notilt_flux, "Detector Smear no Tilt","l");
     h_detweights_notilt_flux->Draw("hist, same");
+    h_detweights_notilt_flux->Draw("e, same");
 
     // Now get Nova flux 
    TH1D* h_nova_flux;
@@ -66,6 +69,7 @@ void plot_nova_flux(const char* mode) {
    h_nova_flux->SetLineWidth(2);
    lFlux->AddEntry(h_nova_flux, "NOvA","l");
    h_nova_flux->Draw("hist, same");
+   h_nova_flux->Draw("e, same");
 
 //    h_intersection_flux->Scale(h_nova_flux->Integral(3,-1)/h_intersection_flux->Integral(3,-1));
 //    h_detweights_flux->Scale(h_nova_flux->Integral(3,-1)/h_detweights_flux->Integral(3,-1));
