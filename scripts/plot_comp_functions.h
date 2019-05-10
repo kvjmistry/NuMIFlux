@@ -274,8 +274,10 @@ double GetPOT(TFile* f){
 	double fPOT{0};
 	TPOT->SetBranchAddress("POT", &fPOT); // Get the POT
 	TPOT->GetEntry(0);
+	double total_entries = TPOT->GetEntries(); // if using hadd, this will not be 1 equal to 1 anymore
+	fPOT*=total_entries;
 	std::cout << "TOTAL POT READ IN:\t" << fPOT << std::endl;
-
+	
     return fPOT;
 }
 // ------------------------------------------------------------------------------------------------------------

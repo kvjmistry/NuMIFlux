@@ -115,7 +115,7 @@ double IntegrateFlux(int universe, TFile* fCV, int index, double POTScale){
 
 		flux  = hHP2d->Integral( xbin_th, hHP2d->GetNbinsX()+1, 0, hHP2d->GetNbinsY()+1); // Integrate over whole phase space (not quite any more)
 		
-		flux*= (POTScale / (GetPOT(fCV)*1.0e4*50)); // Scale to cm2 and the DATA POT
+		flux*= (POTScale / (GetPOT(fCV)*1.0e4)); // Scale to cm2 and the DATA POT
 
 	}
 	// else we have a beamline variations indexes from 1 to N
@@ -134,7 +134,7 @@ double IntegrateFlux(int universe, TFile* fCV, int index, double POTScale){
 
 		flux  = hBeamline2d->Integral(xbin_th, hBeamline2d->GetNbinsX()+1, 0, hBeamline2d->GetNbinsY()+1); // Integrate over whole phase space
 		
-		flux*= (POTScale / (GetPOT(fBeamline)*1.0e4*50)); // Scale to cm2 and the DATA POT
+		flux*= (POTScale / (GetPOT(fBeamline)*1.0e4)); // Scale to cm2 and the DATA POT
 
 	}
 	else { // CV where index = 0
@@ -148,7 +148,7 @@ double IntegrateFlux(int universe, TFile* fCV, int index, double POTScale){
 		
 		flux  = hCV2d->Integral(xbin_th, hCV2d->GetNbinsX()+1, 0, hCV2d->GetNbinsY()+1); // Integrate over whole phase space (not quite any more)
 
-		flux*= (POTScale / (GetPOT(fCV)*1.0e4*50)); // Scale to cm2 and the DATA POT
+		flux*= (POTScale / (GetPOT(fCV)*1.0e4)); // Scale to cm2 and the DATA POT
 
 	}
 
