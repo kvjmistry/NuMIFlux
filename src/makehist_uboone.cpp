@@ -27,6 +27,9 @@
 #include "geo/GeoAABox.h"
 #include "geo/GeoHalfLine.h"
 #include "geo/GeoAlgo.h"
+#include "dk2nu/tree/dk2nu.h"
+#include "dk2nu/tree/dkmeta.h"
+#include "dk2nu/tree/calcLocationWeights.h"
 
 using namespace art;
 using namespace std;

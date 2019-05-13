@@ -29,15 +29,18 @@
 #include "geo/GeoAlgo.h"
 #include "TRandom.h"
 #include "TRandom3.h"
+#include "dk2nu/tree/dk2nu.h"
+#include "dk2nu/tree/dkmeta.h"
+#include "dk2nu/tree/calcLocationWeights.h"
 #include "functions_makehist.h"
 
 using namespace art;
 using namespace std;
 
-//___________________________________________________________________________
+//___________________________________________________________________________ 
 int main(int argc, char** argv) {
 
-
+ 
 	Detector Detector_;
 	std::string detector_type = "nova";
 	Initialise(detector_type, Detector_);
@@ -110,7 +113,8 @@ int main(int argc, char** argv) {
 	for(unsigned i=0; i<flav.size(); i++) {
 		int const n = bins[i].size()-1;
 		temp.clear();
-		temp = bins[i];
+		// temp = bins[i];
+		temp = Detector_.bins.at(i);
 
 		double* bin = &temp[0];
 
@@ -221,7 +225,9 @@ int main(int argc, char** argv) {
 			// << "\txyz_beam:\t" << xyz_beam.X() << ", " << xyz_beam.Y() << ", " << xyz_beam.Z()<< std::endl;
 
 			// Get the new weight at the detector
-			calcEnuWgt(mcflux, xyz_beam, enu, detwgt);
+			double KRDET =  100.0; // Radius of circle in cm
+			double KRDET_Area  = 3.1415926*KRDET*KRDET/10000.0; // Area of circle in m2
+			calcEnuWgt(mcflux, xyz_beam, enu, detwgt, KRDET);
 
 			// Get the tiltweight
 			tiltwght = Get_tilt_wgt(xyz_beam, mcflux, enu, Detector_);
@@ -229,16 +235,16 @@ int main(int argc, char** argv) {
 			// std::cout << "tiltwgt:\t" << tiltwght << std::endl;
 
 			// Weight of neutrino parent (importance weight) * Neutrino weight for a decay forced at center of near detector 
-			cv_weight           *= mcflux.fnimpwt * detwgt / 3.1415926 * tiltwght ; // divide by area of circle equal to pi *r*r
-			cv_weight_notilt    *= mcflux.fnimpwt * detwgt / 3.1415926; // for ppfx cases
+			cv_weight           *= mcflux.fnimpwt * detwgt / KRDET_Area * tiltwght ; // divide by area of circle equal to pi *r*r
+			cv_weight_notilt    *= mcflux.fnimpwt * detwgt / KRDET_Area; // for ppfx cases
 			// window_weight       *= mcflux.fnimpwt * mcflux.fnwtfar; // mcflux.fnwtfar == mcflux.fnwtnear
 			
 			// window_weight                   *= mcflux.fnimpwt * Recalc_Intersection_wgt(_geo_algo_instance, volAVTPC, mcflux, mctruth, Detector_ ); // Recalculated for every event, already divide by Pi
 			double window_weight_recalc;
 			if (intercept) window_weight       *= mcflux.fnimpwt * mcflux.fnwtfar * tiltwght; // mcflux.fnwtfar == mcflux.fnwtnear
 			else {
-				window_weight_recalc           = Recalc_Intersection_wgt(_geo_algo_instance, volAVTPC, mcflux, mctruth, Detector_ );
-				window_weight                 *= mcflux.fnimpwt * window_weight_recalc; // Recalculated for every event
+				window_weight_recalc           = Recalc_Intersection_wgt(_geo_algo_instance, volAVTPC, mcflux, mctruth, Detector_, KRDET );
+				window_weight                 *= mcflux.fnimpwt * window_weight_recalc / KRDET_Area; // Recalculated for every event
 			}
 			
 			intercept = true; // override above calculations

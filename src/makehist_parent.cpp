@@ -35,6 +35,9 @@ All the window method and detector smeared weights are preserved.
 #include "geo/GeoAABox.h"
 #include "geo/GeoHalfLine.h"
 #include "geo/GeoAlgo.h"
+#include "dk2nu/tree/dk2nu.h"
+#include "dk2nu/tree/dkmeta.h"
+#include "dk2nu/tree/calcLocationWeights.h"
 #include "functions_makehist.h"
 
 using namespace art;
@@ -207,7 +210,8 @@ int main(int argc, char** argv) {
 	for(unsigned i=0; i<flav.size(); i++) {
 		int const n = bins[i].size()-1;
 		temp.clear();
-		temp = bins[i];
+		// temp = bins[i];
+		temp = Detector_.bins.at(i);
 
 		double* bin = &temp[0];
 
@@ -357,7 +361,9 @@ int main(int argc, char** argv) {
 			TVector3 xyz_beam = FromDetToBeam(xyz_det, false, Detector_);
 
 			// Get the new weight at the detector
-			calcEnuWgt(mcflux, xyz_beam, Enu, detwgt);
+			double KRDET =  100.0; // Radius of circle in cm
+			double KRDET_Area  = 3.1415926*KRDET*KRDET/10000.0; // Area of circle in m2
+			calcEnuWgt(mcflux, xyz_beam, Enu, detwgt, KRDET);
 
 			// Get the tiltweight
 			tiltwght = Get_tilt_wgt(xyz_beam, mcflux, Enu, Detector_);
@@ -365,11 +371,11 @@ int main(int argc, char** argv) {
 			// if (tiltwght > 0.95) std::cout << "tiltweight:\t" << std::setprecision(5) << tiltwght << "\tzpos:\t" << mcflux.fvz <<"\ttheta:\t" << theta << std::endl;
 
 			// Weight of neutrino parent (importance weight) * Neutrino weight for a decay forced at center of near detector 
-			cv_weight        *= mcflux.fnimpwt * detwgt / 3.1415926; // for ppfx cases
-			dk2nu_weight     *= mcflux.fnimpwt * detwgt / 3.1415926; // for UW cases 
+			cv_weight        *= mcflux.fnimpwt * detwgt / KRDET_Area; // for ppfx cases
+			dk2nu_weight     *= mcflux.fnimpwt * detwgt / KRDET_Area; // for UW cases 
 			
-			window_weight       *= mcflux.fnimpwt * mcflux.fnwtfar * tiltwght ; // mcflux.fnwtfar == mcflux.fnwtnear
-			dk2nu_window_weight *= mcflux.fnimpwt * mcflux.fnwtfar * tiltwght ; // mcflux.fnwtfar == mcflux.fnwtnear
+			window_weight       *= mcflux.fnimpwt * mcflux.fnwtfar * tiltwght / KRDET_Area; // mcflux.fnwtfar == mcflux.fnwtnear
+			dk2nu_window_weight *= mcflux.fnimpwt * mcflux.fnwtfar * tiltwght / KRDET_Area; // mcflux.fnwtfar == mcflux.fnwtnear
 			
 			// Error handling, sets to zero if bad
 			check_weight(cv_weight);

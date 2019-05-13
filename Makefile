@@ -13,6 +13,7 @@ CPPFLAGS=-I $(BOOST_INC) \
 	 -I $(LARDATAOBJ_INC) \
 	 -I $(NUSIMDATA_INC) \
 	 -I $(LARSIM_INC) \
+	 -I $(DK2NUDATA_INC) \
 	 -I $(ROOT_INC)
 
 LDFLAGS=$(shell root-config --libs) \
@@ -24,7 +25,8 @@ LDFLAGS=$(shell root-config --libs) \
 	-L $(NUSIMDATA_LIB) -l nusimdata_SimulationBase \
 	-L $(LARCOREOBJ_LIB) -l larcoreobj_SummaryData \
 	-L $(LARDATAOBJ_LIB) -l lardataobj_RecoBase \
-	-L $(LARSIM_LIB) -l larsim_EventWeight_Base
+	-L $(LARSIM_LIB) -l larsim_EventWeight_Base \
+	-L $(DK2NUDATA_LIB) -l  dk2nuTree
 
 
 #UNAME := $(shell uname -s)

@@ -38,7 +38,8 @@ class Detector {
 			TVector3 Rot_row_z_, 
 			TVector3 Win_Base_,
 			TVector3 Win_pt1_,
-			TVector3 Win_pt2_  ) {
+			TVector3 Win_pt2_,
+			std::vector<std::vector<double>> bins_  ) {
 				detector_name = detector_name_;
 				xRange = xRange_;
 				yRange = yRange_;
@@ -50,6 +51,9 @@ class Detector {
 				Win_Base = Win_Base_;
 				Win_pt1 = Win_pt1_;
 				Win_pt2 = Win_pt2_;
+				bins.resize(5);
+				bins = bins_;
+			
 			};
 		
 		std::string detector_name;
@@ -71,6 +75,9 @@ class Detector {
 		TVector3 Win_Base;
 		TVector3 Win_pt1;
 		TVector3 Win_pt2;
+
+		// Histogram Bins | 1 for each flavour + theta
+		std::vector<std::vector<double>> bins;
 
 };
 //___________________________________________________________________________
@@ -96,6 +103,9 @@ void Initialise(std::string detector_type, Detector &Detector_){
 	TVector3 Win_pt1;
 	TVector3 Win_pt2;
 
+	// Histogram Bins | 1 for each flavour + theta
+	std::vector<std::vector<double>> bins(5);
+
 	// MicroBooNE is the Input
 	if (detector_type == "uboone"){
 
@@ -117,6 +127,22 @@ void Initialise(std::string detector_type, Detector &Detector_){
 		Win_Base = { 500, -500, -3500 };
 		Win_pt1  = {-500,  200, -3500 };
 		Win_pt2  = { 500, -500,  2000 };
+
+		bins[0] = { // numu
+			0.00, 0.025, 0.03, 0.235 ,0.24, 0.50, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 3.00, 4.00, 5.00, 6.00, 7.00, 10.00 };
+
+		bins[1] = {  // nue
+			0.00 ,0.06, 0.125, 0.25, 0.5, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 3.50, 4.00, 5.00 };
+
+		bins[2] = {// numubar
+			0.00, 0.025, 0.03, 0.235 ,0.24, 0.50, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 3.00, 4.00, 5.00, 6.00, 7.00, 10.00 };
+
+		bins[3] = {  // nuebar
+			0.00 ,0.06, 0.125,  0.25, 0.5, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 3.50, 4.00, 5.00 };
+		
+		// Theta
+		bins[4] = {  0, 20, 110,  160 }; // theta -- removed edge theta bins where no events live and split into 3 bins for stats
+
 
 	}
 	else if (detector_type == "nova"){
@@ -144,6 +170,21 @@ void Initialise(std::string detector_type, Detector &Detector_){
 		// Window Normal:	 X 0.01411202435 Y 0.05809720554 Z 0.9982111828
 		// Window area is 74
 
+		// numu
+		bins[0] = { 0.0, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0, 3.2, 3.4, 3.6, 3.8, 4.0, 4.2, 4.4, 4.6, 4.8, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0};
+		
+		// nue
+		bins[1] = {  0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0};
+		
+		// numubar
+		bins[2] = {  0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0};
+		
+		// nuebar
+		bins[3] = {  0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0};
+		
+		// Theta
+		bins[4] = {0.0};
+
 	}
 	else{
 		std::cout << "Unknown detector type given, EXITING....." << std::endl;
@@ -165,11 +206,11 @@ void Initialise(std::string detector_type, Detector &Detector_){
 		" [ " << Win_pt2.X()  << " " << Win_pt2.Y()  << " " << Win_pt2.Z()  << " ] " << "\n" <<
 		std::endl; 
 
-	Detector_ = Detector(detector_type, xRange, yRange, zRange, Trans_Det2Beam, Rot_row_x, Rot_row_y, Rot_row_z, Win_Base, Win_pt1, Win_pt2 );
+	Detector_ = Detector(detector_type, xRange, yRange, zRange, Trans_Det2Beam, Rot_row_x, Rot_row_y, Rot_row_z, Win_Base, Win_pt1, Win_pt2, bins );
 
 }
 //___________________________________________________________________________
-int calcEnuWgt(auto const& mcflux, const TVector3& xyz, double &enu, double& wgt_xy){
+int calcEnuWgt(auto const& mcflux, const TVector3& xyz, double &enu, double& wgt_xy, double kRDET){
 	// Neutrino Energy and Weight at arbitrary point
 	// Arguments:
 	//    dk2nu    :: contains current decay information
@@ -205,7 +246,7 @@ int calcEnuWgt(auto const& mcflux, const TVector3& xyz, double &enu, double& wgt
 	const int kpdg_omegaminus =  3334;  // Geant 24
 	const int kpdg_omegaplus  = -3334;  // Geant 32
 
-	const double kRDET = 100.0;   // set to flux per 100 cm radius
+	// const double kRDET = 100.0;   // set to flux per 100 cm radius
 
 	double xpos = xyz.X();
 	double ypos = xyz.Y();
@@ -464,7 +505,7 @@ double Get_tilt_wgt( const TVector3& detxyz, auto const& mcflux, double enu, Det
 // This function will recaclulate the missed nu rays for the intersection method
 // The intension is that this will fix the normalistion problems
 // Returns the weight/pi
-double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalgo::AABox volAVTPC, auto const& mcflux, auto const& mctruth, Detector Detector_ ){
+double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalgo::AABox volAVTPC, auto const& mcflux, auto const& mctruth, Detector Detector_, double KRDET ){
 
 	TRotation R;
 	int retries{0};
@@ -497,7 +538,7 @@ double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalg
 		// Pick a new point on the window in beam coords
 		x3beam = fWin_Base_beam + (fRnd.Uniform() * fFluxWindowDir1) + (fRnd.Uniform() * fFluxWindowDir2);
 
-		calcEnuWgt(mcflux, x3beam, enu, weight);
+		calcEnuWgt(mcflux, x3beam, enu, weight, KRDET);
 
 		// Get the nu ray direction in beam coords
 		TVector3 xyzDk(mcflux.fvx,mcflux.fvy,mcflux.fvz);  // Origin of decay in beam coords
@@ -556,7 +597,7 @@ double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalg
 	
 	double tiltweight = Get_tilt_wgt( x3beam, mcflux, enu, Detector_);
 
-	return weight * tiltweight / 3.1415926 ;
+	return weight * tiltweight ;
 }
 //___________________________________________________________________________
 // Function to check the status of weights, if they are bad, set to zero

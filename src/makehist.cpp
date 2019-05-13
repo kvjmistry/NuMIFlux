@@ -274,14 +274,16 @@ int main(int argc, char** argv) {
 			TVector3 xyz_beam = FromDetToBeam(xyz_det, false, Detector_);
 
 			// Get the new weight at the detector
-			calcEnuWgt(mcflux, xyz_beam, enu, detwgt);
+			double KRDET =  100.0; // Radius of circle in cm
+			double KRDET_Area  = 3.1415926*KRDET*KRDET/10000.0; // Area of circle in m2
+			calcEnuWgt(mcflux, xyz_beam, enu, detwgt, KRDET);
 
 			// Get the tiltweight
 			tiltwght = Get_tilt_wgt(xyz_beam, mcflux, enu, Detector_);
 
 			// Weight of neutrino parent (importance weight) * Neutrino weight for a decay forced at center of near detector 
-			cv_weight *= mcflux.fnimpwt * detwgt * tiltwght; 
-			dk2nu_cv   = mcflux.fnimpwt * detwgt * tiltwght; 
+			cv_weight *= mcflux.fnimpwt * detwgt / KRDET_Area; 
+			dk2nu_cv   = mcflux.fnimpwt * detwgt / KRDET_Area; 
 
 			// Error handling
 			if (cv_weight < 0) cv_weight = 0; // get rid of them pesky negative weights

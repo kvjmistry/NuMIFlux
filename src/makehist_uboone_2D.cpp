@@ -28,6 +28,9 @@
 #include "geo/GeoAABox.h"
 #include "geo/GeoHalfLine.h"
 #include "geo/GeoAlgo.h"
+#include "dk2nu/tree/dk2nu.h"
+#include "dk2nu/tree/dkmeta.h"
+#include "dk2nu/tree/calcLocationWeights.h"
 #include "functions_makehist.h"
 
 using namespace art;
@@ -203,7 +206,7 @@ int main(int argc, char** argv) {
 
 			double cv_weight = 1; 
 			double detwgt; // New weight at a window value
-			double tiltwght;
+			// double tiltwght;
 
 			double Enu = mctruth.GetNeutrino().Nu().E();
 
@@ -246,13 +249,15 @@ int main(int argc, char** argv) {
 			TVector3 xyz_beam = FromDetToBeam(xyz_det, false, Detector_);
 
 			// Get the new weight at the detector
-			calcEnuWgt(mcflux, xyz_beam, Enu, detwgt);
+			double KRDET =  100.0; // Radius of circle in cm
+			double KRDET_Area  = 3.1415926*KRDET*KRDET/10000.0; // Area of circle in m2
+			calcEnuWgt(mcflux, xyz_beam, Enu, detwgt, KRDET);
 
 			// Get the tiltweight -- unused here?
 			// tiltwght = Get_tilt_wgt(xyz_beam, mcflux, Enu, Detector_);
 
 			// Weight of neutrino parent (importance weight) * Neutrino weight for a decay forced at center of near detector 
-			cv_weight *= mcflux.fnimpwt * detwgt / 3.1415926;
+			cv_weight *= mcflux.fnimpwt * detwgt / KRDET_Area;
 
 			check_weight(cv_weight);
 
