@@ -8,6 +8,7 @@
 #include <iostream>
 #include <iomanip>
 #include <cstdlib>
+#include <stdlib.h>
 #include <string>
 #include <vector>
 
@@ -40,8 +41,6 @@
 #include "dk2nu/tree/dk2nu.h"
 #include "dk2nu/tree/dkmeta.h"
 #include "dk2nu/tree/calcLocationWeights.h"
-
-
 
 double totalPOT{0};
 bool input_flag{false}; // flag to see if a detector has been specified
@@ -273,16 +272,16 @@ void Initialise(std::string detector_type, Detector &Detector_){
 		exit(1);
 	}
 	std::cout << "\nFiducial Volume:\n"
-		"X:\t(" << xRange.first << ", "<< xRange.second << ")" << "\n" <<
-		"Y:\t(" << yRange.first << ", "<< yRange.second << ")" << "\n" <<
-		"Z:\t(" << zRange.first << ", "<< zRange.second << ")\n" << "\n"<<
+		"X:\t(" << xRange.first << ", "<< xRange.second << ") cm" << "\n" <<
+		"Y:\t(" << yRange.first << ", "<< yRange.second << ") cm" << "\n" <<
+		"Z:\t(" << zRange.first << ", "<< zRange.second << ") cm\n" << "\n"<<
 		"R_{beam to det} = \n" << 
 		" [ " << Rot_row_x.X() << " " << Rot_row_x.Y() << " " << Rot_row_x.Z() << " ] " << "\n" <<
 		" [ " << Rot_row_y.X() << " " << Rot_row_y.Y() << " " << Rot_row_y.Z() << " ] " << "\n" <<
 		" [ " << Rot_row_z.X() << " " << Rot_row_z.Y() << " " << Rot_row_z.Z() << " ] " << "\n\n" <<
-		"Translation from target to detector in beam coords = \n" <<
+		"Translation from target to detector in beam coords [cm] = \n" <<
 		" [ " << Trans_Det2Beam.X() << ", " << Trans_Det2Beam.Y() << ", " << Trans_Det2Beam.Z() << " ] " << "\n\n" <<
-		"Window (in det coords) = \n" << 
+		"Window (in det coords) [cm] = \n" << 
 		" [ " << Win_Base.X() << " " << Win_Base.Y() << " " << Win_Base.Z() << " ] " << "\n" <<
 		" [ " << Win_pt1.X()  << " " << Win_pt1.Y()  << " " << Win_pt1.Z()  << " ] " << "\n" <<
 		" [ " << Win_pt2.X()  << " " << Win_pt2.Y()  << " " << Win_pt2.Z()  << " ] " << "\n" <<
@@ -587,19 +586,16 @@ double Get_tilt_wgt( const TVector3& detxyz, auto const& mcflux, double enu, Det
 // This function will recaclulate the missed nu rays for the intersection method
 // The intension is that this will fix the normalistion problems
 // Returns the weight/pi
-double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalgo::AABox volAVTPC, auto const& mcflux, auto const& mctruth, Detector Detector_, double KRDET ){
+double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalgo::AABox volAVTPC, auto const& mcflux, auto const& mctruth, Detector Detector_, double KRDET, double &enu ){
 
 	TRotation R;
 	int retries{0};
-	double enu = mctruth.GetNeutrino().Nu().E();
+
+	double weight = 0;
 	TVector3 x3beam, x3beam_det;
-	TRandom3 fRnd;
 
 	bool debug{false};
 	
-	// Now get the weight
-	double weight;
-
 	R.RotateAxes(Detector_.Rot_row_x, Detector_.Rot_row_y, Detector_.Rot_row_z); // R is now det to beam
 	TRotation R_Beam_2_Det = R.Invert();
 
@@ -615,10 +611,18 @@ double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalg
 	// Now see if this neutrino vector is going to intersect with the detector
 	// If it doesn't then recalculate
 	while(true){
+		
+		x3beam.SetXYZ(0,0,0);
+		x3beam_det.SetXYZ(0,0,0);
+		weight=0;
+
+		double random = ((double) rand() / (RAND_MAX)); // Get a random number
+
+		if (debug)std::cout <<"r uniform:\t" << random << std::endl;
 
 		retries++;
 		// Pick a new point on the window in beam coords
-		x3beam = fWin_Base_beam + (fRnd.Uniform() * fFluxWindowDir1) + (fRnd.Uniform() * fFluxWindowDir2);
+		x3beam = fWin_Base_beam + (random * fFluxWindowDir1) + (random * fFluxWindowDir2);
 
 		calcEnuWgt(mcflux, x3beam, enu, weight, KRDET);
 
@@ -655,7 +659,7 @@ double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalg
 		auto vec = _geo_algo_instance.Intersection(volAVTPC, ray); 
 		bool intercept = false;
 
-		if (debug) std::cout << "vec size:\t" << vec.size()<< "\n"<< std::endl;
+		if (debug) std::cout << "vec size:\t" << vec.size()<< std::endl;
 
 		if (vec.size() == 0) { intercept = false; } // no intersections
 		if (vec.size() == 2) { intercept = true; }  // 2 intersections
@@ -667,14 +671,15 @@ double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalg
 		
 		// Got an interception, so break!
 		if (intercept) {
-			// std::cout << "Passed with " << retries << " retries"<<  std::endl;
-			break;
+			if (debug)std::cout << "Passed with " << retries << " retries"<< "\n" << std::endl;
+			break; 
 		}
 		if (retries > 1000) {
 			// If there are more than 1000 attempts and still no intersection then give up!
 			std::cout << "Recalculation failed due to > 1000 tries and no interception" << std::endl;
 			return 0.0; // throw the event away
 		} 
+
 	}
 	
 	double tiltweight = Get_tilt_wgt( x3beam, mcflux, enu, Detector_);
@@ -693,5 +698,29 @@ void check_weight(double &weight){
 	}
 }
 //___________________________________________________________________________
+// Function to check interception
+bool check_intercept(geoalgo::GeoAlgo const _geo_algo_instance, geoalgo::AABox volAVTPC, auto const& mctruth){
 
+	// Do the neutrino ray calculation for flux at the window
+	geoalgo::HalfLine ray(mctruth.GetNeutrino().Nu().Vx(),
+			mctruth.GetNeutrino().Nu().Vy(),
+			mctruth.GetNeutrino().Nu().Vz(),
+			mctruth.GetNeutrino().Nu().Px(),
+			mctruth.GetNeutrino().Nu().Py(),
+			mctruth.GetNeutrino().Nu().Pz());
+
+	// Count nu intersections with tpc
+	auto vec = _geo_algo_instance.Intersection(volAVTPC, ray); 
+	bool intercept = false;
+
+	if (vec.size() == 0) { intercept = false; } // no intersections
+	if (vec.size() == 2) { intercept = true; }  // 2 intersections
+	if (vec.size() != 2 && vec.size() != 0) {   // other intersection
+		std::cout << "Neutrino ray has " << vec.size()
+			<< " intersection with the detector volume"
+			<< std::endl;
+	}
+	return intercept;
+}
+//___________________________________________________________________________
 #endif

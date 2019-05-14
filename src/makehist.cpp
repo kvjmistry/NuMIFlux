@@ -193,13 +193,13 @@ int main(int argc, char** argv) {
     	if (n % 1000000 == 0) std::cout << "On entry " << n/1000000.0 <<"M" << std::endl;
 
 		auto const& mctruths = *ev.getValidHandle<vector<simb::MCTruth>>(mctruths_tag);   
-		auto const& mcfluxs = *ev.getValidHandle<vector<simb::MCFlux>>(mctruths_tag);   
-		auto const& evtwghts = *ev.getValidHandle<vector<evwgh::MCEventWeight>>(evtwght_tag);  
-		
+		auto const& mcfluxs  = *ev.getValidHandle<vector<simb::MCFlux>>(mctruths_tag);   
+		auto const& evtwghts = *ev.getValidHandle<vector<evwgh::MCEventWeight>>(evtwght_tag);
+
 		// Loop over MCTruths
 		for (size_t i=0; i<mctruths.size(); i++) {
 			auto const& mctruth = mctruths.at(i);
-			auto const& mcflux = mcfluxs.at(i);
+			auto const& mcflux  = mcfluxs.at(i);
 			evwgh::MCEventWeight evtwght;
 			evtwght = evtwghts.at(i);
 
@@ -217,26 +217,18 @@ int main(int argc, char** argv) {
 				continue;
 			}
 
-			// Do the neutrino ray calculation for flux at the window
-			geoalgo::HalfLine ray(mctruth.GetNeutrino().Nu().Vx(),
-					mctruth.GetNeutrino().Nu().Vy(),
-					mctruth.GetNeutrino().Nu().Vz(),
-					mctruth.GetNeutrino().Nu().Px(),
-					mctruth.GetNeutrino().Nu().Py(),
-					mctruth.GetNeutrino().Nu().Pz());
+			// Check if the ray intercepted with the detector
+			bool intercept = check_intercept(_geo_algo_instance, volAVTPC, mctruth);
 
-			// Count nu intersections with tpc
-			auto vec = _geo_algo_instance.Intersection(volAVTPC, ray); 
-			bool intercept = false;
-
-			if (vec.size() == 0) { intercept = false; } // no intersections
-			if (vec.size() == 2) { intercept = true; }  // 2 intersections
-			if (vec.size() != 2 && vec.size() != 0) {   // other intersection
-				std::cout << "Neutrino ray has " << vec.size()
-					<< " intersection with the detector volume"
-					<< std::endl;
-			}
-
+			// if (intercept){
+			// 	std::cout << "Passed Nu Ray Properties" << std::endl;
+			// 	std::cout << "px:\t" <<mctruth.GetNeutrino().Nu().Px()*1000 <<  std::endl; 
+			// 	std::cout << "py:\t" <<mctruth.GetNeutrino().Nu().Py()*1000 <<  std::endl;
+			// 	std::cout << "pz:\t" <<mctruth.GetNeutrino().Nu().Pz()*1000 <<  std::endl;
+			// 	std::cout << "vx:\t" <<mctruth.GetNeutrino().Nu().Vx() << std::endl;
+			// 	std::cout << "vy:\t" <<mctruth.GetNeutrino().Nu().Vy() << std::endl;
+			// 	std::cout << "vz:\t" <<mctruth.GetNeutrino().Nu().Vz() << std::endl;
+			// }
 
 			double cv_weight = 1;    // PPFX CV
 			double dk2nu_weight = 1; // UW 
@@ -299,25 +291,23 @@ int main(int argc, char** argv) {
 
 			// Window weight recalculations
 			double window_weight_recalc;
-			if (intercept){
-				// window_weight       *= mcflux.fnimpwt * mcflux.fnwtfar * tiltwght;
-				window_weight       *= mcflux.fnimpwt * mcflux.fnwtfar * tiltwght / KRDET_Area; // mcflux.fnwtfar == mcflux.fnwtnear
-				dk2nu_window_weight *= mcflux.fnimpwt * mcflux.fnwtfar * tiltwght / KRDET_Area; // mcflux.fnwtfar == mcflux.fnwtnear
-			} 
-			else {
-				window_weight_recalc           = Recalc_Intersection_wgt(_geo_algo_instance, volAVTPC, mcflux, mctruth, Detector_, KRDET );
-				window_weight                 *= mcflux.fnimpwt * window_weight_recalc / KRDET_Area; // Recalculated for every event
-				dk2nu_window_weight           *= mcflux.fnimpwt * window_weight_recalc / KRDET_Area; // Recalculated for every event
-			}			
+			// if (intercept){
+			// 	window_weight       *= mcflux.fnimpwt * mcflux.fnwtfar * tiltwght / KRDET_Area; // mcflux.fnwtfar == mcflux.fnwtnear
+			// 	dk2nu_window_weight *= mcflux.fnimpwt * mcflux.fnwtfar * tiltwght / KRDET_Area; // mcflux.fnwtfar == mcflux.fnwtnear
+			// } 
+			// else {
+			// 	window_weight_recalc           = Recalc_Intersection_wgt(_geo_algo_instance, volAVTPC, mcflux, mctruth, Detector_, KRDET );
+			// 	window_weight                 *= mcflux.fnimpwt * window_weight_recalc / KRDET_Area; // Recalculated for every event
+			// 	dk2nu_window_weight           *= mcflux.fnimpwt * window_weight_recalc / KRDET_Area; // Recalculated for every event
+			// }	
+			window_weight_recalc           = Recalc_Intersection_wgt(_geo_algo_instance, volAVTPC, mcflux, mctruth, Detector_, KRDET, Enu );
+			window_weight                 *= mcflux.fnimpwt * window_weight_recalc / KRDET_Area; // Recalculated for every event
+			dk2nu_window_weight           *= mcflux.fnimpwt * window_weight_recalc / KRDET_Area; // Recalculated for every event		
 			intercept = true; // override above calculations
-
-
 
 			// Weight of neutrino parent (importance weight) * Neutrino weight for a decay forced at center of near detector 
 			cv_weight        *= mcflux.fnimpwt * detwgt / KRDET_Area; // for ppfx cases
 			dk2nu_weight     *= mcflux.fnimpwt * detwgt / KRDET_Area; // for UW cases 
-			
-			
 			
 			// Error handling, sets to zero if bad
 			check_weight(cv_weight);

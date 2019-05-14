@@ -19,7 +19,8 @@ void plot_nova_flux(const char* mode) {
     TFile *f, *f_nova;
 
     // File in 
-	boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/PPFX/nova/Norm_investigation/test/output.root"); if (boolfile == false) gSystem->Exit(0);
+	// boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/PPFX/nova/Norm_investigation/test/output.root"); if (boolfile == false) gSystem->Exit(0);
+    boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/PPFX/nova/Norm_investigation/test/output_v2.root"); if (boolfile == false) gSystem->Exit(0);
     boolfile  = GetFile(f_nova,"/uboone/app/users/kmistry/PPFX/numi-validation/nova_flux/FHC_Flux_NOvA_ND_2017.root"); if (boolfile == false) gSystem->Exit(0);
 
     double fPOT = GetPOT(f);
@@ -28,7 +29,7 @@ void plot_nova_flux(const char* mode) {
 
     // Now get the flux for intersection
 	TH1D* h_intersection_flux;
-	boolhist = GetHist(f, h_intersection_flux, Form("%s/%s_CV_AV_TPC_intersection", mode, mode)); if (boolhist == false) gSystem->Exit(0);
+	boolhist = GetHist(f, h_intersection_flux, Form("%s/Window/%s_CV_Window", mode, mode)); if (boolhist == false) gSystem->Exit(0);
     Normalise(h_intersection_flux);
     h_intersection_flux->SetLineColor(kMagenta);
     h_intersection_flux->SetLineWidth(2);
@@ -40,7 +41,7 @@ void plot_nova_flux(const char* mode) {
 
     // Now get the flux for deteweights
 	TH1D* h_detweights_flux;
-	boolhist = GetHist(f, h_detweights_flux, Form("%s/%s_CV_AV_TPC_detweights", mode, mode)); if (boolhist == false) gSystem->Exit(0);
+	boolhist = GetHist(f, h_detweights_flux, Form("%s/Detsmear/%s_CV_AV_TPC", mode, mode)); if (boolhist == false) gSystem->Exit(0);
     Normalise(h_detweights_flux);
     h_detweights_flux->SetLineColor(kBlack);
     h_detweights_flux->SetLineWidth(2);
@@ -50,17 +51,17 @@ void plot_nova_flux(const char* mode) {
     h_detweights_flux->Draw("hist, same");
     h_detweights_flux->Draw("e, same");
 
-    // Now get the flux for deteweights_notilt
-	TH1D* h_detweights_notilt_flux;
-	boolhist = GetHist(f, h_detweights_notilt_flux, Form("%s/%s_CV_AV_TPC_detweights_notilt", mode, mode)); if (boolhist == false) gSystem->Exit(0);
-    Normalise(h_detweights_notilt_flux);
-    h_detweights_notilt_flux->SetLineColor(kGreen+1);
-    h_detweights_notilt_flux->SetLineWidth(2);
-    // h_detweights_notilt_flux->Scale(normfactor* 1./(3.1415926) );
-    h_detweights_notilt_flux->Scale(normfactor );
-    lFlux->AddEntry(h_detweights_notilt_flux, "Detector Smear no Tilt","l");
-    h_detweights_notilt_flux->Draw("hist, same");
-    h_detweights_notilt_flux->Draw("e, same");
+    // // Now get the flux for deteweights_notilt
+	// TH1D* h_detweights_notilt_flux;
+	// boolhist = GetHist(f, h_detweights_notilt_flux, Form("%s/%s_CV_AV_TPC_detweights_notilt", mode, mode)); if (boolhist == false) gSystem->Exit(0);
+    // Normalise(h_detweights_notilt_flux);
+    // h_detweights_notilt_flux->SetLineColor(kGreen+1);
+    // h_detweights_notilt_flux->SetLineWidth(2);
+    // // h_detweights_notilt_flux->Scale(normfactor* 1./(3.1415926) );
+    // h_detweights_notilt_flux->Scale(normfactor );
+    // lFlux->AddEntry(h_detweights_notilt_flux, "Detector Smear no Tilt","l");
+    // h_detweights_notilt_flux->Draw("hist, same");
+    // h_detweights_notilt_flux->Draw("e, same");
 
     // Now get Nova flux 
    TH1D* h_nova_flux;
