@@ -11,33 +11,6 @@ All the window method and detector smeared weights are preserved.
 * Authors: J. Zennamo, A. Mastbaum, K. Mistry
 */
 
-#include <iostream>
-#include <iomanip>      // std::setprecision
-#include <cstdlib>
-#include <string>
-#include <vector>
-#include "TDirectory.h"
-#include "TROOT.h"
-#include "TH1F.h"
-#include "TH1D.h"
-#include "TGraph.h"
-#include "TH2D.h"
-#include "TFile.h"
-#include "TRandom.h"
-#include "canvas/Utilities/InputTag.h"
-#include "gallery/Event.h"
-#include "gallery/ValidHandle.h"
-#include "nusimdata/SimulationBase/MCTruth.h"
-#include "nusimdata/SimulationBase/MCFlux.h"
-#include "larcoreobj/SummaryData/POTSummary.h"
-#include "larsim/EventWeight/Base/MCEventWeight.h"
-#include "geo/GeoVector.h"
-#include "geo/GeoAABox.h"
-#include "geo/GeoHalfLine.h"
-#include "geo/GeoAlgo.h"
-#include "dk2nu/tree/dk2nu.h"
-#include "dk2nu/tree/dkmeta.h"
-#include "dk2nu/tree/calcLocationWeights.h"
 #include "functions_makehist.h"
 
 using namespace art;
@@ -51,15 +24,13 @@ using namespace std;
 int main(int argc, char** argv) {
 
 	Detector Detector_;
-	
 	InputTag mctruths_tag { "flux" };
 	InputTag  evtwght_tag { "eventweight" };
 
-	double totalPOT{0};
-	bool input_flag{false}; // flag to see if a detector has been specified
+	// labels = {"ms_PPFX","Total"};
+	labels = {"PPFXMaster"};
 
-	vector<string> badfiles;
-	vector<string> filename;
+	// Loop over input arguments
 	for (int i = 1; i < argc; i++) {
 
 		std::string input = string(argv[i]);
@@ -88,7 +59,6 @@ int main(int argc, char** argv) {
 	}
 
 	std::cout << "\nTotal POT read in:\t" << totalPOT << std::endl;
-
 	std::cout << "\nUsing 5e5 POT per dk2nu file, the flux will be wrong if this is not the case!\n" << std::endl;
 
 	// If no detector is specified then use uboone as default
@@ -99,94 +69,12 @@ int main(int argc, char** argv) {
 	geoalgo::GeoAlgo const _geo_algo_instance;
 	geoalgo::AABox volAVTPC( Detector_.xRange.first, Detector_.yRange.first, Detector_.zRange.first, Detector_.xRange.second, Detector_.yRange.second, Detector_.zRange.second);
 
-	// Histograms for each flavor
-	std::vector<TH1D*> Enu_CV_Window;
-	std::vector<TH1D*> Enu_CV_AV_TPC;
-	std::vector<TH1D*> Enu_UW_Window;
-	std::vector<TH1D*> Enu_UW_AV_TPC;
-
-	std::vector<TH1D*> Th_CV_AV_TPC;
-	std::vector<TH1D*> Th_UW_AV_TPC;
-
-	// 5Mev Bins
-	std::vector<TH1D*> Enu_CV_Window_5MeV_bin;
-	std::vector<TH1D*> Enu_CV_AV_TPC_5MeV_bin;
-	std::vector<TH1D*> Enu_UW_Window_5MeV_bin;
-	std::vector<TH1D*> Enu_UW_AV_TPC_5MeV_bin;
-
-	// Detector intersection window method
-	std::vector<TH1D*> Enu_CV_Window_5MeV_bin_intersect;
-
-	// Flux by Parent
-	std::vector<string> parent = {"PI_Plus", "PI_Minus", "Mu_Plus", "Mu_Minus", "Kaon_Plus", "Kaon_Minus" , "K0L"};
-	std::vector<std::vector<TH1D*> > Enu_Parent_AV_TPC;		// Flux by Parent
-	std::vector<std::vector<TH1D*> > Th_Parent_AV_TPC; 		// Flux by parent in theta
-	std::vector<std::vector<TH1D*> > zpos_Parent_AV_TPC; 	// Flux by parent in z Pos at decay (production is unimplemented for now)
-	std::vector<std::vector<TH1D*> > dk_Parent_mom; 		// Decay momentum by parent
-	std::vector<std::vector<TH1D*> > impwght_Parent; 		// Importance weight by parent
-	std::vector<std::vector<TH1D*> > Prod_energy_Parent; 	// Production energy by parent
-	std::vector<std::vector<TH1D*> > Targ_mom_Parent; 	    // Momentum by parent as it leaves the target
-	std::vector<std::vector<TH1D*> > DAR_Enu_Parent; 	    // Energy spectrum of decay at rest particles
-	
-	// Other hists
-	TH1D* NuMu_PiDAR_zpos      = new TH1D("NuMu_PiDAR_zpos","", 400 , 0, 80000); // numu Pidar peak zpos
-	TH1D* NuMu_KDAR_zpos       = new TH1D("NuMu_KDAR_zpos","", 400 , 0, 80000);  // numu kdar peak zpos
-	TH1D* NuMu_peak_mom_muon   = new TH1D("NuMu_peak_mom_muon","", 100 , 0, 25);  // muon parent momentum at large enu peak
-	TH1D* NuMu_peak_theta_muon = new TH1D("NuMu_peak_theta_muon","", 40 , 0, 180);  // muon parent thetaat large peak
-	TH1D* NuMu_peak_zpos_muon  = new TH1D("NuMu_peak_zpos_muon","", 400 , 0, 80000);  // muon parent thetaat large peak
-
-	// Tree for POT counting
-	TTree* POTTree = new TTree("POT","Total POT");
-	POTTree -> Branch("POT", &totalPOT);
-	POTTree -> Fill();
-
-	// systematic - universe 
-	std::vector< std::vector< double > > Weights;   
-
-	std::vector<string> flav = { "numu", "nue", "numubar", "nuebar" };
-
-	std::vector< std::vector<double> > bins; bins.resize(4);
-	
-	if (Detector_.detector_name == "uboone"){
-		bins[0] = { // numu
-			0.00, 0.025, 0.03, 0.235 ,0.24, 0.50, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 3.00, 4.00, 5.00, 6.00, 7.00, 10.00 };
-
-		bins[1] = {  // nue
-			0.00 ,0.06, 0.125, 0.25, 0.5, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 3.50, 4.00, 5.00 };
-
-		bins[2] = {// numubar
-			0.00, 0.025, 0.03, 0.235 ,0.24, 0.50, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 3.00, 4.00, 5.00, 6.00, 7.00, 10.00 };
-
-		bins[3] = {  // nuebar
-			0.00 ,0.06, 0.125,  0.25, 0.5, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 3.50, 4.00, 5.00 };
-	}
-	else {
-		bins[0] = {
-		0.0,  0.6,  0.8,  1.0,  1.2,  1.4,  1.6,  1.8,  2.0,  2.2,  2.4,  2.6,
-		2.8,  3.0,  3.2,  3.4,  3.6,  3.8,  4.0,  4.2,  4.4,  4.6,  4.8,  5.0,
-		6.0,  7.0,  8.0,  9.0,  10.0,  11.0,  12.0,  13.0,  14.0,  15.0,  16.0,
-		17.0,  18.0,  19.0,  20.0
-		};
-		bins[1] = {  0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0};
-		bins[2] = {  0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0};
-		bins[3] = {  0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0};
-	}
-
-	std::vector<string> labels;
-	// labels = {"ms_PPFX","Total"};
-	labels = {"PPFXMaster"};
-
-	Weights.resize(labels.size());
-
-	for (unsigned int i=0; i<labels.size(); i++) {
-		Weights[i].resize(100);
-	}
-
+	// Resizing of histograms
 	Enu_CV_Window.resize(4);
 	Enu_CV_AV_TPC.resize(4);
 	Enu_UW_Window.resize(4);
 	Enu_UW_AV_TPC.resize(4);
-
+	
 	Th_CV_AV_TPC.resize(4);
 	Th_UW_AV_TPC.resize(4);
 	
@@ -194,26 +82,46 @@ int main(int argc, char** argv) {
 	Enu_CV_AV_TPC_5MeV_bin.resize(4);
 	Enu_UW_Window_5MeV_bin.resize(4);
 	Enu_UW_AV_TPC_5MeV_bin.resize(4);
-
 	Enu_CV_Window_5MeV_bin_intersect.resize(4);
-
+	
 	Enu_Parent_AV_TPC.resize(4);
 	Th_Parent_AV_TPC.resize(4);
 	zpos_Parent_AV_TPC.resize(4);
 	impwght_Parent.resize(4);
 	Targ_mom_Parent.resize(4);
 	DAR_Enu_Parent.resize(4);
+
+	// 2D
+	Enu_Th_CV_AV_TPC.resize(4);
+	Enu_Th_UW_AV_TPC.resize(4);
+
+	// Weighted
+	Enu_Syst_AV_TPC.resize(4);    // 1D
+	Enu_Th_Syst_AV_TPC.resize(4); // 2D
 	
-	std::vector<double> temp;
+
+	// Tree for POT counting
+	TTree* POTTree = new TTree("POT","Total POT");
+	POTTree -> Branch("POT", &totalPOT);
+	POTTree -> Fill();
+
+	
+	// Resize the weight labels
+	Weights.resize(labels.size());
+	for (unsigned int i=0; i<labels.size(); i++) Weights[i].resize(100);
+
+	int const n_th = Detector_.bins.at(4).size()-1; // theta bins
+	temp2 = Detector_.bins.at(4); 
 
 	// Flavors
 	for(unsigned i=0; i<flav.size(); i++) {
-		int const n = bins[i].size()-1;
+		
+		int const n = Detector_.bins.at(i).size()-1;
 		temp.clear();
-		// temp = bins[i];
 		temp = Detector_.bins.at(i);
 
 		double* bin = &temp[0];
+		double* bin_th = &temp2[0];
 
 		// FLux histograms
 		Enu_CV_Window[i] = new TH1D(Form("%s_CV_Window",flav[i].c_str()),"",n, bin);
@@ -222,6 +130,10 @@ int main(int argc, char** argv) {
 		Enu_UW_AV_TPC[i] = new TH1D(Form("%s_UW_AV_TPC",flav[i].c_str()),"",n, bin);
 		Th_CV_AV_TPC [i] = new TH1D(Form("Th_%s_CV_TPC", flav[i].c_str()), "", 18, 0, 180);
 		Th_UW_AV_TPC [i] = new TH1D(Form("Th_%s_UW_TPC", flav[i].c_str()), "", 18, 0, 180);
+
+		// 2D
+		Enu_Th_CV_AV_TPC[i] = new TH2D(Form("%s_CV_AV_TPC_2D",flav[i].c_str()),"",n, bin, n_th, bin_th);
+		Enu_Th_UW_AV_TPC[i] = new TH2D(Form("%s_unweighted_AV_TPC_2D",flav[i].c_str()),"",n, bin, n_th, bin_th);
 
 		// new binning schmeme to be the same as marcos
 		Enu_CV_Window_5MeV_bin[i] = new TH1D(Form("%s_CV_Window_5MeV_bin",flav[i].c_str()),"",4000, 0, 20);
@@ -248,6 +160,21 @@ int main(int argc, char** argv) {
 			DAR_Enu_Parent[i][k]     = new TH1D(Form("DAR_Enu_%s_%s_AV_TPC", flav[i].c_str(), parent[k].c_str()),"", 4000, 0, 20);
 		}
 		
+		// Weighted Stuff
+		Enu_Syst_AV_TPC[i].resize(labels.size());
+		Enu_Th_Syst_AV_TPC[i].resize(labels.size());
+		
+		// Labels
+		for(unsigned j=0; j<labels.size(); j++) {
+			Enu_Syst_AV_TPC[i][j].resize(100);
+			Enu_Th_Syst_AV_TPC[i][j].resize(100);
+
+			// Universes
+			for(int k=0; k<100; k++){
+				Enu_Syst_AV_TPC[i][j][k] =  new TH1D(Form("%s_%s_Uni_%d_AV_TPC",flav[i].c_str(), labels[j].c_str(), k),"",n, bin);
+				Enu_Th_Syst_AV_TPC[i][j][k] =  new TH2D(Form("%s_%s_Uni_%d_AV_TPC_2D",flav[i].c_str(), labels[j].c_str(), k),"",n, bin, n_th, bin_th);
+			}
+		}
 	}
 
 	// ++++++++++++++++++++++++++++++++
@@ -370,18 +297,71 @@ int main(int argc, char** argv) {
 
 			// if (tiltwght > 0.95) std::cout << "tiltweight:\t" << std::setprecision(5) << tiltwght << "\tzpos:\t" << mcflux.fvz <<"\ttheta:\t" << theta << std::endl;
 
+			// Window weight recalculations
+			double window_weight_recalc;
+			if (intercept){
+				// window_weight       *= mcflux.fnimpwt * mcflux.fnwtfar * tiltwght;
+				window_weight       *= mcflux.fnimpwt * mcflux.fnwtfar * tiltwght / KRDET_Area; // mcflux.fnwtfar == mcflux.fnwtnear
+				dk2nu_window_weight *= mcflux.fnimpwt * mcflux.fnwtfar * tiltwght / KRDET_Area; // mcflux.fnwtfar == mcflux.fnwtnear
+			} 
+			else {
+				window_weight_recalc           = Recalc_Intersection_wgt(_geo_algo_instance, volAVTPC, mcflux, mctruth, Detector_, KRDET );
+				window_weight                 *= mcflux.fnimpwt * window_weight_recalc / KRDET_Area; // Recalculated for every event
+				dk2nu_window_weight           *= mcflux.fnimpwt * window_weight_recalc / KRDET_Area; // Recalculated for every event
+			}			
+			intercept = true; // override above calculations
+
+
+
 			// Weight of neutrino parent (importance weight) * Neutrino weight for a decay forced at center of near detector 
 			cv_weight        *= mcflux.fnimpwt * detwgt / KRDET_Area; // for ppfx cases
 			dk2nu_weight     *= mcflux.fnimpwt * detwgt / KRDET_Area; // for UW cases 
 			
-			window_weight       *= mcflux.fnimpwt * mcflux.fnwtfar * tiltwght / KRDET_Area; // mcflux.fnwtfar == mcflux.fnwtnear
-			dk2nu_window_weight *= mcflux.fnimpwt * mcflux.fnwtfar * tiltwght / KRDET_Area; // mcflux.fnwtfar == mcflux.fnwtnear
+			
 			
 			// Error handling, sets to zero if bad
 			check_weight(cv_weight);
 			check_weight(window_weight);
 			check_weight(dk2nu_weight);
 			check_weight(dk2nu_window_weight);
+
+			// Fill Weight vector with 1's to create size=labels
+			for (unsigned l=0; l<labels.size(); l++) {
+				std::fill(Weights[l].begin(), Weights[l].end(), 1);
+			}
+
+			// Get the PPFX weights
+			// Loop over all event weight objs
+			for (auto last : evtwght.fWeight) { 
+
+				// Loop over all options
+				for (unsigned l=0; l<labels.size(); l++) { 
+
+					// Look for string name wishing to push back
+					if (last.first.find(labels[l].c_str()) != std::string::npos) {
+
+						// Loop over ms universes
+						for (unsigned i=0; i<last.second.size(); i++) { 
+
+							// Fill weights 0 < w < 30 otherwise fill 1's
+							if (last.second.at(i) > 0 && last.second.at(i) < 30){ 
+								Weights[l][i] *= last.second.at(i);  
+							}     
+							else {
+								// std::cout << "Bad Univ weight, setting to 1: " << last.second.at(i) << std::endl;
+								Weights[l][i] *= 1;
+								// Weights[l][i] *= last.second.at(i);  
+							}
+
+						} // End loop over universes
+
+					}
+
+				}
+
+			} // End loop over weights
+
+
 			
 			// ++++++++++++++++++++++++++++++++
 			// Now got weights, fill histograms
@@ -497,6 +477,24 @@ int main(int argc, char** argv) {
 				// std::cout << "E:\t" << Enu << "Parent:\t" << mcflux.fptype <<"  theta:\t" <<theta<<"   ntype:\t"<< mcflux.fndecay<<   std::endl;
 			}
 
+			// 2D Stuff
+			Enu_Th_CV_AV_TPC[pdg]->Fill(Enu, theta, cv_weight);
+			Enu_Th_UW_AV_TPC[pdg]->Fill(Enu, theta, dk2nu_weight);
+
+
+			// Now fill multisims
+			for (unsigned l=0; l<labels.size(); l++) {
+
+				// Universes
+				for (unsigned i=0; i<Weights[l].size(); i++) {
+					
+					Enu_Syst_AV_TPC[pdg][l][i]->Fill(Enu, Weights[l][i]*cv_weight);
+					Enu_Th_Syst_AV_TPC[pdg][l][i]->Fill(Enu, theta, Weights[l][i]*cv_weight);
+				}
+			}
+
+
+
 		} // End loop over mctruth
 
 	} // End loop over events
@@ -512,11 +510,11 @@ int main(int argc, char** argv) {
 	std::cout << "flavour.size:\t" <<flav.size()<<std::endl;
 
 	// Top Flav dir 
-	std::vector<std::vector<TDirectory*>> subdir(flav.size()); 
-	
+	std::vector<std::vector<TDirectory*>> subdir(flav.size());
+
 	//Create label dirs
 	for (unsigned i=0; i<flav.size(); i++){
-		subdir[i].resize(parent.size()+2);
+		subdir[i].resize(parent.size()+5);
 	
 	}
 
@@ -527,21 +525,6 @@ int main(int argc, char** argv) {
 
 		subdir[f][0] = savdir->mkdir(Form("%s",flav[f].c_str()));
 		subdir[f][0]->cd();
-
-		// Write CV fluxes
-		Enu_CV_Window[f]->Write();      
-		Enu_CV_AV_TPC[f]->Write();
-		Enu_UW_Window[f]->Write();      
-		Enu_UW_AV_TPC[f]->Write();
-		Th_CV_AV_TPC[f]->Write();
-		Th_UW_AV_TPC[f]->Write();
-
-		Enu_CV_Window_5MeV_bin[f]->Write();      
-		Enu_CV_AV_TPC_5MeV_bin[f]->Write();
-		Enu_UW_Window_5MeV_bin[f]->Write();      
-		Enu_UW_AV_TPC_5MeV_bin[f]->Write();
-		
-		Enu_CV_Window_5MeV_bin_intersect[f]->Write();
 
 		// Parent
 		// INDEXING: 1: PI_Plus 2: PI_Minus 3: Mu Plus 4: Mu_Minus 5: Kaon_Plus 6: Kaon_Minus 7: K0L 
@@ -570,6 +553,36 @@ int main(int argc, char** argv) {
 		NuMu_peak_theta_muon->Write();
 		NuMu_peak_zpos_muon->Write();
 
+		std::cout << "Window" << std::endl;
+		subdir.at(f).at(parent.size()+2) = subdir[f][0]->mkdir("Window");
+		subdir.at(f).at(parent.size()+2)->cd();
+		Enu_CV_Window[f]->Write(); 
+		Enu_UW_Window[f]->Write();     
+		Enu_CV_Window_5MeV_bin[f]->Write();    
+		Enu_UW_Window_5MeV_bin[f]->Write();    
+		Enu_CV_Window_5MeV_bin_intersect[f]->Write();
+
+		std::cout << "Detsmear" << std::endl;
+		subdir.at(f).at(parent.size()+3) = subdir[f][0]->mkdir("Detsmear");
+		subdir.at(f).at(parent.size()+3)->cd();
+		Enu_CV_AV_TPC[f]->Write();
+		Enu_UW_AV_TPC[f]->Write();
+		Th_CV_AV_TPC[f]->Write();
+		Th_UW_AV_TPC[f]->Write();
+		Enu_CV_AV_TPC_5MeV_bin[f]->Write();
+		Enu_UW_AV_TPC_5MeV_bin[f]->Write();
+
+		std::cout << "Multisims" << std::endl;
+		subdir.at(f).at(parent.size()+4) = subdir[f][0]->mkdir("Multisims");
+		subdir.at(f).at(parent.size()+4)->cd();
+		
+		for (unsigned p=0; p < labels.size(); p++){
+			
+			for(int i = 0; i < 100; i++){
+				Enu_Syst_AV_TPC.at(f).at(p).at(i)->Write();
+				Enu_Th_Syst_AV_TPC.at(f).at(p).at(i)->Write();
+			}
+		}
 		savdir->cd();
 	}
 

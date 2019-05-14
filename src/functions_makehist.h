@@ -1,10 +1,17 @@
+#ifndef FUNCTIONS_MAKEHIST_H
+#define FUNCTIONS_MAKEHIST_H
+
 // Functions file for make hist script
 // Intention is to unify the makehist scripts into one
 
+// Std Includes
 #include <iostream>
+#include <iomanip>
 #include <cstdlib>
 #include <string>
 #include <vector>
+
+// ROOT Includes
 #include "TDirectory.h"
 #include "TROOT.h"
 #include "TH1F.h"
@@ -17,10 +24,85 @@
 #include "TRotation.h"
 #include "TRandom.h"
 #include "TRandom3.h"
+#include "canvas/Utilities/InputTag.h"
+
+// LArsoft Includes
 #include "geo/GeoVector.h"
 #include "geo/GeoAABox.h"
 #include "geo/GeoHalfLine.h"
 #include "geo/GeoAlgo.h"
+#include "gallery/Event.h"
+#include "gallery/ValidHandle.h"
+#include "nusimdata/SimulationBase/MCTruth.h"
+#include "nusimdata/SimulationBase/MCFlux.h"
+#include "larcoreobj/SummaryData/POTSummary.h"
+#include "larsim/EventWeight/Base/MCEventWeight.h"
+#include "dk2nu/tree/dk2nu.h"
+#include "dk2nu/tree/dkmeta.h"
+#include "dk2nu/tree/calcLocationWeights.h"
+
+
+
+double totalPOT{0};
+bool input_flag{false}; // flag to see if a detector has been specified
+
+std::vector<std::string> badfiles;
+std::vector<std::string> filename;
+
+// systematic - universe 
+std::vector< std::vector< double > > Weights;   
+
+std::vector<std::string> flav = { "numu", "nue", "numubar", "nuebar" };
+
+std::vector<std::string> labels;
+
+std::vector<double> temp, temp2; // For the bins
+
+// Histograms for each flavor
+std::vector<TH1D*> Enu_CV_Window;	
+std::vector<TH1D*> Enu_CV_AV_TPC;	
+std::vector<TH1D*> Enu_UW_Window;	
+std::vector<TH1D*> Enu_UW_AV_TPC;	
+
+std::vector<TH1D*> Th_CV_AV_TPC;	
+std::vector<TH1D*> Th_UW_AV_TPC;	
+
+// 5Mev Bins
+std::vector<TH1D*> Enu_CV_Window_5MeV_bin;	
+std::vector<TH1D*> Enu_CV_AV_TPC_5MeV_bin;	
+std::vector<TH1D*> Enu_UW_Window_5MeV_bin;	
+std::vector<TH1D*> Enu_UW_AV_TPC_5MeV_bin;	
+
+// Detector intersection window method
+std::vector<TH1D*> Enu_CV_Window_5MeV_bin_intersect;	
+
+// Flux by Parent
+std::vector<std::string> parent = {"PI_Plus", "PI_Minus", "Mu_Plus", "Mu_Minus", "Kaon_Plus", "Kaon_Minus" , "K0L"};
+std::vector<std::vector<TH1D*> > Enu_Parent_AV_TPC;		// Flux by Parent
+std::vector<std::vector<TH1D*> > Th_Parent_AV_TPC; 		// Flux by parent in theta
+std::vector<std::vector<TH1D*> > zpos_Parent_AV_TPC; 	// Flux by parent in z Pos at decay (production is unimplemented for now)
+std::vector<std::vector<TH1D*> > dk_Parent_mom; 		// Decay momentum by parent
+std::vector<std::vector<TH1D*> > impwght_Parent; 		// Importance weight by parent
+std::vector<std::vector<TH1D*> > Prod_energy_Parent; 	// Production energy by parent
+std::vector<std::vector<TH1D*> > Targ_mom_Parent; 	    // Momentum by parent as it leaves the target
+std::vector<std::vector<TH1D*> > DAR_Enu_Parent; 	    // Energy spectrum of decay at rest particles
+
+// Other hists
+TH1D* NuMu_PiDAR_zpos      = new TH1D("NuMu_PiDAR_zpos","", 400 , 0, 80000); // numu Pidar peak zpos
+TH1D* NuMu_KDAR_zpos       = new TH1D("NuMu_KDAR_zpos","", 400 , 0, 80000);  // numu kdar peak zpos
+TH1D* NuMu_peak_mom_muon   = new TH1D("NuMu_peak_mom_muon","", 100 , 0, 25);  // muon parent momentum at large enu peak
+TH1D* NuMu_peak_theta_muon = new TH1D("NuMu_peak_theta_muon","", 40 , 0, 180);  // muon parent thetaat large peak
+TH1D* NuMu_peak_zpos_muon  = new TH1D("NuMu_peak_zpos_muon","", 400 , 0, 80000);  // muon parent thetaat large peak
+
+// 2D histograms
+std::vector<TH2D*> Enu_Th_CV_AV_TPC;
+std::vector<TH2D*> Enu_Th_UW_AV_TPC;
+
+
+// Weighted Histograms
+std::vector<std::vector<std::vector<TH1D*>>> Enu_Syst_AV_TPC;     //1D
+std::vector<std::vector<std::vector<TH2D*>>> Enu_Th_Syst_AV_TPC;  //2D
+
 //___________________________________________________________________________
 // Container class for a detector
 class Detector {
@@ -183,7 +265,7 @@ void Initialise(std::string detector_type, Detector &Detector_){
 		bins[3] = {  0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0};
 		
 		// Theta
-		bins[4] = {0.0};
+		bins[4] = {0.0, 180.0};
 
 	}
 	else{
@@ -198,7 +280,7 @@ void Initialise(std::string detector_type, Detector &Detector_){
 		" [ " << Rot_row_x.X() << " " << Rot_row_x.Y() << " " << Rot_row_x.Z() << " ] " << "\n" <<
 		" [ " << Rot_row_y.X() << " " << Rot_row_y.Y() << " " << Rot_row_y.Z() << " ] " << "\n" <<
 		" [ " << Rot_row_z.X() << " " << Rot_row_z.Y() << " " << Rot_row_z.Z() << " ] " << "\n\n" <<
-		"Translation from target to detector in detector coords = \n" <<
+		"Translation from target to detector in beam coords = \n" <<
 		" [ " << Trans_Det2Beam.X() << ", " << Trans_Det2Beam.Y() << ", " << Trans_Det2Beam.Z() << " ] " << "\n\n" <<
 		"Window (in det coords) = \n" << 
 		" [ " << Win_Base.X() << " " << Win_Base.Y() << " " << Win_Base.Z() << " ] " << "\n" <<
@@ -611,3 +693,5 @@ void check_weight(double &weight){
 	}
 }
 //___________________________________________________________________________
+
+#endif
