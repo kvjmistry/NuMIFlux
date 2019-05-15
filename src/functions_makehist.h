@@ -2,7 +2,7 @@
 #define FUNCTIONS_MAKEHIST_H
 
 // Functions file for make hist script
-// Intention is to unify the makehist scripts into one
+// Contains the predetermined detector geometries too
 
 // Std Includes
 #include <iostream>
@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string>
 #include <vector>
+#include <chrono> 
 
 // ROOT Includes
 #include "TDirectory.h"
@@ -235,8 +236,10 @@ void Initialise(std::string detector_type, Detector &Detector_){
 		zRange.first  =   25;
 		zRange.second = 1150;
 
-		// Trans_Det2Beam = {1226.9447, 6100.1882, -99113.1313}; //cm
-		 Trans_Det2Beam = {1171.74545 ,       -331.51325 ,      99293.47347}; // new test with beam coords
+		// Trans_Det2Beam = {226.9447, 6100.1882, -99113.1313}; //cm
+		Trans_Det2Beam = {1171.74545 ,       -331.51325 ,      99293.47347}; // new test with beam coords
+		// Trans_Det2Beam = { 1150.170113 ,     -280.0752339 ,      100099.1001}; // new test with beam coords from genie page
+
 
 		// Rotation matrix using the 0,0,0 position for NOvA (beam to det input)
 		Rot_row_x = {9.9990e-01, -8.2300e-04, -1.4088e-02 };
@@ -549,7 +552,7 @@ TVector3 FromDetToBeam( const TVector3 det, bool rotate_only, Detector Detector_
 
 	if (rotate_only) beam = R * det;              // Only rotate the vector
 	// else beam = R * (det - Detector_.Trans_Det2Beam);
-	else beam = R * det + Detector_.Trans_Det2Beam; // new test
+	else beam = R * det + Detector_.Trans_Det2Beam; // for when translation is given in beam coords
 
 	return beam;
 }
@@ -589,12 +592,11 @@ double Get_tilt_wgt( const TVector3& detxyz, auto const& mcflux, double enu, Det
 double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalgo::AABox volAVTPC, auto const& mcflux, auto const& mctruth, Detector Detector_, double KRDET, double &enu ){
 
 	TRotation R;
-	int retries{0};
-
-	double weight = 0;
 	TVector3 x3beam, x3beam_det;
-
-	bool debug{false};
+	int retries{0};
+	double weight = 0;
+	// bool debug = true;
+	bool debug = false;
 	
 	R.RotateAxes(Detector_.Rot_row_x, Detector_.Rot_row_y, Detector_.Rot_row_z); // R is now det to beam
 	TRotation R_Beam_2_Det = R.Invert();
@@ -612,11 +614,12 @@ double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalg
 	// If it doesn't then recalculate
 	while(true){
 		
+		// Extra precautions to make sure we are definately overwriting -- can remove
 		x3beam.SetXYZ(0,0,0);
 		x3beam_det.SetXYZ(0,0,0);
 		weight=0;
 
-		double random = ((double) rand() / (RAND_MAX)); // Get a random number
+		double random = ((double) rand() / (RAND_MAX)); // Get a random number 0 to 1
 
 		if (debug)std::cout <<"r uniform:\t" << random << std::endl;
 
@@ -664,19 +667,20 @@ double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalg
 		if (vec.size() == 0) { intercept = false; } // no intersections
 		if (vec.size() == 2) { intercept = true; }  // 2 intersections
 		if (vec.size() != 2 && vec.size() != 0) {   // other intersection
-			std::cout << "Neutrino ray has " << vec.size()
-				<< " intersection with the detector volume"
-				<< std::endl;
+			// std::cout << "Neutrino ray has " << vec.size()
+			// 	<< " intersection with the detector volume"
+			// 	<< std::endl;
 		}
 		
 		// Got an interception, so break!
 		if (intercept) {
-			if (debug)std::cout << "Passed with " << retries << " retries"<< "\n" << std::endl;
+			if (debug) std::cout << "Passed with " << retries << " retries"<< "\n" << std::endl;
 			break; 
 		}
-		if (retries > 1000) {
+		if (retries > 200) {
 			// If there are more than 1000 attempts and still no intersection then give up!
-			std::cout << "Recalculation failed due to > 1000 tries and no interception" << std::endl;
+			// uboone has cases where they never intersect -- could be due to window not big enough to catch them? For now supress these
+			if (Detector_.detector_name == "nova") std::cout << "Recalculation failed due to > 1000 tries and no interception" << std::endl;
 			return 0.0; // throw the event away
 		} 
 
@@ -698,7 +702,7 @@ void check_weight(double &weight){
 	}
 }
 //___________________________________________________________________________
-// Function to check interception
+// Function to check interceptions with the detector
 bool check_intercept(geoalgo::GeoAlgo const _geo_algo_instance, geoalgo::AABox volAVTPC, auto const& mctruth){
 
 	// Do the neutrino ray calculation for flux at the window
@@ -716,9 +720,9 @@ bool check_intercept(geoalgo::GeoAlgo const _geo_algo_instance, geoalgo::AABox v
 	if (vec.size() == 0) { intercept = false; } // no intersections
 	if (vec.size() == 2) { intercept = true; }  // 2 intersections
 	if (vec.size() != 2 && vec.size() != 0) {   // other intersection
-		std::cout << "Neutrino ray has " << vec.size()
-			<< " intersection with the detector volume"
-			<< std::endl;
+		// std::cout << "Neutrino ray has " << vec.size()
+		// 	<< " intersection with the detector volume"
+		// 	<< std::endl;
 	}
 	return intercept;
 }

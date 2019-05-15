@@ -8,13 +8,19 @@ oppertunuty to investigate the flux by parent.
 
 All the window method and detector smeared weights are preserved. 
 
+This script still hardcodes the POT. It is locked away in the subrun
+sumdata::POTsummary dataproduct which I have no idea how to access in 
+gallery...
+
 * Authors: J. Zennamo, A. Mastbaum, K. Mistry
 */
 
+// Helper functions and some histogram defintions are found in functions_makehist.h
 #include "functions_makehist.h"
 
 using namespace art;
 using namespace std;
+using namespace std::chrono;
 
 // USAGE:
 // makehist_parent <detector_type> <root_files>
@@ -22,6 +28,8 @@ using namespace std;
 // Make sure that the root files contain the correct flux reader module ran over the right geometry
 //___________________________________________________________________________
 int main(int argc, char** argv) {
+
+	auto start = high_resolution_clock::now(); // Start time of script
 
 	Detector Detector_;
 	InputTag mctruths_tag { "flux" };
@@ -45,13 +53,13 @@ int main(int argc, char** argv) {
 
 		std::cout << "FILE : " << argv[i] << std::endl; 
 		TFile *filein = TFile::Open(argv[i]);
+		
 		if (filein->IsZombie()) {
 			std::cout << "ERROR: File is ZOMBIE:\t" << argv[i] << std::endl;
 			badfiles.push_back(string(argv[i]));
 			filein->Close();
 		}
 		else {
-			// std::cout << "FILE : " << argv[i] << std::endl; 
 			filename.push_back(string(argv[i]));
 			totalPOT+=500000; // 50* 100 000 POT per dk2nu file
 			filein->Close();
@@ -99,7 +107,6 @@ int main(int argc, char** argv) {
 	Enu_Syst_AV_TPC.resize(4);    // 1D
 	Enu_Th_Syst_AV_TPC.resize(4); // 2D
 	
-
 	// Tree for POT counting
 	TTree* POTTree = new TTree("POT","Total POT");
 	POTTree -> Branch("POT", &totalPOT);
@@ -220,16 +227,6 @@ int main(int argc, char** argv) {
 			// Check if the ray intercepted with the detector
 			bool intercept = check_intercept(_geo_algo_instance, volAVTPC, mctruth);
 
-			// if (intercept){
-			// 	std::cout << "Passed Nu Ray Properties" << std::endl;
-			// 	std::cout << "px:\t" <<mctruth.GetNeutrino().Nu().Px()*1000 <<  std::endl; 
-			// 	std::cout << "py:\t" <<mctruth.GetNeutrino().Nu().Py()*1000 <<  std::endl;
-			// 	std::cout << "pz:\t" <<mctruth.GetNeutrino().Nu().Pz()*1000 <<  std::endl;
-			// 	std::cout << "vx:\t" <<mctruth.GetNeutrino().Nu().Vx() << std::endl;
-			// 	std::cout << "vy:\t" <<mctruth.GetNeutrino().Nu().Vy() << std::endl;
-			// 	std::cout << "vz:\t" <<mctruth.GetNeutrino().Nu().Vz() << std::endl;
-			// }
-
 			double cv_weight = 1;    // PPFX CV
 			double dk2nu_weight = 1; // UW 
 			double detwgt; // New weight at a window value
@@ -280,7 +277,7 @@ int main(int argc, char** argv) {
 			TVector3 xyz_beam = FromDetToBeam(xyz_det, false, Detector_);
 
 			// Get the new weight at the detector
-			double KRDET =  100.0; // Radius of circle in cm
+			double KRDET       =  100.0; // Radius of circle in cm
 			double KRDET_Area  = 3.1415926*KRDET*KRDET/10000.0; // Area of circle in m2
 			calcEnuWgt(mcflux, xyz_beam, Enu, detwgt, KRDET);
 
@@ -291,19 +288,25 @@ int main(int argc, char** argv) {
 
 			// Window weight recalculations
 			double window_weight_recalc;
-			// if (intercept){
-			// 	window_weight       *= mcflux.fnimpwt * mcflux.fnwtfar * tiltwght / KRDET_Area; // mcflux.fnwtfar == mcflux.fnwtnear
-			// 	dk2nu_window_weight *= mcflux.fnimpwt * mcflux.fnwtfar * tiltwght / KRDET_Area; // mcflux.fnwtfar == mcflux.fnwtnear
-			// } 
-			// else {
-			// 	window_weight_recalc           = Recalc_Intersection_wgt(_geo_algo_instance, volAVTPC, mcflux, mctruth, Detector_, KRDET );
-			// 	window_weight                 *= mcflux.fnimpwt * window_weight_recalc / KRDET_Area; // Recalculated for every event
-			// 	dk2nu_window_weight           *= mcflux.fnimpwt * window_weight_recalc / KRDET_Area; // Recalculated for every event
-			// }	
-			window_weight_recalc           = Recalc_Intersection_wgt(_geo_algo_instance, volAVTPC, mcflux, mctruth, Detector_, KRDET, Enu );
-			window_weight                 *= mcflux.fnimpwt * window_weight_recalc / KRDET_Area; // Recalculated for every event
-			dk2nu_window_weight           *= mcflux.fnimpwt * window_weight_recalc / KRDET_Area; // Recalculated for every event		
-			intercept = true; // override above calculations
+			if (intercept){
+				window_weight       *= mcflux.fnimpwt * mcflux.fnwtfar * tiltwght / KRDET_Area; // mcflux.fnwtfar == mcflux.fnwtnear
+				dk2nu_window_weight *= mcflux.fnimpwt * mcflux.fnwtfar * tiltwght / KRDET_Area; // mcflux.fnwtfar == mcflux.fnwtnear
+			} 
+			else {
+				// Only do this for nova since it doesnt really work that well for uboone with the tiltweight and stuff
+				if (Detector_.detector_name == "nova"){
+					window_weight_recalc           = Recalc_Intersection_wgt(_geo_algo_instance, volAVTPC, mcflux, mctruth, Detector_, KRDET, Enu );
+					window_weight                 *= mcflux.fnimpwt * window_weight_recalc / KRDET_Area; // Recalculated for every event
+					dk2nu_window_weight           *= mcflux.fnimpwt * window_weight_recalc / KRDET_Area; // Recalculated for every event
+					intercept = true; // override above calculations
+				}
+			}
+			// Uncomment this if wanting to re-write all the window weights
+			// window_weight_recalc           = Recalc_Intersection_wgt(_geo_algo_instance, volAVTPC, mcflux, mctruth, Detector_, KRDET, Enu );
+			// window_weight                 *= mcflux.fnimpwt * window_weight_recalc / KRDET_Area; // Recalculated for every event
+			// dk2nu_window_weight           *= mcflux.fnimpwt * window_weight_recalc / KRDET_Area; // Recalculated for every event
+			// intercept = true; // override above calculations
+
 
 			// Weight of neutrino parent (importance weight) * Neutrino weight for a decay forced at center of near detector 
 			cv_weight        *= mcflux.fnimpwt * detwgt / KRDET_Area; // for ppfx cases
@@ -358,20 +361,20 @@ int main(int argc, char** argv) {
 			// ++++++++++++++++++++++++++++++++
 
 			// Window
-			Enu_CV_Window[pdg]      ->Fill(Enu, window_weight);
-			Enu_UW_Window[pdg]      ->Fill(Enu, dk2nu_window_weight);
-			Enu_CV_Window_5MeV_bin[pdg]->Fill(Enu, window_weight);
-			Enu_UW_Window_5MeV_bin[pdg]->Fill(Enu, dk2nu_window_weight);
+			Enu_CV_Window[pdg]              ->Fill(Enu, window_weight);
+			Enu_UW_Window[pdg]              ->Fill(Enu, dk2nu_window_weight);
+			Enu_CV_Window_5MeV_bin[pdg]     ->Fill(Enu, window_weight);
+			Enu_UW_Window_5MeV_bin[pdg]     ->Fill(Enu, dk2nu_window_weight);
 
 			if (intercept) Enu_CV_Window_5MeV_bin_intersect[pdg] ->Fill(Enu, window_weight); // Flux that intersects the detector
 
 			// TPC AV
-			Enu_CV_AV_TPC[pdg]      ->Fill(Enu, cv_weight);
-			Enu_UW_AV_TPC[pdg]      ->Fill(Enu, dk2nu_weight);
-			Enu_CV_AV_TPC_5MeV_bin[pdg]->Fill(Enu, cv_weight);
-			Enu_UW_AV_TPC_5MeV_bin[pdg]->Fill(Enu, dk2nu_weight);
-			Th_CV_AV_TPC[pdg]->Fill(theta, cv_weight);
-			Th_UW_AV_TPC[pdg]->Fill(theta, dk2nu_weight);
+			Enu_CV_AV_TPC[pdg]              ->Fill(Enu, cv_weight);
+			Enu_UW_AV_TPC[pdg]              ->Fill(Enu, dk2nu_weight);
+			Enu_CV_AV_TPC_5MeV_bin[pdg]     ->Fill(Enu, cv_weight);
+			Enu_UW_AV_TPC_5MeV_bin[pdg]     ->Fill(Enu, dk2nu_weight);
+			Th_CV_AV_TPC[pdg]               ->Fill(theta, cv_weight);
+			Th_UW_AV_TPC[pdg]               ->Fill(theta, dk2nu_weight);
 
 			// INDEXING: 0: PI_Plus 1: PI_Minus 2: Mu Plus 3: Mu_Minus 4: Kaon_Plus 5: Kaon_Minus 6: K0L 
 			if (mcflux.fptype == 211){ // pi plus
@@ -543,6 +546,7 @@ int main(int argc, char** argv) {
 		NuMu_peak_theta_muon->Write();
 		NuMu_peak_zpos_muon->Write();
 
+		// Bolted this stuff in as an afterthought, could improve but it works ;)
 		std::cout << "Window" << std::endl;
 		subdir.at(f).at(parent.size()+2) = subdir[f][0]->mkdir("Window");
 		subdir.at(f).at(parent.size()+2)->cd();
@@ -584,6 +588,12 @@ int main(int argc, char** argv) {
 	for (unsigned int i=0;i < badfiles.size(); i++ ){
 		std::cout << badfiles.at(i) << std::endl;
 	}
+
+	auto stop = high_resolution_clock::now();  // end time of script
+	auto duration_sec = duration_cast<seconds>(stop - start); // time taken to run script
+	auto duration_min = duration_cast<minutes>(stop - start); // time taken to run script
+	std::cout << "Time taken by function: " << duration_sec.count() << " seconds" << std::endl; 
+	std::cout << "Time taken by function: " << duration_min.count() << " minutes" << std::endl; 
 
 	return 0;
 }

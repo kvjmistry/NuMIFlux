@@ -73,15 +73,15 @@ void NuMIFlux::CalculateFlux() {
 		// Calculate the total weight
 		double weight = wgt_xy * fDk2Nu->decay.nimpwt * fDefaultWeightCorrection;
 
-		if (std::isnan(weight == 1)) { // catch NaN values
-			std::cout << "got a nan:\t" << weight << std::endl;
-			weight = 0;
+		if (std::isnan(weight) == 1) { // catch NaN values
+		std::cout << "got a nan: wgt\t" << weight << std::endl;
+		weight = 0;
 		}
 
-		if (std::isnan(enu == 1)) { // catch NaN values
-			std::cout << "got a nan enu:\t" << enu << std::endl;
-			enu = 0;
-		}
+		if (std::isnan(enu) == 1) { // catch NaN values
+		std::cout << "got a nan enu:\t" << enu << std::endl;
+		enu = 0;
+	}
 
 
 		// Fill the histograms
@@ -109,7 +109,7 @@ void NuMIFlux::CalculateFlux() {
 	//
 	//***************************************
 
-	double scale =    AccumulatedPOT;
+	double scale =    NominalPOT/AccumulatedPOT;
 	numuFluxHisto  -> Scale(scale);
 	anumuFluxHisto -> Scale(scale);
 	nueFluxHisto   -> Scale(scale);

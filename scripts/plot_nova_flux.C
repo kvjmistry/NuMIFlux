@@ -20,7 +20,7 @@ void plot_nova_flux(const char* mode) {
 
     // File in 
 	// boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/PPFX/nova/Norm_investigation/test/output.root"); if (boolfile == false) gSystem->Exit(0);
-    boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/PPFX/nova/Norm_investigation/test/output_v2.root"); if (boolfile == false) gSystem->Exit(0);
+    boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/PPFX/nova/Norm_investigation/test/output_v4.root"); if (boolfile == false) gSystem->Exit(0);
     boolfile  = GetFile(f_nova,"/uboone/app/users/kmistry/PPFX/numi-validation/nova_flux/FHC_Flux_NOvA_ND_2017.root"); if (boolfile == false) gSystem->Exit(0);
 
     double fPOT = GetPOT(f);
@@ -69,7 +69,7 @@ void plot_nova_flux(const char* mode) {
    h_nova_flux->SetLineColor(kBlue+1);
    h_nova_flux->SetLineWidth(2);
    lFlux->AddEntry(h_nova_flux, "NOvA","l");
-   h_nova_flux->Draw("hist, same");
+   h_nova_flux->Draw("his, same");
    h_nova_flux->Draw("e, same");
 
 //    h_intersection_flux->Scale(h_nova_flux->Integral(3,-1)/h_intersection_flux->Integral(3,-1));
@@ -77,8 +77,8 @@ void plot_nova_flux(const char* mode) {
 //    h_detweights_notilt_flux->Scale(h_nova_flux->Integral(3,-1)/h_detweights_notilt_flux->Integral(3,-1));
 
    lFlux->Draw();
-   gPad->SetLogy();
-   h_intersection_flux->GetYaxis()->SetRangeUser(0.01, 1000);
+//    gPad->SetLogy();
+   h_intersection_flux->GetYaxis()->SetRangeUser(0.01, 80);
 
    c1->Update();
 
