@@ -565,6 +565,8 @@ int main(int argc, char** argv) {
 		Th_UW_AV_TPC[f]->Write();
 		Enu_CV_AV_TPC_5MeV_bin[f]->Write();
 		Enu_UW_AV_TPC_5MeV_bin[f]->Write();
+		Enu_Th_CV_AV_TPC[f]->Write();
+		Enu_Th_UW_AV_TPC[f]->Write();
 
 		std::cout << "Multisims" << std::endl;
 		subdir.at(f).at(parent.size()+4) = subdir[f][0]->mkdir("Multisims");

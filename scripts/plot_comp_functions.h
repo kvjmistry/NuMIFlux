@@ -23,7 +23,7 @@ std::vector<std::string> loopdir(TString  inputfile, TString mode) {
 }
 // ------------------------------------------------------------------------------------------------------------
 // function that makes a legend for multiple histograms and draws them to the canvas
-void legDraw(TLegend * &legend, TH1D *&hist, TString prodmode, TString mipp, std::string inputmode, TString mode){
+void legDraw(TLegend * &legend, TH1D *&hist, std::string inputmode, TString mode){
 	
 	if (inputmode == "PPFXMaster"){
 	hist->SetLineColor(kBlack);
@@ -34,21 +34,7 @@ void legDraw(TLegend * &legend, TH1D *&hist, TString prodmode, TString mipp, std
 	else if  (inputmode == "ms_PPFX"){
 		hist->SetLineColor(kMagenta+2);
 		hist->SetLineWidth(2);
-		legend->AddEntry(hist, prodmode, "l"); // prodmode is overridden in the terminal input
-		hist->Draw("hist,same");
-	}
-	else if  (inputmode == "PPFXMIPPKaon" && mipp =="mippon"){ // only turn on if there is MIPP
-		hist->SetLineColor(30);
-		hist->SetLineWidth(2);
-		legend->AddEntry(hist, "MIPPKaon", "l");
-		hist->SetLineStyle(2);
-		hist->Draw("hist,same");
-	}
-	else if  ( inputmode == "PPFXMIPPPion" && mipp =="mippon"){ // only turn on if there is MIPP
-		hist->SetLineColor(38);
-		hist->SetLineWidth(2);
-		legend->AddEntry(hist, "MIPPPion", "l");
-		hist->SetLineStyle(2);
+		legend->AddEntry(hist, "ms_ppfx", "l");
 		hist->Draw("hist,same");
 	}
 	else if  (inputmode == "PPFXOther"){
@@ -137,76 +123,15 @@ void legDraw(TLegend * &legend, TH1D *&hist, TString prodmode, TString mipp, std
 
 }
 // ------------------------------------------------------------------------------------------------------------
-// Function to make the weight distribution plots
-void weight_plots(TString mode, std::vector<std::string> &inputmode, TFile* f1, TString prodmode, TString mipp, TCanvas* c, TLegend * leg  ){
-	TH1D* whist; // weight hist
-
-	c->cd(); //canvas
-
-	std::string mode_str;
-
-	// Convert TString to a std::string
-	if (mode == "numu") mode_str = "numu";
-	else if (mode == "numubar") mode_str = "numubar";
-	else if (mode == "nue") mode_str = "nue";
-	else mode_str = "nuebar";
-
-	int loop = inputmode.size();
-	
-	// loop over labels
-	for (int l=0; l<loop; l++){	
-		if (inputmode[l] == "PPFXOther") continue;	// Skip this due to low stats
-		char name[500];
-
-		snprintf(name, 500, "%s/%s/%s_%s_wght_%s" ,mode_str.c_str(), inputmode[l].c_str(), mode_str.c_str(), "MS",  inputmode[l].c_str()); // MS
-	
-		whist = (TH1D*) f1->Get(name);
-		
-		// Check if sucessfully got histo
-		if (whist == NULL) {
-			std::cout << "\nfailed to get:\t" << name << "\tThis histogram might not exist in the file\n" << std::endl;
-			return;
-		}
-		whist->Scale( 1./ (whist->GetEntries()) ); // Norm by num entries
-
-		// Draw and customise the plot
-		legDraw(leg, whist, prodmode, mipp, inputmode[l], mode);
-		
-		whist->GetXaxis()->SetTitle("Weight");
-		
-	}
-
-	// CV -- needs to be separate from loop
-	char name[500];
-	snprintf(name, 500, "%s/%s_CV_wght",mode_str.c_str(), mode_str.c_str());  // CV
-	whist = (TH1D*) f1->Get(name);
-
-	// Check if sucessfully got histo
-	if (whist == NULL) {
-		std::cout << "\nfailed to get:\t" << name << "\tThis histogram might not exist in the file\n" << std::endl;
-		return;
-	}
-
-	whist->Scale( 1./ (whist->GetEntries()) );
-	whist->SetLineColor(kCyan);
-	whist->SetLineWidth(2);
-	leg->AddEntry(whist, "CV", "l");
-	whist->Draw("hist,same");
-	
-	gPad->SetLogy();
-	leg->Draw();
-
-}
-// ------------------------------------------------------------------------------------------------------------
 // Enumbers for the input mode 
 enum e_mode{ enumu, enue, enumubar, enuebar};
 // ------------------------------------------------------------------------------------------------------------
 // Function to retun enum from mode label
-e_mode return_mode(TString mode){
-		if (mode == "numu")    return enumu;
-		if (mode == "nue")     return enue;
-		if (mode == "numubar") return enumubar;
-		if (mode == "nuebar")  return enuebar;
+e_mode return_mode(const char* mode){
+		if (strncmp("numu", mode, 4) == 0)    return enumu;
+		if (strncmp("nue", mode, 3) == 0)     return enue;
+		if (strncmp("numubar", mode, 7) == 0) return enumubar;
+		if (strncmp("nuebar", mode, 6) == 0)  return enuebar;
 		else return enumu;
 
 }
@@ -318,14 +243,14 @@ void Normalise(TH2D* &h){
 		} 
 }
 // ------------------------------------------------------------------------------------------------------------
-void CalcCovariance(std::string inputmode,TString Cov_names, TFile* f, TH2D* &cov, TH1D* horig, const int nbins  ){
+void CalcCovariance(std::string inputmode, const char* mode, TString Cov_names, TFile* f, TH2D* &cov, TH1D* horig, const int nbins  ){
 	TH1D* hu; 					// Flux hist for each universe
 	const int nuni = 100; // num universes
 
 	// Loop over universes
 	for (int k=0; k<nuni; k++) {
 		char name[500];
-		snprintf(name, 500, Cov_names ,inputmode.c_str(),inputmode.c_str(), k); 
+		snprintf(name, 500, Cov_names ,mode, mode, inputmode.c_str(), k); 
 		
 		// Check if sucessfully got histo
 		bool boolhist = GetHist(f, hu, name); if (boolhist == false) gSystem->Exit(0);
@@ -428,20 +353,13 @@ void CalcCovariance_4D(TH2D* &cov, TH1D* &hCV, TH1D* &hu, const int &nbinsX, con
 
 }
 // ------------------------------------------------------------------------------------------------------------
-void BeamlineUncertainties(std::vector<TH1D*> &herr, TH1D* hCV_Flux, std::string beam_type, TString mode){
+void BeamlineUncertainties(std::vector<TH1D*> &herr, TH1D* hCV_Flux, std::string beam_type, const char* mode){
 	
-	// Convert TString to a std::string
-	std::string mode_str;
-	if (mode == "numu") mode_str = "numu";
-	else if (mode == "numubar") mode_str = "numubar";
-	else if (mode == "nue") mode_str = "nue";
-	else mode_str = "nuebar";
-
 	TFile* f3;
 	bool boolfile;
-	// if (mode_str == "numu")   boolfile = GetFile(f3,Form("/uboone/data/users/kmistry/work/PPFX/nova/no_ThinKaon_Indiv/%s_Energy_ratios_quad.root", mode_str.c_str() )); 
-	// else  boolfile = GetFile(f3,Form("/uboone/data/users/kmistry/work/PPFX/nova/no_ThinKaon_Indiv/%s_Energy_ratios.root", mode_str.c_str() ));
-	boolfile = GetFile(f3,Form("/uboone/data/users/kmistry/work/PPFX/nova/no_ThinKaon_Indiv/beamline_uncertainties/%s_beam_errors.root", mode_str.c_str() )); 
+	// if (mode_str == "numu")   boolfile = GetFile(f3,Form("/uboone/data/users/kmistry/work/PPFX/nova/no_ThinKaon_Indiv/%s_Energy_ratios_quad.root", mode )); 
+	// else  boolfile = GetFile(f3,Form("/uboone/data/users/kmistry/work/PPFX/nova/no_ThinKaon_Indiv/%s_Energy_ratios.root", mode ));
+	boolfile = GetFile(f3,Form("/uboone/data/users/kmistry/work/PPFX/nova/no_ThinKaon_Indiv/beamline_uncertainties/%s_beam_errors.root", mode )); 
 	
 	if ( boolfile == false) gSystem->Exit(0);
 	
@@ -566,20 +484,13 @@ TH1D* getFractionalError(TH1D* hIn){
 }
 // ------------------------------------------------------------------------------------------------------------
 // Leos method of calculating the HP uncertainties 
-void HPUncertainties_Leo(TFile* fIn, TH1D* &herror, std::string inputmode, TString mode){
-
-	// Convert TString to a std::string
-	std::string mode_str;
-	if (mode == "numu") mode_str = "numu";
-	else if (mode == "numubar") mode_str = "numubar";
-	else if (mode == "nue") mode_str = "nue";
-	else mode_str = "nuebar";
+void HPUncertainties_Leo(TFile* fIn, TH1D* &herror, std::string inputmode, const char* mode){
 
 	std::vector<TH1D*> vhuniv;
 	TH1D* hu;
 
 	// Get the universe histograms
-	TDirectory *udir = fIn->GetDirectory(Form("%s/%s/Active_TPC_Volume", mode_str.c_str(), inputmode.c_str()));
+	TDirectory *udir = fIn->GetDirectory(Form("%s/Multisims", mode));
 	TIter next(udir->GetListOfKeys());
 	TKey* key;
 	int i{0};
@@ -594,7 +505,7 @@ void HPUncertainties_Leo(TFile* fIn, TH1D* &herror, std::string inputmode, TStri
 		
 		// Veto theta histograms
 		std::string huname = hu->GetName();
-		std::string thetaname = Form("Th_%s_PPFXMaster_Uni_%i_AV_TPC", mode_str.c_str(), i);
+		std::string thetaname = Form("Th_%s_PPFXMaster_Uni_%i_AV_TPC",mode , i);
 		if ( huname == thetaname ) continue;
 		
 		vhuniv.push_back(hu);
@@ -608,20 +519,14 @@ void HPUncertainties_Leo(TFile* fIn, TH1D* &herror, std::string inputmode, TStri
 }
 // ------------------------------------------------------------------------------------------------------------
 // Function to draw assymetric errorband with CV and mean
-void DrawErrorBand(TFile* f, TString mode, TLegend* leg, std::string inputmode){
+void DrawErrorBand(TFile* f, const char* mode, TLegend* leg, std::string inputmode){
 
-	// Convert TString to a std::string
-	std::string mode_str;
-	if (mode == "numu") mode_str = "numu";
-	else if (mode == "numubar") mode_str = "numubar";
-	else if (mode == "nue") mode_str = "nue";
-	else mode_str = "nuebar";
 	TH1D* hcv;
 
 	std::vector<TH1D*> vhuniv;
 	TH1D* hu; 
 
-	TDirectory *udir = f->GetDirectory(Form("%s/%s/Active_TPC_Volume", mode_str.c_str(), inputmode.c_str()));
+	TDirectory *udir = f->GetDirectory(Form("%s/Multisims", mode));
 	TIter next(udir->GetListOfKeys());
 	TKey* key;
 	int i{0};
@@ -636,7 +541,7 @@ void DrawErrorBand(TFile* f, TString mode, TLegend* leg, std::string inputmode){
 
 		// Veto theta histograms
 		std::string huname = hu->GetName();
-		std::string thetaname = Form("Th_%s_PPFXMaster_Uni_%i_AV_TPC",mode_str.c_str(), i);
+		std::string thetaname = Form("Th_%s_PPFXMaster_Uni_%i_AV_TPC",mode, i);
 		if ( huname == thetaname ) continue;
 		
 		vhuniv.push_back(hu);
@@ -646,7 +551,7 @@ void DrawErrorBand(TFile* f, TString mode, TLegend* leg, std::string inputmode){
 	TH1D* htemp = getBand(vhuniv); 
 	TH1D* htemp_clone = (TH1D*) htemp->Clone("htemp_clone");
 
-	bool bool_hist = GetHist(f, hcv, Form("%s/%s_CV_AV_TPC", mode_str.c_str(), mode_str.c_str()) ); if (bool_hist == false) gSystem->Exit(0);
+	bool bool_hist = GetHist(f, hcv, Form("%s/Detsmear/%s_CV_AV_TPC", mode, mode) ); if (bool_hist == false) gSystem->Exit(0);
 
 	Normalise(hcv);
 	Normalise(htemp);
@@ -670,10 +575,10 @@ void DrawErrorBand(TFile* f, TString mode, TLegend* leg, std::string inputmode){
 	// htemp_clone->GetXaxis()->SetRangeUser(0, 6);
 	htemp->SetStats(0);
 	htemp->SetMarkerSize(0);
-	// htemp->SetTitle(Form("Error band for %s",mode_str.c_str()));
+	// htemp->SetTitle(Form("Error band for %s",mode));
 	htemp->GetXaxis()->SetTitle("#nu energy [GeV]");
 
-	htemp->GetYaxis()->SetTitle(Form("%s / 6e20 POT / m^{2} / GeV",mode_str.c_str()));
+	htemp->GetYaxis()->SetTitle(Form("%s / 6e20 POT / m^{2} / GeV", mode));
 
 	htemp->Draw("e2");
 	htemp_clone->Draw("same,hist");
@@ -753,21 +658,15 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
 }
 // ------------------------------------------------------------------------------------------------------------
 // Function to calculate the mean 2d histogram from the multisim variations and retun the unwarapped version
-void CalcMeanHist(TFile* fIn, TH1D* &hMean_unwrap, int nBinsEnu, int nBinsTh, TString mode){
+void CalcMeanHist(TFile* fIn, TH1D* &hMean_unwrap, int nBinsEnu, int nBinsTh, const char* mode){
 	std::cout << "Calculating the Mean universe"<<std::endl;
-	// Convert TString to a std::string
-	std::string mode_str;
-	if (mode == "numu") mode_str = "numu";
-	else if (mode == "numubar") mode_str = "numubar";
-	else if (mode == "nue") mode_str = "nue";
-	else mode_str = "nuebar";
 
 	std::vector<TH1D*> vhuniv;
 	TH2D* hu;
 	TH1D* hu_unwrap;
 
 	// Get the universe histograms
-	TDirectory *udir = fIn->GetDirectory(Form("%s/%s/Active_TPC_Volume", mode_str.c_str(), "PPFXMaster"));
+	TDirectory *udir = fIn->GetDirectory(Form("%s/Multisims", mode));
 	TIter next(udir->GetListOfKeys());
 	TKey* key;
 	int i{0};
@@ -783,7 +682,7 @@ void CalcMeanHist(TFile* fIn, TH1D* &hMean_unwrap, int nBinsEnu, int nBinsTh, TS
 		
 		// Veto theta histograms
 		std::string huname = hu->GetName();
-		std::string thetaname = Form("Th_%s_PPFXMaster_Uni_%i_AV_TPC", mode_str.c_str(), i);
+		std::string thetaname = Form("Th_%s_PPFXMaster_Uni_%i_AV_TPC", mode, i);
 		if ( huname == thetaname ) continue;
 
 		// Normalise 2d hist by bin area / deg / GeV
