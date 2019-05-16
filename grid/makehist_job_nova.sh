@@ -42,7 +42,7 @@ ifdh cp -D /pnfs/uboone/resilient/users/kmistry/files/Environmental_variables.tx
 for e in $(cat Environmental_variables.txt)
 do
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$e
-done
+done;
 
 # copy a tarball and untar it if you need it
 #ifdh cp /pnfs/uboone/resilient/users/kmistry/tars/PPFX_uboone_bugfix_slim_withtilt.tar intar.tar
@@ -50,13 +50,13 @@ done
 
 echo
 echo "======== COPY THE EXECUTABLES ========"
-echo "ifdh cp /pnfs/uboone/resilient/users/kmistry/exe/makehist makehist"
-ifdh cp /pnfs/uboone/resilient/users/kmistry/exe/makehist makehist
+echo "ifdh cp /pnfs/uboone/resilient/users/kmistry/exe/makehist_nova makehist"
+ifdh cp /pnfs/uboone/resilient/users/kmistry/exe/makehist_nova makehist
 chmod u+x makehist
 
 echo
 echo "======== COPY THE FILELIST ========"
-ifdh cp /pnfs/uboone/persistent/users/kmistry/PPFX/makehist/files_run${RUN}.list files.list
+ifdh cp /pnfs/uboone/persistent/users/kmistry/PPFX/makehist/filelist_nova_ppfx.list files.list
 
 # Now get cut the file list up into the relavent chunk
 LINE1=$((PROCESS*${FILES_PER_JOB} + 1))
@@ -84,13 +84,13 @@ ls -ltrh
 echo
 echo "======== EXECUTING 2D makehist ========"
 echo "./makehist g4*.root"
-./makehist uboone g4*.root
+./makehist g4*.root
 
 # Rename the output file
 echo
 echo "======== Renaming the output file ========"
-echo "mv output.root output_uboone_${PROCESS}.root"
-mv output.root output_uboone_${PROCESS}.root
+echo "mv output.root output_2D_${PROCESS}.root"
+mv output.root output_nova_${PROCESS}.root
 
 echo
 echo "Moving output to CONDOR_DIR_MAKEHIST"

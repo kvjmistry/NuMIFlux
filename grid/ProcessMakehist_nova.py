@@ -28,30 +28,30 @@ def main():
       os.mkdir(MAKEHISTDIR)
 
   # Create a run number directory
-  RUNDIR = "/pnfs/uboone/scratch/users/{USER}/makehist/run{RUN}/".format( USER = os.getenv("USER"), RUN = options.run)
+  RUNDIR = "/pnfs/uboone/scratch/users/{USER}/makehist/nova/".format( USER = os.getenv("USER"))
 
   if os.path.isdir(RUNDIR) == False:
       print RUNDIR, " directory doen't exist, so creating...\n"
       os.mkdir(RUNDIR)
 
   # Create a output file directory  
-  OUTDIR = "/pnfs/uboone/scratch/users/{USER}/makehist/run{RUN}/files/".format( USER = os.getenv("USER"), RUN = options.run)
+  OUTDIR = "/pnfs/uboone/scratch/users/{USER}/makehist/nova/files/".format( USER = os.getenv("USER"))
 
   if os.path.isdir(OUTDIR) == False:
       print OUTDIR, " directory doen't exist, so creating...\n"
       os.mkdir(OUTDIR)
 
   # Create a log file directory  
-  LOGDIR = "/pnfs/uboone/scratch/users/{USER}/makehist/run{RUN}/log/".format( USER = os.getenv("USER"), RUN = options.run)
+  LOGDIR = "/pnfs/uboone/scratch/users/{USER}/makehist/nova/log/".format( USER = os.getenv("USER"))
 
   if os.path.isdir(LOGDIR) == False:
       print LOGDIR, " directory doen't exist, so creating...\n"
       os.mkdir(LOGDIR)
 
-  logfile = LOGDIR + "/makehist_{RUN}_\$PROCESS.log".format(RUN = options.run)
+  logfile = LOGDIR + "/makehist_nova_\$PROCESS.log".format(RUN = options.run)
 
   # scratch area from which to send tarfile/config files to grid
-  CACHEDIR = "/pnfs/uboone/scratch/users/{USER}/makehist/run{RUN}/CACHE/".format( USER = os.getenv("USER"), RUN = options.run)
+  CACHEDIR = "/pnfs/uboone/scratch/users/{USER}/makehist/nova/CACHE/".format( USER = os.getenv("USER"))
   
   if os.path.isdir(CACHEDIR) == False:
       print CACHEDIR, " directory doen't exist, so creating...\n"
@@ -61,8 +61,8 @@ def main():
   CACHE = CACHEDIR + str(random.randint(10000,99999)) + "/"
   os.mkdir(CACHE)
 
-  COPYPATH = "{CACHE}/makehist_job.sh".format(CACHE = CACHE)
-  shutil.copy('./makehist_job.sh', COPYPATH)
+  COPYPATH = "{CACHE}/makehist_job_nova.sh".format(CACHE = CACHE)
+  shutil.copy('./makehist_job_nova.sh', COPYPATH)
 
   print "\nOutput logfile(s):",logfile
 
@@ -72,7 +72,7 @@ def main():
       "-e RUN={RUN} "
       "-e PROCESS_SHIFT={PROCESS_SHIFT} "
       "-L {LOGFILE} "
-      "file://{CACHE}makehist_job.sh".format(
+      "file://{CACHE}makehist_job_nova.sh".format(
       GRID       = ("--OS=SL6 -g "
                     "--resource-provides=usage_model=OFFSITE "
                     "--role=Analysis "
