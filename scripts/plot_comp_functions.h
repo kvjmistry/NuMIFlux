@@ -873,7 +873,7 @@ std::vector<TLine*> MakeTLineVector(TString mode){
 
 	}
 
-	Thbins = { 20, 40, 120,  160 };
+	Thbins = {  0, 20, 110,  160 };
 
 	double Th0 = Thbins[0]; 
 	double Th1 = Thbins[Thbins.size()-1];
