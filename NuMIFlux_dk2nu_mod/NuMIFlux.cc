@@ -44,7 +44,7 @@ void NuMIFlux::CalculateFlux() {
 		cflux_meta->GetEntry(i);
 
 		// Alert the user
-		if (i % 100000 == 0) cout << "On entry " << i << endl;
+		if (i % 100000 == 0) cout << "On entry " << i/1.0e6 << " M"<< endl;
 		
 		if(treeNumber != cflux->GetTreeNumber()) {
 			treeNumber = cflux->GetTreeNumber();
@@ -104,9 +104,9 @@ void NuMIFlux::CalculateFlux() {
 
 		// Now fill the contraint histograms for each file
 		GetConstraints( fDk2Nu );
+			
 
 	} // end of loop over the entries
-
 	
 
 	//***************************************
@@ -588,14 +588,22 @@ int NuMIFlux::calcEnuWgt( bsim::Dk2Nu* decay, const TVector3& xyz,
 void NuMIFlux::GetConstraints( bsim::Dk2Nu* fDk2Nu) {
 
 	int ntraj = fDk2Nu->ancestor.size();
+	// std::cout << "ntraj size:\t" << ntraj << std::endl;
 	TDatabasePDG* particle = TDatabasePDG::Instance();
-	double Inc_Mass{-1000.0}, Prod_Mass{-1000.0};
+
+	// int DEBUG_COUNTER{0};
 	
 	// Loop over the trjjectories
 	for (int itraj = 0; itraj < (ntraj - 1); itraj++) {
+		// std::cout << "itraj :\t" << itraj << std::endl;
 
 		int pdg_inc = fDk2Nu -> ancestor[itraj].pdg;
 		double incMom[3];
+
+		// if (pdg_inc != 2212 || itraj != 0) continue;
+		// if (itraj != ntraj - 3) continue;
+		// std::cout << "itraj :\t" << itraj << std::endl;
+		
 
 		if (fDk2Nu->ancestor[itraj].pprodpz != 0) { 
 			incMom[0] = fDk2Nu -> ancestor[itraj].pprodpx;
@@ -609,9 +617,17 @@ void NuMIFlux::GetConstraints( bsim::Dk2Nu* fDk2Nu) {
 		}
 		Int_t itraj_prod = itraj + 1;
 		Int_t pdg_prod = fDk2Nu -> ancestor[itraj_prod].pdg;
+		// std::cout << "pdg_prod :\t" << pdg_prod << std::endl;
 
 		// Check for decays of interest (pions or kaons)
 		if (pdg_prod == 211 || pdg_prod == -211 || pdg_prod == 321 || pdg_prod == -321){
+
+			// DEBUG_COUNTER++;
+
+			// if (DEBUG_COUNTER > 10) break;
+
+			// std::cout << "itraj_prod:\t" << itraj_prod << "   pdg_inc:\t" << pdg_inc << "  pdg_prod\t " << pdg_prod <<  std::endl;
+
 			double prodMom[3];
 			prodMom[0] = fDk2Nu -> ancestor[itraj_prod].startpx;
 			prodMom[1] = fDk2Nu -> ancestor[itraj_prod].startpy;
@@ -634,20 +650,17 @@ void NuMIFlux::GetConstraints( bsim::Dk2Nu* fDk2Nu) {
 			double Pt = Prod_P * sin_theta;
 			double Pz = Prod_P * cos_theta; 
 
-			if(pdg_inc != 1000010020) Inc_Mass = particle -> GetParticle(pdg_inc)->Mass();
-			else {Inc_Mass = 1.875;}
-
-			if(pdg_prod != 1000010020) Prod_Mass = particle -> GetParticle(pdg_prod)->Mass();
-			else{Prod_Mass = 1.875;}
-				
 			double Inc_Mass  = particle->GetParticle(pdg_inc)->Mass();
 			double Prod_Mass = particle->GetParticle(pdg_prod)->Mass();
 
 			//Ecm, gamma:
-			double inc_E_lab = std::sqrt(Inc_P * Inc_P + pow(Inc_Mass,2));
-			double Ecm       = std::sqrt(2. * pow(Inc_Mass,2) + 2. * inc_E_lab * Inc_Mass); 
-			double Betacm    = std::sqrt(pow(inc_E_lab,2) - pow(Inc_Mass,2.0)) / (inc_E_lab + Inc_Mass); 
-			double Gammacm   = 1./std::sqrt(1.-pow(Betacm,2.0));
+			double inc_E_lab = std::sqrt(Inc_P * Inc_P + Inc_Mass * Inc_Mass);
+			
+			double Ecm       = std::sqrt(2. * Inc_Mass * Inc_Mass + 2. * inc_E_lab * Inc_Mass); 
+			
+			double Betacm    = std::sqrt(inc_E_lab * inc_E_lab - Inc_Mass * Inc_Mass) / (inc_E_lab + Inc_Mass); 
+			
+			double Gammacm   = 1. / std::sqrt(1. - Betacm * Betacm);
 
 			//xF:
 			double prod_E_lab  = std::sqrt( Prod_P * Prod_P + pow(Prod_Mass,2));
@@ -661,18 +674,18 @@ void NuMIFlux::GetConstraints( bsim::Dk2Nu* fDk2Nu) {
 					break;
 
 				case -211: // for pion minus
-					pionminus_NA49->Fill(xF , Pt);
+					pionminus_NA49->Fill(xF, Pt);
 					pionminus_MIPP->Fill(Pz, Pt);
 					
 					break;
 
 				case 321:  // for kaon plus
-					Kplus_NA49->Fill(xF , Pt);
+					Kplus_NA49->Fill(xF, Pt);
 					Kplus_MIPP->Fill(Pz, Pt);
 					break;
 
 				case -321: // for kaon minus
-					Kminus_NA49->Fill(xF , Pt);
+					Kminus_NA49->Fill(xF, Pt);
 					Kminus_MIPP->Fill(Pz, Pt);
 					break;
 			}
