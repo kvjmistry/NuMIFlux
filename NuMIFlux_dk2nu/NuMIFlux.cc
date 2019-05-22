@@ -184,6 +184,16 @@ void NuMIFlux::CalculateFlux() {
 	anumuFluxHisto -> Write();
 	nueFluxHisto   -> Write();
 	anueFluxHisto  -> Write();
+
+	pionplus_NA49->Write();
+	pionplus_MIPP->Write();
+	pionminus_NA49->Write();
+	pionminus_MIPP->Write();
+	Kplus_NA49->Write();
+	Kplus_MIPP->Write();
+	Kminus_NA49->Write();
+	Kminus_MIPP->Write();
+
 	if ( genieXsecPath ) {
 		numuCCHisto     -> Write();
 		genieXsecNumuCC -> Write();
