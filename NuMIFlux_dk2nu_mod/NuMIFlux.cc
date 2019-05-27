@@ -13,12 +13,15 @@ using namespace std;
 #include "TH1.h"
 #include "TFile.h"
 #include "TGraph.h"
+#include <TParticlePDG.h>
+#include <TDatabasePDG.h>
 
 #include "NuMIFlux.hh"
 #include "dk2nu/tree/dk2nu.h"
 #include "dk2nu/tree/dkmeta.h"
 #include "dk2nu/tree/calcLocationWeights.h"
-	
+
+
 void NuMIFlux::CalculateFlux() {
 
 	bsim::Dk2Nu* fDk2Nu = new bsim::Dk2Nu;
@@ -41,7 +44,7 @@ void NuMIFlux::CalculateFlux() {
 		cflux_meta->GetEntry(i);
 
 		// Alert the user
-		if (i % 100000 == 0) cout << "On entry " << i << endl;
+		if (i % 100000 == 0) cout << "On entry " << i/1.0e6 << " M"<< endl;
 		
 		if(treeNumber != cflux->GetTreeNumber()) {
 			treeNumber = cflux->GetTreeNumber();
@@ -81,8 +84,7 @@ void NuMIFlux::CalculateFlux() {
 		if (std::isnan(enu) == 1) { // catch NaN values
 		std::cout << "got a nan enu:\t" << enu << std::endl;
 		enu = 0;
-	}
-
+		}
 
 		// Fill the histograms
 		switch (fDk2Nu->decay.ntype) {
@@ -100,8 +102,12 @@ void NuMIFlux::CalculateFlux() {
 				break; 
 		}
 
-	} // end of loop over the entries
+		// Now fill the contraint histograms for each file
+		GetConstraints_ThinTarg( fDk2Nu );
+		GetConstraints_ThickTarg(fDk2Nu); 
 
+	} // end of loop over the entries
+	
 
 	//***************************************
 	//
@@ -114,6 +120,16 @@ void NuMIFlux::CalculateFlux() {
 	anumuFluxHisto -> Scale(scale);
 	nueFluxHisto   -> Scale(scale);
 	anueFluxHisto  -> Scale(scale);
+	
+	// Constrained Histograms
+	pionplus_NA49  -> Scale(scale);
+	pionplus_MIPP  -> Scale(scale);
+	pionminus_NA49 -> Scale(scale);
+	pionminus_MIPP -> Scale(scale);
+	Kplus_NA49     -> Scale(scale);
+	Kplus_MIPP     -> Scale(scale);
+	Kminus_NA49    -> Scale(scale);
+	Kminus_MIPP    -> Scale(scale);
 	cout << endl << ">>> TOTAL POT: " << AccumulatedPOT << endl << endl;
 
 
@@ -168,6 +184,16 @@ void NuMIFlux::CalculateFlux() {
 	anumuFluxHisto -> Write();
 	nueFluxHisto   -> Write();
 	anueFluxHisto  -> Write();
+
+	pionplus_NA49->Write();
+	pionplus_MIPP->Write();
+	pionminus_NA49->Write();
+	pionminus_MIPP->Write();
+	Kplus_NA49->Write();
+	Kplus_MIPP->Write();
+	Kminus_NA49->Write();
+	Kminus_MIPP->Write();
+
 	if ( genieXsecPath ) {
 		numuCCHisto     -> Write();
 		genieXsecNumuCC -> Write();
@@ -556,4 +582,141 @@ int NuMIFlux::calcEnuWgt( bsim::Dk2Nu* decay, const TVector3& xyz,
 		} // ptype is muon
 		
 		return 0;
+}
+//___________________________________________________________________________
+// FIll the constraints histograms for MIPP and NA49
+void NuMIFlux::GetConstraints_ThinTarg( bsim::Dk2Nu* fDk2Nu) {
+
+	int ntraj = fDk2Nu->ancestor.size();
+	TDatabasePDG* particle = TDatabasePDG::Instance();
+	
+	// Loop over the trjjectories
+	for (int itraj = 0; itraj < (ntraj - 1); itraj++) {
+
+		int pdg_inc = fDk2Nu -> ancestor[itraj].pdg;
+		double incMom[3];
+
+		// Skip anything that wasnt produced by the first proton
+		if (pdg_inc != 2212) continue;
+		if (itraj != 0) continue;
+		// if (itraj != ntraj - 3) continue;
+		// std::cout << "itraj :\t" << itraj << std::endl;
+		
+
+		if (fDk2Nu->ancestor[itraj].pprodpz != 0) { 
+			incMom[0] = fDk2Nu -> ancestor[itraj].pprodpx;
+			incMom[1] = fDk2Nu -> ancestor[itraj].pprodpy;
+			incMom[2] = fDk2Nu -> ancestor[itraj].pprodpz;
+		}
+		else {
+			incMom[0] = fDk2Nu -> ancestor[itraj].stoppx;
+			incMom[1] = fDk2Nu -> ancestor[itraj].stoppy;
+			incMom[2] = fDk2Nu -> ancestor[itraj].stoppz;
+		}
+		Int_t itraj_prod = itraj + 1;
+		Int_t pdg_prod = fDk2Nu -> ancestor[itraj_prod].pdg;
+
+		// Check for decays of interest (pions or kaons)
+		if (pdg_prod == 211 || pdg_prod == -211 || pdg_prod == 321 || pdg_prod == -321){
+
+			double prodMom[3];
+			prodMom[0] = fDk2Nu -> ancestor[itraj_prod].startpx;
+			prodMom[1] = fDk2Nu -> ancestor[itraj_prod].startpy;
+			prodMom[2] = fDk2Nu -> ancestor[itraj_prod].startpz;
+
+			double vtx[3];
+			vtx[0] = fDk2Nu -> ancestor[itraj_prod].startx;
+			vtx[1] = fDk2Nu -> ancestor[itraj_prod].starty;
+			vtx[2] = fDk2Nu -> ancestor[itraj_prod].startz;
+
+			// Now calculate useful variables
+			double Inc_P  = std::sqrt(incMom[0]*incMom[0] + incMom[1]*incMom[1] +incMom[2]*incMom[2]);
+			double Prod_P = std::sqrt(prodMom[0]*prodMom[0] + prodMom[1]*prodMom[1] +prodMom[2]*prodMom[2]);
+
+			double cos_theta = (incMom[0]*prodMom[0]+incMom[1]*prodMom[1]+incMom[2]*prodMom[2])/(Inc_P*Prod_P);
+			double sin_theta = std::sqrt(1.-pow(cos_theta,2.0));
+
+			// Theta in rads:  
+			double Theta = std::acos(cos_theta);
+			double Pt = Prod_P * sin_theta;
+			double Pz = Prod_P * cos_theta; 
+
+			double Inc_Mass  = particle->GetParticle(pdg_inc)->Mass();
+			double Prod_Mass = particle->GetParticle(pdg_prod)->Mass();
+
+			//Ecm, gamma:
+			double inc_E_lab = std::sqrt(Inc_P * Inc_P + Inc_Mass * Inc_Mass);
+			
+			double Ecm       = std::sqrt(2. * Inc_Mass * Inc_Mass + 2. * inc_E_lab * Inc_Mass); 
+			
+			double Betacm    = std::sqrt(inc_E_lab * inc_E_lab - Inc_Mass * Inc_Mass) / (inc_E_lab + Inc_Mass); 
+			
+			double Gammacm   = 1. / std::sqrt(1. - Betacm * Betacm);
+
+			//xF:
+			double prod_E_lab  = std::sqrt( Prod_P * Prod_P + pow(Prod_Mass,2));
+			double PL          = Gammacm * (Pz - Betacm * prod_E_lab);  // PL is 
+			double xF  = PL * 2. / Ecm;
+
+			switch (pdg_prod) {
+				case 211:  // for pion plus
+					pionplus_NA49->Fill(xF, Pt);
+					break;
+
+				case -211: // for pion minus
+					pionminus_NA49->Fill(xF, Pt);
+					
+					break;
+
+				case 321:  // for kaon plus
+					Kplus_NA49->Fill(xF, Pt);
+					break;
+
+				case -321: // for kaon minus
+					Kminus_NA49->Fill(xF, Pt);
+					break;
+			}
+
+		}
+		else continue;
+
+	} // END loop over trajectories
+
+	return;
+	
+}
+//___________________________________________________________________________
+
+
+void NuMIFlux::GetConstraints_ThickTarg(bsim::Dk2Nu* fDk2Nu){
+
+	int pdg_exit = fDk2Nu->tgtexit.tptype;
+
+	// Now get the thick target constraints
+	double Pz_exit = fDk2Nu->tgtexit.tpz;
+	double Pt_exit = std::sqrt(fDk2Nu->tgtexit.tpx * fDk2Nu->tgtexit.tpx + fDk2Nu->tgtexit.tpy * fDk2Nu->tgtexit.tpy);
+
+	if (Pz_exit < 0) return;
+
+	switch (pdg_exit) {
+			case 211:  // for pion plus
+				pionplus_MIPP->Fill(Pz_exit, Pt_exit);
+				break;
+
+			case -211: // for pion minus
+				pionminus_MIPP->Fill(Pz_exit, Pt_exit);
+				
+				break;
+
+			case 321:  // for kaon plus
+				Kplus_MIPP->Fill(Pz_exit, Pt_exit);
+				break;
+
+			case -321: // for kaon minus
+				Kminus_MIPP->Fill(Pz_exit, Pt_exit);
+				break;
+		}
+
+	return;
+
 }

@@ -9,6 +9,7 @@ using namespace std;
 
 #include "TChain.h"
 #include "TH1.h"
+#include "TH2D.h"
 #include "TFile.h"
 #include "TSystem.h"
 #include "TVector3.h"
@@ -50,12 +51,26 @@ public :
   TH1D* nueFluxHisto;
   TH1D* anueFluxHisto;
   TH1D* numuCCHisto;
+
+  // MIPP
+  TH2D* pionplus_MIPP;
+  TH2D* pionminus_MIPP;
+  TH2D* Kplus_MIPP;
+  TH2D* Kminus_MIPP;
+  // NA49
+  TH2D* pionplus_NA49;
+  TH2D* pionminus_NA49;
+  TH2D* Kplus_NA49;
+  TH2D* Kminus_NA49;
+
+
+
   TGraph *genieXsecNumuCC;
   TFile* f = new TFile("NuMIFlux.root", "RECREATE");
 
 
-  // NuMIFlux(string pattern="/pnfs/uboone/persistent/uboonebeam/numi_dk2nu_zero_threshold/FHC/g4numiv6*.root");
   NuMIFlux(string pattern="/pnfs/uboone/persistent/uboonebeam/numi_dk2nu_zero_threshold/FHC/g4numiv6_minervame_me000z200i_*.root");
+  // NuMIFlux(string pattern="/pnfs/uboone/persistent/uboonebeam/numi_dk2nu_zero_threshold/FHC/g4numiv6_minervame_me000z200i_120_0000.root");
 
   virtual ~NuMIFlux();
 
@@ -64,6 +79,8 @@ public :
   TVector3 FromDetToBeam(const TVector3& det);
   double estimate_pots(int highest_potnum);
   int calcEnuWgt(bsim::Dk2Nu* decay, const TVector3& xyz, double& enu, double& wgt_xy);
+  void GetConstraints_ThinTarg( bsim::Dk2Nu* fDk2Nu);
+  void GetConstraints_ThickTarg( bsim::Dk2Nu* fDk2Nu);
 
 };
 
@@ -105,6 +122,19 @@ NuMIFlux::NuMIFlux(string pattern) {
   // anue
   anueFluxHisto = new TH1D("anueFluxHisto", (titleBase1 + "#bar{#nu}_{e}" + titleBase2 + "#bar{#nu}_{e}" + titleBase3),histNbins,histMin,histMax);
   numuCCHisto = new TH1D("numuCCHisto", "numu CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC / 79 ton / 6e20 POT",histNbins,histMin,histMax);
+
+
+  // Constraint histograms
+  // MIPP
+  pionplus_MIPP  =  new TH2D("pionplus_MIPP", "pionplus_MIPP  ;p_{L} [GeV/c] ;p_{T} [GeV/c]", 600, 0, 100, 200, 0, 2 );
+  pionminus_MIPP =  new TH2D("pionminus_MIPP","pionminus_MIPP ;p_{L} [GeV/c] ;p_{T} [GeV/c]", 600, 0, 100, 200, 0, 2 );
+  Kplus_MIPP     =  new TH2D("Kplus_MIPP",    "Kplus_MIPP     ;p_{L} [GeV/c] ;p_{T} [GeV/c]", 600, 0, 100, 200, 0, 2 );
+  Kminus_MIPP    =  new TH2D("Kminus_MIPP",   "Kminus_MIPP    ;p_{L} [GeV/c] ;p_{T} [GeV/c]", 600, 0, 100, 200, 0, 2 );
+  // NA49
+  pionplus_NA49  =  new TH2D("pionplus_NA49",  "pionplus_NA49  ;xF  ;p_{T} [GeV/c]", 200, -1, 1, 100, 0, 2.0 );
+  pionminus_NA49 =  new TH2D("pionminus_NA49", "pionminus_NA49 ;xF  ;p_{T} [GeV/c]", 200, -1, 1, 100, 0, 2.0 );
+  Kplus_NA49     =  new TH2D("Kplus_NA49",     "Kplus_NA49     ;xF  ;p_{T} [GeV/c]", 200, -1, 1, 100, 0, 2.0 );
+  Kminus_NA49    =  new TH2D("Kminus_NA49",    "Kminus_NA49    ;xF  ;p_{T} [GeV/c]", 200, -1, 1, 100, 0, 2.0 );
 }
 
 NuMIFlux::~NuMIFlux() {

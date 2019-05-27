@@ -6,9 +6,9 @@
 
  Lots of this code has been mutilated, and so needs a big clear out of old code.
  Nevertheless, the code still runs, and you can execute it with the commmand:
- root -l '/uboone/app/users/kmistry/PPFX/numi-validation/scripts/plot_uboone_flux.C("mippoff","output.root",""," ", "nue")'
+ root -l '/uboone/app/users/kmistry/PPFX/numi-validation/scripts/plot_uboone_flux.C("output.root", "nue")'
  where output.root is a file that contains the 1d ppfx weighted verison of the flux. 
- All those empty fields need to be removed
+
  * 
  * A. Mastbaum <mastbaum@uchicago.edu> 2018/11
  * Modified by K. Mistry 12/18
@@ -171,7 +171,6 @@ void plot_uboone_flux(TString inputfile, const char* mode) { // (input, numu/nue
 	double* edges = new double[nbins+1];
 	TCanvas* c3 = new TCanvas();
 	TCanvas* c4 = new TCanvas();
-	TH1D* herr2; 				// Nova uncertainties
 	std::vector<TH2D*> cov;		// Covariance
 	std::vector<TH2D*> cor; 	// Correlation
 	std::vector<TH1D*> herr ;	// Fractional Uncertenties 
@@ -455,7 +454,7 @@ void plot_uboone_flux(TString inputfile, const char* mode) { // (input, numu/nue
     }
 
 	
-	hbinidx->GetXaxis()->SetRangeUser(0,0.5);
+	// hbinidx->GetXaxis()->SetRangeUser(0,0.5);
 	// gPad->SetLogx();
 	// gPad->Update();
 

@@ -94,7 +94,12 @@
 ./NuMIFlux_cc.so: /cvmfs/larsoft.opensciencegrid.org/products/root/v6_12_06a/Linux64bit+2.6-2.12-e17-prof/include/ROOT/TRWSpinLock.hxx
 ./NuMIFlux_cc.so: /cvmfs/larsoft.opensciencegrid.org/products/root/v6_12_06a/Linux64bit+2.6-2.12-e17-prof/include/ROOT/TSpinMutex.hxx
 ./NuMIFlux_cc.so: /cvmfs/larsoft.opensciencegrid.org/products/root/v6_12_06a/Linux64bit+2.6-2.12-e17-prof/include/TGraph.h
+./NuMIFlux_cc.so: /cvmfs/larsoft.opensciencegrid.org/products/root/v6_12_06a/Linux64bit+2.6-2.12-e17-prof/include/TParticlePDG.h
+./NuMIFlux_cc.so: /cvmfs/larsoft.opensciencegrid.org/products/root/v6_12_06a/Linux64bit+2.6-2.12-e17-prof/include/TDatabasePDG.h
+./NuMIFlux_cc.so: /cvmfs/larsoft.opensciencegrid.org/products/root/v6_12_06a/Linux64bit+2.6-2.12-e17-prof/include/TParticleClassPDG.h
 ./NuMIFlux_cc.so: NuMIFlux.hh
+./NuMIFlux_cc.so: /cvmfs/larsoft.opensciencegrid.org/products/root/v6_12_06a/Linux64bit+2.6-2.12-e17-prof/include/TH2D.h
+./NuMIFlux_cc.so: /cvmfs/larsoft.opensciencegrid.org/products/root/v6_12_06a/Linux64bit+2.6-2.12-e17-prof/include/TH2.h
 ./NuMIFlux_cc.so: /cvmfs/larsoft.opensciencegrid.org/products/dk2nudata/v01_06_01b/Linux64bit+2.6-2.12-e17-prof/include/dk2nu/tree/dk2nu.h
 ./NuMIFlux_cc.so: /cvmfs/larsoft.opensciencegrid.org/products/root/v6_12_06a/Linux64bit+2.6-2.12-e17-prof/include/TROOT.h
 ./NuMIFlux_cc.so: /cvmfs/larsoft.opensciencegrid.org/products/dk2nudata/v01_06_01b/Linux64bit+2.6-2.12-e17-prof/include/dk2nu/tree/dkmeta.h

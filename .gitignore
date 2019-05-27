@@ -7,3 +7,4 @@ bin
 scripts/GENIE_GEN/
 *.pdf
 NuMIFlux_dk2nu/latex/
+.vscode
