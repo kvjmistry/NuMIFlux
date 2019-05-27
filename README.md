@@ -21,10 +21,23 @@ This produces a ROOT file `output.root` with histograms for the central value
 and multisim universes.
 
 
-Latest Updates:
-Can now run new plot comparison all function with arguments:
-// mippon/mipoff, input file name, name of product of weights,turn on weightplots,  mode 
-	root -l '/uboone/app/users/kmistry/PPFX/numi-validation/scripts/plot_comparison_all.C("mippoff","output_all.root","noThinKaon","wplot" "numu")'
+## Validation Scripts:  
+Most of the `plot_comparison` scripts have not been kept up to date at this present time. 
+This means that they may not work out of the box and would need some modifications.
+
+To produce the covariance matrix, correlation matrix and flux diagrams for microboone,
+run this script. This script has mostly been kept up to date, but may need some minor changes
+in the future.
+`root -l 'plot_uboone_flux.C("output.root","numu")'`
+
+I plan on moving the `Fluxystematics.C` and `FluxSyst_functions.h` files to another repository since these
+are what were used for the nue flux sytematics and so dont really have a place anymore in this repo.
+
+`checkfiles.C` was a script that was made to open root files and see if they are zombie. This was made due to the nova beamline files being broken and so I am not sure this is needed anymore.
+
+`flugg_comparison.C`is a simple script that counts the number of kaons in a file. This was to try an explain the differences in decay at rest species in flugg and dk2nu. Since I believe there is actually a difference between the two, this script serves no purpose, but I will keep it here for now anyway.
+
+
 
 
 Credits
