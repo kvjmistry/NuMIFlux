@@ -611,12 +611,14 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
 
 	// 6e20 POT, 50/1000 for 50 MeV from 1GeV, 1e-4 for m2->cm2
 	h_flux->Scale( (6.0e20)/ (fPOT*1.0e4) );  
+
+	h_flux->Rebin(5);
 	
 
 	if (mode == "numu"){
 		h_flux->SetLineColor(kRed+1);
 		h_flux->SetLineWidth(2);
-		h_flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
+		h_flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / 25 MeV / cm^{2}");
 		leg->AddEntry(h_flux, "#nu_{#mu}","l");
 		h_flux->Draw("hist,same");
 	}
@@ -625,7 +627,7 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
 		h_flux->SetLineColor(kRed+1);
 		h_flux->SetLineWidth(2);
 		h_flux->SetLineStyle(2);
-		h_flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
+		h_flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / 25 MeV / cm^{2}");
 		leg->AddEntry(h_flux, "#nu_{e}","l");
 		h_flux->Draw("hist,same");
 
@@ -634,7 +636,7 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
 	else if (mode == "numubar"){
 		h_flux->SetLineColor(kBlue+1);
 		h_flux->SetLineWidth(2);
-		h_flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / 50 MeV / cm^{2}");
+		h_flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / 25 MeV / cm^{2}");
 		leg->AddEntry(h_flux, "#bar{#nu_{#mu}}","l");
 		h_flux->Draw("hist,same");
 	}
@@ -643,13 +645,13 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
 		h_flux->SetLineColor(kBlue+1);
 		h_flux->SetLineWidth(2);
 		h_flux->SetLineStyle(2);
-		h_flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / 50 MeV / cm^{2}");
+		h_flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / 25 MeV / cm^{2}");
 		leg->AddEntry(h_flux, "#bar{#nu_{e}} ","l");
 		h_flux->Draw("hist,same");
 	
 	}
 	else std::cout << "unknown neutrino type ...."<<std::endl;
-	h_flux->GetXaxis()->SetRangeUser(0,6);
+	h_flux->GetXaxis()->SetRangeUser(0,5);
 	
 	gPad->SetLogy();
 	// gPad->Update();

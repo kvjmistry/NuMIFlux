@@ -22,36 +22,36 @@ void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThin
 	TH1D *h_dk2nu_flux, *h_g_simp, *hnovafileflux, *hppfx, *hppfx_mod; 
 	TFile *f_gsimple, *f_ppfx, *f_ppfx_mod;
 	bool boolfile, boolhist;
-	double rebin{1}; // number to rebin the histograms by
+	double rebin{5}; // number to rebin the histograms by
 
 	// Select neutrino type to run with 
 	switch (return_mode(mode)){
 		case enumu:
 			std::cout << "\nUsing NuMu Mode!\n" << std::endl;
-			Gethist_TPC = "numu/numu_CV_AV_TPC_5MeV_bin";							// AV in TPC flux prediction
+			Gethist_TPC = "numu/Detsmear/numu_CV_AV_TPC_5MeV_bin";							// AV in TPC flux prediction
 			g_simp_names = "numuFluxHisto";									// G simple files
-			Gethist_TPC_dk2nu = "numu/numu_UW_AV_TPC_5MeV_bin";				// uw AV in TPC flux prediction
+			Gethist_TPC_dk2nu = "numu/Detsmear/numu_UW_AV_TPC_5MeV_bin";				// uw AV in TPC flux prediction
 			break;
 
 		case enue:
 			std::cout << "\nUsing Nue Mode!\n" << std::endl;
-			Gethist_TPC = "nue/nue_CV_AV_TPC_5MeV_bin";
+			Gethist_TPC = "nue/Detsmear/nue_CV_AV_TPC_5MeV_bin";
 			g_simp_names = "nueFluxHisto";
-			Gethist_TPC_dk2nu = "nue/nue_UW_AV_TPC_5MeV_bin";
+			Gethist_TPC_dk2nu = "nue/Detsmear/nue_UW_AV_TPC_5MeV_bin";
 			break;
 
 		case enumubar:
 			std::cout << "\nUsing NuMubar Mode!\n" << std::endl;
-			Gethist_TPC = "numubar/numubar_CV_AV_TPC_5MeV_bin";
+			Gethist_TPC = "numubar/Detsmear/numubar_CV_AV_TPC_5MeV_bin";
 			g_simp_names = "anumuFluxHisto";
-			Gethist_TPC_dk2nu = "numubar/numubar_UW_AV_TPC_5MeV_bin";
+			Gethist_TPC_dk2nu = "numubar/Detsmear/numubar_UW_AV_TPC_5MeV_bin";
 			break;
 
 		case enuebar:
 			std::cout << "\nUsing Nuebar Mode!\n" << std::endl;
-			Gethist_TPC = "nuebar/nuebar_CV_AV_TPC_5MeV_bin";
+			Gethist_TPC = "nuebar/Detsmear/nuebar_CV_AV_TPC_5MeV_bin";
 			g_simp_names = "anueFluxHisto";
-			Gethist_TPC_dk2nu = "nuebar/nuebar_UW_AV_TPC_5MeV_bin";
+			Gethist_TPC_dk2nu = "nuebar/Detsmear/nuebar_UW_AV_TPC_5MeV_bin";
 			break;
 
 	}
@@ -65,7 +65,7 @@ void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThin
 	// Dk2nu
 	// boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/DetectorWeights_withtilt/output.root"); if (boolfile == false) gSystem->Exit(0);
 	// boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/parent/v3/output_parent_all.root"); if (boolfile == false) gSystem->Exit(0); // file with all large weights kept and just the ones which are < 0 removed
-	boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/parent/v3/output.root"); if (boolfile == false) gSystem->Exit(0);
+	boolfile  = GetFile(f_ppfx_mod ,"/uboone/app/users/kmistry/MCC9_uboonecode_v08_00_00_13a/srcs/numi_validation/files/output_uboone.root"); if (boolfile == false) gSystem->Exit(0);
 	double fPOT = GetPOT(f_ppfx_mod);
 	boolhist = GetHist(f_ppfx_mod, h_dk2nu_flux, Gethist_TPC_dk2nu); if (boolhist == false) gSystem->Exit(0);
 	h_dk2nu_flux->Rebin(rebin);
@@ -90,7 +90,7 @@ void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThin
 	// Plottings
 	h_dk2nu_flux->SetLineColor(kRed+1);
 	h_dk2nu_flux->SetLineWidth(2);
-	h_dk2nu_flux->SetTitle(";E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / 5 MeV / cm^{2}");
+	h_dk2nu_flux->SetTitle(";E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / 25 MeV / cm^{2}");
 	// h_dk2nu_flux->SetTitle(";E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
 	IncreaseLabelSize(h_dk2nu_flux);
 	h_dk2nu_flux->GetXaxis()->SetRangeUser(0,5);
@@ -111,9 +111,9 @@ void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThin
 	lFlux->SetFillStyle(0);
 	lFlux->SetTextFont(62); 
 	
-	lFlux->AddEntry(h_dk2nu_flux, "Dk2Nu Flux (no ppfx)","l");
-	lFlux->AddEntry(h_g_simp, "G Simple Flux","l");
-	lFlux->AddEntry(hppfx, "PPFX Flux","l");;
+	lFlux->AddEntry(h_dk2nu_flux, "dk2nu","l");
+	lFlux->AddEntry(h_g_simp, "flugg","l");
+	lFlux->AddEntry(hppfx, "dk2nu PPFX Corrected","l");;
 	lFlux->Draw();
 	
 	if (mode == "numu")		h_dk2nu_flux->SetTitle("#nu_{#mu}");
@@ -128,10 +128,10 @@ void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThin
 	TLegend* l_plotall = new TLegend(0.8, 0.65, 0.95, 0.9);
 
 	c_plotall->cd();
-	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "numu", fPOT, "numu/numu_CV_AV_TPC" );
-	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "numubar", fPOT, "numubar/numubar_CV_AV_TPC" );
-	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "nue", fPOT, "nue/nue_CV_AV_TPC" );
-	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "nuebar", fPOT, "nuebar/nuebar_CV_AV_TPC" );
+	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "numu", fPOT, "numu/Detsmear/numu_CV_AV_TPC_5MeV_bin" );
+	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "numubar", fPOT, "numubar/Detsmear/numubar_CV_AV_TPC_5MeV_bin" );
+	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "nue", fPOT, "nue/Detsmear/nue_CV_AV_TPC_5MeV_bin" );
+	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "nuebar", fPOT, "nuebar/Detsmear/nuebar_CV_AV_TPC_5MeV_bin" );
 
 	l_plotall->SetNColumns(1);
 	l_plotall->SetBorderSize(0);
@@ -150,21 +150,21 @@ void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThin
 	gSystem->Exec("if [ ! -d \"plots\" ]; then echo \"\nPlots folder does not exist... creating\"; mkdir plots; fi"); 
 	
 	if (mode == "numu"){ 	
-		c1->Print("plots/CV_Flux_Prediction_NuMu_MIPPOff.pdf");
+		c1->Print("plots/CV_Flux_Prediction_Numu.pdf");
 		std::cout << "\n"<< std::endl;
 	}
 	else if (mode == "nue"){
-		c1->Print("plots/CV_Flux_Prediction_Nue_MIPPOff.pdf");
+		c1->Print("plots/CV_Flux_Prediction_Nue.pdf");
 		std::cout << "\n"<< std::endl;
 
 	}
 	else if (mode == "numubar"){
-		c1->Print("plots/CV_Flux_Prediction_Numubar_MIPPOff.pdf");
+		c1->Print("plots/CV_Flux_Prediction_Numubar.pdf");
 		std::cout << "\n"<< std::endl;
 
 	}
 	else {
-		c1->Print("plots/CV_Flux_Prediction_Nuebar_MIPPOff.pdf");
+		c1->Print("plots/CV_Flux_Prediction_Nuebar.pdf");
 		std::cout << "\n"<< std::endl;
 	}
 
