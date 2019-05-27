@@ -6,6 +6,8 @@ from ROOT import TTree, TObject, TFile, gDirectory, TH1D, TH2D, TH3D, TCanvas, g
 from array import array
 from glob import glob
 
+ROOT.gStyle.SetOptStat(0);
+
 # Importing rootlogon.C
 ROOT.gROOT.SetMacroPath('~/');
 ROOT.gROOT.Macro( os.path.expanduser( 'rootlogon.C' ) )
@@ -30,7 +32,7 @@ h_Kplus_long_trans = f.Get("Kplus_NA49")
 
 c4 = TCanvas("c1","c1",1500,1100)
 
-h_Kplus_long_trans.SetTitle(" All #nu s from K^{+}")
+h_Kplus_long_trans.SetTitle("K^{+}")
 h_Kplus_long_trans.GetXaxis().SetTitle("x_{F} ")
 h_Kplus_long_trans.GetXaxis().SetTitleFont(12)
 h_Kplus_long_trans.GetYaxis().SetTitle("p_{T} [GeV/c]")
@@ -59,13 +61,13 @@ for line in lineVector:
     line.SetLineWidth(3)
     line.Draw()
 
-leg = TLegend(.54, .75 , .58, .79)
+leg = TLegend(.39, .75 , .43 , .79)
 leg.SetFillStyle(0);
 leg.SetLineWidth(4);
 leg.Draw();
 
 
-text = TLatex(.6, .75, "NA49 Coverage");
+text = TLatex(.15, .755  , "NA49 Coverage");
 text.SetTextColor(ROOT.kBlack);
 text.SetNDC();
 text.SetTextSize(1.4/30.);
@@ -75,5 +77,5 @@ text.Draw();
 
 c4.Print("plots/kaonplus_NA49.pdf");
 
-raw_input("Please press enter to exit.")
+# raw_input("Please press enter to exit.")
 

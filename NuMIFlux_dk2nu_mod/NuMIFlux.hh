@@ -79,7 +79,8 @@ public :
   TVector3 FromDetToBeam(const TVector3& det);
   double estimate_pots(int highest_potnum);
   int calcEnuWgt(bsim::Dk2Nu* decay, const TVector3& xyz, double& enu, double& wgt_xy);
-  void GetConstraints( bsim::Dk2Nu* fDk2Nu);
+  void GetConstraints_ThinTarg( bsim::Dk2Nu* fDk2Nu);
+  void GetConstraints_ThickTarg( bsim::Dk2Nu* fDk2Nu);
 
 };
 

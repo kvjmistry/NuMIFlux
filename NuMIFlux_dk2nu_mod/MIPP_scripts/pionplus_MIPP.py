@@ -14,6 +14,8 @@ from ROOT import TTree, TObject, TFile, gDirectory, TH1D, TH2D, TH3D, TCanvas, g
 from array import array
 from glob import glob
 
+ROOT.gStyle.SetOptStat(0);
+
 # Importing rootlogon.C
 ROOT.gROOT.SetMacroPath('~/');
 ROOT.gROOT.Macro( os.path.expanduser( 'rootlogon.C' ) )
@@ -38,8 +40,8 @@ h_pionplus_long_trans = f.Get("pionplus_MIPP")
 
 cpionplus_long_trans = TCanvas("c1","c1",1500,1200)
 
-h_pionplus_long_trans.SetTitle("#pi^{+} ancestor")
-h_pionplus_long_trans.GetXaxis().SetTitle("p_{z} [GeV/c]")
+h_pionplus_long_trans.SetTitle("#pi^{+}")
+h_pionplus_long_trans.GetXaxis().SetTitle("p_{Z} [GeV/c]")
 h_pionplus_long_trans.GetXaxis().SetTitleFont(12)
 h_pionplus_long_trans.GetYaxis().SetTitle("p_{T} [GeV/c]")
 h_pionplus_long_trans.GetYaxis().SetTitleFont(12)
@@ -67,12 +69,12 @@ for line in lineVector:
     line.SetLineWidth(3)
     line.Draw()
 
-leg = TLegend(.61, .55, .65, .59)
+leg = TLegend(.44, .55, .48, .59)
 leg.SetFillStyle(0);
 leg.SetLineWidth(4);
 leg.Draw();
 
-text = TLatex(.67, .55, "MIPP Coverage");
+text = TLatex(.5, .55, "MIPP Coverage");
 text.SetTextColor(ROOT.kBlack);
 text.SetNDC();
 text.SetTextSize(1.4/30.);
@@ -80,4 +82,6 @@ text.SetTextAlign(11);
 #text.DrawLatex(.48, .55, "#Square");
 text.Draw();
 
-raw_input("Please press enter to exit.")
+cpionplus_long_trans.Print("plots/pionplus_MIPP.pdf");
+
+# raw_input("Please press enter to exit.")

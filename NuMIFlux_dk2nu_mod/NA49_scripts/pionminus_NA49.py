@@ -7,6 +7,8 @@ from array import array
 from glob import glob
 import csv
 
+ROOT.gStyle.SetOptStat(0);
+
 # Importing rootlogon.C
 ROOT.gROOT.SetMacroPath('~/');
 ROOT.gROOT.Macro( os.path.expanduser( 'rootlogon.C' ) )
@@ -31,7 +33,7 @@ h_pionminus_long_trans = f.Get("pionminus_NA49")
 
 c4 = TCanvas("c1","c1",1500,1100)
 
-h_pionminus_long_trans.SetTitle(" All #nus from #pi^{-}")
+h_pionminus_long_trans.SetTitle("#pi^{-}")
 h_pionminus_long_trans.GetXaxis().SetTitle("x_{F} ")
 h_pionminus_long_trans.GetXaxis().SetTitleFont(12)
 h_pionminus_long_trans.GetYaxis().SetTitle("p_{T} [GeV/c]")
@@ -125,13 +127,13 @@ for line in lineVector:
     line.Draw()
 
 
-leg = TLegend(.54, .78 , .58, .82)
+leg = TLegend(.64, .82 , .68, .86)
 leg.SetFillStyle(0);
 leg.SetLineWidth(4);
 leg.Draw();
 
 
-text = TLatex(.6, .78, "NA49 Coverage");
+text = TLatex(.40, .825, "NA49 Coverage");
 text.SetTextColor(ROOT.kBlack);
 text.SetNDC();
 text.SetTextSize(1.4/30.);
@@ -141,4 +143,4 @@ text.Draw();
 
 c4.Print("plots/pionminus_NA49.pdf");
 
-raw_input("Please press enter to exit.")
+# raw_input("Please press enter to exit.")

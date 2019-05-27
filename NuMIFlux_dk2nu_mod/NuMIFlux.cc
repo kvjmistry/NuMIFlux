@@ -103,8 +103,8 @@ void NuMIFlux::CalculateFlux() {
 		}
 
 		// Now fill the contraint histograms for each file
-		GetConstraints( fDk2Nu );
-			
+		GetConstraints_ThinTarg( fDk2Nu );
+		GetConstraints_ThickTarg(fDk2Nu); 
 
 	} // end of loop over the entries
 	
@@ -585,22 +585,20 @@ int NuMIFlux::calcEnuWgt( bsim::Dk2Nu* decay, const TVector3& xyz,
 }
 //___________________________________________________________________________
 // FIll the constraints histograms for MIPP and NA49
-void NuMIFlux::GetConstraints( bsim::Dk2Nu* fDk2Nu) {
+void NuMIFlux::GetConstraints_ThinTarg( bsim::Dk2Nu* fDk2Nu) {
 
 	int ntraj = fDk2Nu->ancestor.size();
-	// std::cout << "ntraj size:\t" << ntraj << std::endl;
 	TDatabasePDG* particle = TDatabasePDG::Instance();
-
-	// int DEBUG_COUNTER{0};
 	
 	// Loop over the trjjectories
 	for (int itraj = 0; itraj < (ntraj - 1); itraj++) {
-		// std::cout << "itraj :\t" << itraj << std::endl;
 
 		int pdg_inc = fDk2Nu -> ancestor[itraj].pdg;
 		double incMom[3];
 
-		// if (pdg_inc != 2212 || itraj != 0) continue;
+		// Skip anything that wasnt produced by the first proton
+		if (pdg_inc != 2212) continue;
+		if (itraj != 0) continue;
 		// if (itraj != ntraj - 3) continue;
 		// std::cout << "itraj :\t" << itraj << std::endl;
 		
@@ -617,16 +615,9 @@ void NuMIFlux::GetConstraints( bsim::Dk2Nu* fDk2Nu) {
 		}
 		Int_t itraj_prod = itraj + 1;
 		Int_t pdg_prod = fDk2Nu -> ancestor[itraj_prod].pdg;
-		// std::cout << "pdg_prod :\t" << pdg_prod << std::endl;
 
 		// Check for decays of interest (pions or kaons)
 		if (pdg_prod == 211 || pdg_prod == -211 || pdg_prod == 321 || pdg_prod == -321){
-
-			// DEBUG_COUNTER++;
-
-			// if (DEBUG_COUNTER > 10) break;
-
-			// std::cout << "itraj_prod:\t" << itraj_prod << "   pdg_inc:\t" << pdg_inc << "  pdg_prod\t " << pdg_prod <<  std::endl;
 
 			double prodMom[3];
 			prodMom[0] = fDk2Nu -> ancestor[itraj_prod].startpx;
@@ -670,23 +661,19 @@ void NuMIFlux::GetConstraints( bsim::Dk2Nu* fDk2Nu) {
 			switch (pdg_prod) {
 				case 211:  // for pion plus
 					pionplus_NA49->Fill(xF, Pt);
-					pionplus_MIPP->Fill(Pz, Pt);
 					break;
 
 				case -211: // for pion minus
 					pionminus_NA49->Fill(xF, Pt);
-					pionminus_MIPP->Fill(Pz, Pt);
 					
 					break;
 
 				case 321:  // for kaon plus
 					Kplus_NA49->Fill(xF, Pt);
-					Kplus_MIPP->Fill(Pz, Pt);
 					break;
 
 				case -321: // for kaon minus
 					Kminus_NA49->Fill(xF, Pt);
-					Kminus_MIPP->Fill(Pz, Pt);
 					break;
 			}
 
@@ -699,3 +686,37 @@ void NuMIFlux::GetConstraints( bsim::Dk2Nu* fDk2Nu) {
 	
 }
 //___________________________________________________________________________
+
+
+void NuMIFlux::GetConstraints_ThickTarg(bsim::Dk2Nu* fDk2Nu){
+
+	int pdg_exit = fDk2Nu->tgtexit.tptype;
+
+	// Now get the thick target constraints
+	double Pz_exit = fDk2Nu->tgtexit.tpz;
+	double Pt_exit = std::sqrt(fDk2Nu->tgtexit.tpx * fDk2Nu->tgtexit.tpx + fDk2Nu->tgtexit.tpy * fDk2Nu->tgtexit.tpy);
+
+	if (Pz_exit < 0) return;
+
+	switch (pdg_exit) {
+			case 211:  // for pion plus
+				pionplus_MIPP->Fill(Pz_exit, Pt_exit);
+				break;
+
+			case -211: // for pion minus
+				pionminus_MIPP->Fill(Pz_exit, Pt_exit);
+				
+				break;
+
+			case 321:  // for kaon plus
+				Kplus_MIPP->Fill(Pz_exit, Pt_exit);
+				break;
+
+			case -321: // for kaon minus
+				Kminus_MIPP->Fill(Pz_exit, Pt_exit);
+				break;
+		}
+
+	return;
+
+}
