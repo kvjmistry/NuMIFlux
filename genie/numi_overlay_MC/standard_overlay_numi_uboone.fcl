@@ -1,0 +1,71 @@
+#include "services_microboone.fcl"
+
+#include "microboone_overlay.fcl"
+#include "swtrigger_microboone.fcl"
+
+process_name : DataOverlay      
+
+source : {
+  module_type : RootInput
+  maxEvents   : -1
+}
+
+services : {
+
+  TFileService: { fileName: "DataOverlayMixer_hist.root" }
+  TimeTracker:  {}
+  MemoryTracker:     { }     #default is one
+  RandomNumberGenerator: {}                     #ART native random number generator
+
+  @table::microboone_simulation_services
+  FileCatalogMetadata:  @local::art_file_catalog_overlay
+  message:      @local::standard_info
+}
+
+outputs: {
+  out: { module_type: RootOutput
+  	         fileName: "%ifb_%tc_overlaid.root"
+		 fastCloning: false
+		 compressionLevel: 1 
+		 dataTier: "detector-simulated"}
+}
+
+physics: {
+
+  producers : {
+    mixer: @local::microboone_overlay
+  }
+
+  analyzers: { }
+
+  filters : {
+    swtrigger: @local::microboone_swtrigger_mc_numi
+  }
+
+
+  mixer_path : [ mixer, swtrigger ]
+  trigger_paths : [ mixer_path ]
+
+  output : [ out ]
+  end_paths: [ output ]
+
+}
+
+services.PmtGainService.PmtGainProvider.UseDB:               true
+
+physics.producers.mixer.RawDigitDataModuleLabel: "daq"
+physics.producers.mixer.RawDigitMCModuleLabel:   "zeroedoutchannels" # after masking out the signal in the bad channels
+physics.producers.mixer.OpDetDataModuleLabel:    "pmtreadout"
+physics.producers.mixer.OpDetMCModuleLabel:      "pmtreadoutnonoise"
+physics.producers.mixer.TriggerDataModuleLabel:  "daq"
+physics.producers.mixer.CRTMCModuleLabel:       "maskedcrthitsim"   # after masking out the CRT panels unavailable in the input data file
+physics.producers.mixer.CRTDataModuleLabel:     "merger"
+physics.producers.mixer.TriggerMCModuleLabel:  "triggersim"
+
+physics.filters.swtrigger.OpDataModule: "mixer"
+physics.filters.swtrigger.DAQHeaderModule: "mixer"
+
+services.DetectorClocksService.InheritClockConfig: false
+
+#make smaller file name length
+outputs.out.fileName: "%ifb_mix_numi.root"

@@ -1,26 +1,50 @@
-
-# Production fcl chain
+# Production fcl chain NuMI MC full
 prodgenie_numi_nu_cosmic_uboone_dk2nu.fcl
+wirecell_g4_uboone.fcl
+wirecell_detsim_numi_uboone.fcl
+reco_uboone_mcc9_8_driver_stage1.fcl
+standard_larcv_uboone_mctruth_prod.fcl
+standard_larcv_uboone_mc2d_prod.fcl
+run_celltreeub_mc_prod.fcl
+reco_uboone_mcc9_8_driver_stage2_numi_fullMC.fcl
+
+# Slimmed fcl chain for MC NuMI
+wirecell_g4_uboone.fcl
+wirecell_detsim_numi_uboone.fcl
+reco_uboone_mcc9_8_driver_stage1.fcl
+reco_uboone_mcc9_8_driver_stage2_numi_fullMC.fcl
+
+# Overlay
+standard_overlay_gen_griddriver.fcl
 
 wirecell_g4_uboone.fcl
 
-#wirecell_detsim_uboone.fcl
 wirecell_detsim_numi_uboone.fcl
 
-reco_uboone_mcc9_8_driver_stage1.fcl
-
+standard_overlay_uboone.fcl
+reco_uboone_mcc9_8_driver_overlay_stage1a.fcl
+reco_uboone_mcc9_8_driver_overlay_stage1b.fcl
 standard_larcv_uboone_mctruth_prod.fcl
-
+reco_uboone_mcc9_8_driver_overlay_stage1c.fcl
+run_celltreeub_overlay_prod.fcl
 standard_larcv_uboone_mc2d_prod.fcl
 
-run_celltreeub_mc_prod.fcl
+reco_uboone_mcc9_8_driver_overlay_stage2.fcl
 
-#reco_uboone_mcc9_8_driver_stage2_fullMC.fcl
-reco_uboone_mcc9_8_driver_stage2_numi_fullMC.fcl
 
-# Slimmed fcl chain
-wirecell_g4_uboone.fcl
-wirecell_detsim_numi_uboone.fcl
-reco_uboone_mcc9_8_driver_stage1.fcl
-reco_uboone_mcc9_8_driver_stage2_numi_fullMC.fcl
+# Details of pulling from pawels fcl file branch
+ fcl/detsim/standard_overlay_numi_uboone.fcl                          |  71 ++++++++++++++++++++++++++++++++++++++++++++
+ fcl/detsim/wirecell_detsim_numi_uboone.fcl                           |   6 ++--
+ fcl/detsim/wirecell_detsim_overlay_numi_uboone.fcl                   | 168 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ fcl/filter/filter_data_optfilter_ext_numi.fcl                        | 106 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ fcl/filter/filter_data_optfilter_numi.fcl                            | 106 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ fcl/gen/genie/standard_overlay_gen_numi_driver.fcl                   |  65 ++++++++++++++++++++++++++++++++++++++++
+ fcl/gen/genie/standard_overlay_gen_numi_griddriver.fcl               |  68 ++++++++++++++++++++++++++++++++++++++++++
+ fcl/reco/MCC9/reco_uboone_data_mcc9_8.fcl                            |   5 ++++
+ fcl/reco/MCC9/reco_uboone_data_mcc9_8_driver_stage2_beamOff_numi.fcl |   4 +++
+ fcl/reco/MCC9/reco_uboone_data_mcc9_8_driver_stage2_beamOn_numi.fcl  |   4 +++
+ fcl/reco/MCC9/reco_uboone_mcc9_8.fcl                                 |   4 +++
+ fcl/reco/MCC9/reco_uboone_mcc9_8_driver_overlay_numi_stage1c.fcl     |  54 ++++++++++++++++++++++++++++++++++
+ fcl/reco/MCC9/reco_uboone_mcc9_8_driver_overlay_numi_stage2.fcl      |  41 ++++++++++++++++++++++++++
+ fcl/reco/MCC9/reco_uboone_mcc9_8_driver_stage2_numi_fullMC.fcl       |   4 +++
 

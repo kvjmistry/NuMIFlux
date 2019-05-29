@@ -1,0 +1,54 @@
+#include "mchitmodules.fcl"
+#include "services_microboone.fcl"
+#include "reco_uboone_mcc8.fcl"
+#include "mctrutht0matching.fcl"
+#include "reco_uboone_data_mcc9_8_driver_common.fcl"
+
+process_name: OverlayRecoStage1c
+
+services.TFileService.fileName: "reco_stage_1c_hist.root"
+services.DetectorClocksService.TrigModuleName: "daq"  # note that the clock time needed for the flash proper timing 
+services.DetectorPropertiesService.NumberTimeSamples:        6400
+services.DetectorPropertiesService.ReadOutWindowSize:        6400
+services.DetectorClocksService.InheritClockConfig:           false
+services.DetectorClocksService.TriggerOffsetTPC:             -0.400e3
+services.FileCatalogMetadata.fileType: "overlay"
+
+physics.filters.opfiltercommon: @local::physics.filters.opfiltercommonextnumi
+
+physics.producers.mchitfinder:  @local::standard_mchitfinder
+
+physics.reco: [ opfiltercommon ]
+physics.trigger_paths: [ reco ]
+physics.ana:                    [ @sequence::microboone_dqm_ana_stage1 ]
+physics.end_paths:              [ ana, stream1 ]
+source.inputCommands:           ["keep *_*_*_*" ]
+outputs.out1.fileName: "%ifb_%tc_reco1c.root"
+outputs.out1.dataTier: "reconstructed-2d"
+
+#physics.producers.wcNoiseFilter.DigitModuleLabel: "mixer"
+physics.producers.saturation.LGProducer: "mixer"
+physics.producers.saturation.HGProducer: "mixer"
+physics.producers.saturation.HGProducerCosmic: "pmtreadout"
+
+outputs.out1.outputCommands: [ "keep *_*_*_*",
+                               #"drop sim::SimChannels_*_*_*",
+                               #"drop sim::SimEnergyDeposits_*_*_*",
+                               "drop raw::RawDigits_*_*_*",
+                               "drop optdata::ChannelDataGroup_*_*_*" ]
+
+#temporary since new RawDigits are baseline corrected
+services.DetPedestalService.DetPedestalRetrievalAlg.UseDB:           false
+services.DetPedestalService.DetPedestalRetrievalAlg.DefaultCollMean: 0
+services.DetPedestalService.DetPedestalRetrievalAlg.DefaultIndMean:  0
+
+microboone_tfile_metadata:
+{
+    JSONFileName:          "reco_stage_1_hist.root.json"
+    GenerateTFileMetadata: true
+    dataTier:              "root-tuple"
+    fileFormat:            "root"
+}
+
+#reduce file name length
+outputs.out1.fileName: "%ifb_r1c.root"

@@ -1,0 +1,47 @@
+#include "mchitmodules.fcl"
+#include "mctrutht0matching.fcl"
+#include "reco_uboone_data_mcc9_8_driver_common.fcl"
+
+process_name: OverlayRecoStage2
+
+services.DetectorClocksService.InheritClockConfig:  false
+services.TFileService.fileName: "reco_stage_2_hist.root"
+services.FileCatalogMetadata.fileType: "overlay"
+
+physics.producers.trajcluster.TrajClusterAlg.MatchTruth: [ -1, -1, -1, -1 ]
+physics.producers.trajcluster.DoRawDigitAssns: false
+
+physics.producers.trajclusterTruthMatch: @local::standard_mcparticlehitmatching
+physics.producers.trajclusterTruthMatch.OverrideRealData: true
+physics.producers.trajclusterTruthMatch.HitParticleAssociations:                    @local::IndirectHitParticleAssnsTool
+physics.producers.trajclusterTruthMatch.HitParticleAssociations.HitPartAssnsLabel:  "gaushitTruthMatch"
+physics.producers.trajclusterTruthMatch.HitParticleAssociations.HitModuleLabel:     "trajcluster"
+
+physics.reco:                   [ @sequence::microboone_reco_data_stage2,trajclusterTruthMatch ]
+physics.ana:                    [ ]
+physics.trigger_paths:          [ reco ]
+physics.end_paths:              [ stream1 ]
+outputs.out1.fileName:          "%ifb_%tc_reco2_numi.root"
+outputs.out1.dataTier:          "reconstructed"
+outputs.out1.outputCommands:    [ "keep *_*_*_*",
+                                  "drop *_*_pandoraAllOutcomesTrack_*",
+                                  "drop *_*_pandoraAllOutcomesShower_*" ]
+source.inputCommands:           ["keep *_*_*_*", "drop *_*_*_Data*RecoStage2" ]
+
+microboone_tfile_metadata:
+{
+  JSONFileName:          ["reco_stage_2_hist.root.json", "Pandora_Events.pndr.json"]
+  GenerateTFileMetadata: [true, true]
+  dataTier:              ["root-tuple", "pandora_debug"]
+  fileFormat:            ["root", "pndr"]
+}
+
+physics.producers.pandoraCrtHitMatch.data_label_CRThit: "mixer"
+physics.producers.crttzero.data_label:                  "mixer"
+
+# in bnb gen: 3125. + 1600
+# in bnb reco: 3.57 -- 5.25 
+# offsets       445 -- 525
+# in numi gen: 4687.5 + 9600
+physics.producers.pandora.SliceIdTool.BeamWindowStartTime: 5.1325
+physics.producers.pandora.SliceIdTool.BeamWindowEndTime:   14.8125
