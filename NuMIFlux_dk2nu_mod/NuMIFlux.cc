@@ -155,8 +155,10 @@ void NuMIFlux::CalculateFlux() {
 		TString genieXsecFileName = genieXsecPath;
 		genieXsecFileName += "/xsec_graphs.root";
 		TFile *genieXsecFile = new TFile(genieXsecFileName,"READ");
-		genieXsecFile->cd("nu_mu_Ar40");
-		genieXsecNumuCC = (TGraph *) gDirectory->Get("tot_cc");
+		genieXsecNumuCC    = (TGraph *) genieXsecFile->Get("nu_mu_Ar40/tot_cc");
+		genieXsecNumubarCC = (TGraph *) genieXsecFile->Get("nu_mu_bar_Ar40/tot_cc");
+		genieXsecNueCC     = (TGraph *) genieXsecFile->Get("nu_e_Ar40/tot_cc");
+		genieXsecNuebarCC  = (TGraph *) genieXsecFile->Get("nu_e_bar_Ar40/tot_cc");
 		genieXsecFile->Close();
 
 		// TSpline3* genieXsecSplineNumuCC = new TSpline3("genieXsecSplineNumuCC", genieXsecNumuCC, "", 0,6);
@@ -166,7 +168,23 @@ void NuMIFlux::CalculateFlux() {
 			value = numuFluxHisto->GetBinContent(i);
 			value *= genieXsecNumuCC->Eval(numuFluxHisto->GetBinCenter(i)); // Eval implies linear interpolation
 			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
-			numuCCHisto->SetBinContent(i,value);
+			numuCCHisto->SetBinContent(i, value);
+
+			value = anumuFluxHisto->GetBinContent(i);
+			value *= genieXsecNumubarCC->Eval(anumuFluxHisto->GetBinCenter(i)); // Eval implies linear interpolation
+			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
+			anumuCCHisto->SetBinContent(i, value);
+
+			value = nueFluxHisto->GetBinContent(i);
+			value *= genieXsecNueCC->Eval(nueFluxHisto->GetBinCenter(i)); // Eval implies linear interpolation
+			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
+			nueCCHisto->SetBinContent(i, value);
+
+			value = anueFluxHisto->GetBinContent(i);
+			value *= genieXsecNuebarCC->Eval(anueFluxHisto->GetBinCenter(i)); // Eval implies linear interpolation
+			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
+			anueCCHisto->SetBinContent(i, value);
+
 		}
 	} // end if ( genieXsecPath )
 
@@ -196,7 +214,20 @@ void NuMIFlux::CalculateFlux() {
 
 	if ( genieXsecPath ) {
 		numuCCHisto     -> Write();
+		genieXsecNumuCC ->SetName("numu_tot_cc");
 		genieXsecNumuCC -> Write();
+
+		anumuCCHisto       -> Write();
+		genieXsecNumubarCC ->SetName("anumu_tot_cc");
+		genieXsecNumubarCC -> Write();
+
+		nueCCHisto     -> Write();
+		genieXsecNueCC ->SetName("nue_tot_cc");
+		genieXsecNueCC -> Write();
+
+		anueCCHisto       -> Write();
+		genieXsecNuebarCC ->SetName("anue_tot_cc");
+		genieXsecNuebarCC -> Write();
 	}
 	f->Close();
 
