@@ -1,0 +1,26 @@
+
+# Production fcl chain
+prodgenie_numi_nu_cosmic_uboone_dk2nu.fcl
+
+wirecell_g4_uboone.fcl
+
+#wirecell_detsim_uboone.fcl
+wirecell_detsim_numi_uboone.fcl
+
+reco_uboone_mcc9_8_driver_stage1.fcl
+
+standard_larcv_uboone_mctruth_prod.fcl
+
+standard_larcv_uboone_mc2d_prod.fcl
+
+run_celltreeub_mc_prod.fcl
+
+#reco_uboone_mcc9_8_driver_stage2_fullMC.fcl
+reco_uboone_mcc9_8_driver_stage2_numi_fullMC.fcl
+
+# Slimmed fcl chain
+wirecell_g4_uboone.fcl
+wirecell_detsim_numi_uboone.fcl
+reco_uboone_mcc9_8_driver_stage1.fcl
+reco_uboone_mcc9_8_driver_stage2_numi_fullMC.fcl
+

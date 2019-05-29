@@ -71,25 +71,25 @@ void plot_parent_flux(TString mode) { // (mippon/mippoff, input, Product/noThinK
 	switch (return_mode(mode)){
 		case enumu:
 			std::cout << "\nUsing Numu Mode!\n" << std::endl;
-			Gethist_CV_AV = "numu/numu_CV_AV_TPC_rebin";      // CV Flux using the 5MeV bins for now 
+			Gethist_CV_AV = "numu/Detsmear/numu_CV_AV_TPC_5MeV_bin";      // CV Flux using the 5MeV bins for now 
 			mode_char = "numu";
 			break;
 
 		case enue:
 			std::cout << "\nUsing Nue Mode!\n" << std::endl;
-			Gethist_CV_AV = "nue/nue_CV_AV_TPC_rebin";
+			Gethist_CV_AV = "nue/Detsmear/nue_CV_AV_TPC_5MeV_bin";
 			mode_char = "nue";
 			break;
 
 		case enumubar:
 			std::cout << "\nUsing Numubar Mode!\n" << std::endl;
-			Gethist_CV_AV = "numubar/numubar_CV_AV_TPC_rebin";
+			Gethist_CV_AV = "numubar/Detsmear/numubar_CV_AV_TPC_5MeV_bin";
 			mode_char = "numubar";
 			break;
 
 		case enuebar:
 			std::cout << "\nUsing Nuebar Mode!\n" << std::endl;
-			Gethist_CV_AV = "nuebar/nuebar_CV_AV_TPC_rebin";
+			Gethist_CV_AV = "nuebar/Detsmear/nuebar_CV_AV_TPC_5MeV_bin";
 			mode_char = "nuebar";
 			break;
 
@@ -102,7 +102,7 @@ void plot_parent_flux(TString mode) { // (mippon/mippoff, input, Product/noThinK
 	TLegend* lFlux = new TLegend(0.7, 0.45, 0.9, 0.9);
 
 	// File in 
-	boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/PPFX/uboone/parent/output.root"); if (boolfile == false) gSystem->Exit(0);
+	boolfile  = GetFile(f,"/uboone/app/users/kmistry/MCC9_uboonecode_v08_00_00_13a/srcs/numi_validation/files/output_uboone.root"); if (boolfile == false) gSystem->Exit(0);
 	// boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/g4numi/rm_KMinus_Capture/output_wDAR.root"); if (boolfile == false) gSystem->Exit(0); // turn off K- capture at rest
 	
 	// Get POT
