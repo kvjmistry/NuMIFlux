@@ -1,16 +1,16 @@
 source /nusoft/app/externals/setup
-source /cvmfs/uboone.opensciencegrid.org/products/setup_uboone.sh
-setup dk2nudata v01_06_01b -q e17:prof
+#source /cvmfs/uboone.opensciencegrid.org/products/setup_uboone.sh
+#setup dk2nudata v01_06_01b -q e17:prof
 
-if(env | grep -q ^ROOT)
-then 
-  echo "ROOT has already been setup."
-  echo "If the version is not correct, this may cause errors."
-  echo "If this occurs, try starting a fresh terminal session."
-else
-  setup root   v5_34_18a   -q e5:debug:nu
+#if(env | grep -q ^ROOT)
+#then 
+#  echo "ROOT has already been setup."
+#  echo "If the version is not correct, this may cause errors."
+#  echo "If this occurs, try starting a fresh terminal session."
+#else
+#  setup root   v5_34_18a   -q e5:debug:nu
   #setup root   v5_34_32   -q e9:nu:prof
-fi
+#fi
 
 
 if(env | grep -q ^GENIEXSECPATH)

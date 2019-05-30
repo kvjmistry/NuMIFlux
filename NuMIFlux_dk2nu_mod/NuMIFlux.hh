@@ -75,8 +75,8 @@ public :
   TFile* f = new TFile("NuMIFlux.root", "RECREATE");
 
 
-  NuMIFlux(string pattern="/pnfs/uboone/persistent/uboonebeam/numi_dk2nu_zero_threshold/FHC/g4numiv6_minervame_me000z200i_*.root");
-  // NuMIFlux(string pattern="/pnfs/uboone/persistent/uboonebeam/numi_dk2nu_zero_threshold/FHC/g4numiv6_minervame_me000z200i_120_0000.root");
+  //NuMIFlux(string pattern="/pnfs/uboone/persistent/uboonebeam/numi_dk2nu_zero_threshold/FHC/g4numiv6_minervame_me000z200i_*.root");
+   NuMIFlux(string pattern="/pnfs/uboone/persistent/uboonebeam/numi_dk2nu_zero_threshold/FHC/g4numiv6_minervame_me000z200i_120_0000.root");
 
   virtual ~NuMIFlux();
 

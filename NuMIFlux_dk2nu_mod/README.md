@@ -11,10 +11,10 @@ Krishan: Updated scripts to use the dk2nu file format as an input as opposed to 
 ## First Usage
 
 From the MicroBooNE gpvm machines:
+Make sure you have sourced the setup script to set up the general version of uboonecode.
+This is so that root has been setup
 
 ```
-source SetupNuMIFlux.sh
-
 root -l compileNuMIFlux.C
 
 python RunNuMIFlux.py
@@ -23,14 +23,7 @@ python RunNuMIFlux.py
 
 ## General Instructions
 
-Setup the environment with:
-
-```
-source SetupNuMIFlux.sh
-
-```
-
-Then to run   
+To run   
 ```
 python RunNuMIFlux.py
 
