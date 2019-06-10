@@ -36,7 +36,8 @@ int main(int argc, char** argv) {
 	InputTag  evtwght_tag { "eventweight" };
 
 	// labels = {"ms_PPFX","Total"};
-	labels = {"PPFXMaster"};
+	//labels = {"PPFXMaster"};
+	labels = {"PPFXMIPPKaon","PPFXMIPPPion","PPFXOther","PPFXTargAtten","PPFXThinKaon","PPFXThinMeson","PPFXThinNeutron","PPFXThinNucA","PPFXThinNuc","PPFXThinPion","PPFXTotAbsorp","PPFXMaster"};
 
 	// Loop over input arguments
 	for (int i = 1; i < argc; i++) {

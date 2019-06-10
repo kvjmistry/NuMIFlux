@@ -32,7 +32,7 @@ source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setup
 source /cvmfs/uboone.opensciencegrid.org/products/setup_uboone.sh
 source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setups.sh
 echo "setup uboonecode v07_08_00 -q e17:prof"
-setup uboonecode v07_08_00 -q e17:prof
+setup uboonecode v08_00_00_14 -q e17:prof
 setup ifdhc #v2_2_3
 export IFDH_GRIDFTP_EXTRA="-st 10" #set ifdh cp stall timeout to 10 sec
 export IFDH_CP_MAXRETRIES=5

@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+
+<!-- Author: Joseph Zennamo, UChicago, jzennamo@uchicago.edu, Sep. 2017 -->
+<!-- JZ Updated Jan. 2018; Now uses MCC8-backwards compatibility mode -->
+<!--This uboone version includes the bugfix to unphysical muon decays -->
+<!-- The windown tilt is added back in and just running the masterweight to save computing time-->
+
+<!-- Production Project -->
+<!DOCTYPE project [
+<!ENTITY relreco "v07_08_00">
+<!ENTITY file_type "mc">
+<!ENTITY run_type "physics">
+
+<!-- change your SAMPLE_NAME-->
+<!ENTITY name "nova_dk2nu_beamline">
+<!ENTITY prod_mode "numi">
+
+<!-- change your USER_NAME -->
+<!ENTITY user_name "kmistry">
+<!ENTITY n_jobs "984">
+<!ENTITY unisim_run "Run0018">
+<!ENTITY type "fhc">
+
+
+<!-- change your PROJECT_FOLDER_NAME -->
+<!ENTITY proj_name "PPFX_uBooNE_BugFix_Slim_withTilt">
+]>
+
+<job>
+<project name="&unisim_run;_uboone_&type;">
+
+  <!-- Project size -->
+  <numevents>100000000</numevents>
+  
+ <!-- Operating System -->
+  <os>SL6</os>
+
+  <!-- Batch resources -->
+  <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource><!--DEDICATED,OPPORTUNISTIC,OFFSITE-->
+  
+  <!-- Project Version -->
+  <filetype>&file_type;</filetype>
+  <runtype>&run_type;</runtype>
+  <version>dk2nu</version>
+
+  <!-- Larsoft information -->
+  <larsoft>
+    <tag>&relreco;</tag>
+    <qual>e17:prof</qual>
+    <local>/pnfs/uboone/resilient/users/kmistry/tars/PPFX_uboone_bugfix_slim_withtilt.tar</local>
+  </larsoft>
+  
+  <check>0</check>
+  <copy>0</copy>
+
+  <!-- Project stages -->
+
+  <stage name="val">
+    <fcl>/pnfs/uboone/persistent/users/kmistry/PPFX/fluxreader_uboone.fcl</fcl>
+    <fcl>/pnfs/uboone/persistent/users/kmistry/PPFX/ppfx_uboone_slim.fcl</fcl>
+    <outdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&proj_name;_&unisim_run;</outdir>
+    <logdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&proj_name;_&unisim_run;</logdir>
+    <bookdir>/uboone/data/users/&user_name;/PPFX/book/&relreco;/&name;/&proj_name;_&unisim_run;</bookdir>
+    <workdir>/pnfs/uboone/resilient/users/&user_name;/PPFX/&relreco;/&name;/&proj_name;_&unisim_run;</workdir>
+    <inputlist>/pnfs/uboone/persistent/users/kmistry/PPFX/beamline/novafilelist_&unisim_run;.txt</inputlist>
+    <maxfilesperjob>1</maxfilesperjob>
+    <numjobs>&n_jobs;</numjobs>
+    <!--<memory>4000</memory>-->
+    <jobsub>--expected-lifetime=10h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
+    <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
+    <!-- schema>root</schema> -->
+  </stage>  
+
+</project>
+
+
+</job>
