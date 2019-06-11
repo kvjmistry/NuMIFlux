@@ -6,7 +6,7 @@
 
  Lots of this code has been mutilated, and so needs a big clear out of old code.
  Nevertheless, the code still runs, and you can execute it with the commmand:
- root -l '/uboone/app/users/kmistry/PPFX/numi-validation/scripts/plot_uboone_flux.C("output.root", "nue")'
+ root -l '/uboone/app/users/kmistry/PPFX/numi-validation/scripts/plot_uboone_flux.C("nue")'
  where output.root is a file that contains the 1d ppfx weighted verison of the flux. 
 
  * 
@@ -18,22 +18,32 @@
 
 // ----------------------------------------------------------------------------
 // Main
-void plot_uboone_flux(TString inputfile, const char* mode) { // (input, numu/nue)
+void plot_uboone_flux(const char* mode) { // (input, numu/nue)
 	gStyle->SetOptStat(0); // say no to stats box
 	bool overwrite_errors{false};
 	// bool overwrite_errors{true};
 
 	bool unweighted{false};
+	bool boolfile;
 
-	std::vector<std::string> inputmode = loopdir(inputfile, mode); // Grab the names of the input reweighters
-	inputmode.clear();// Overwriting for now until soreted out what input modes we have
-	inputmode.push_back("PPFXMaster");
+	const char* mode_title;
 
+	if (strncmp("numu", mode, 4) == 0)		mode_title = "#nu_{#mu}";
+	if (strncmp("nue", mode, 3) == 0)		mode_title = "#nu_{e}";
+	if (strncmp("numubar", mode, 7) == 0)	mode_title = "#bar{#nu_{#mu}}";
+	if (strncmp("nuebar", mode, 6) == 0)	mode_title = "#bar{#nu_{e}}";
+
+	//std::vector<std::string> inputmode = loopdir(inputfile, mode); // Grab the names of the input reweighters
+	//inputmode.clear();// Overwriting for now until soreted out what input modes we have
+	//inputmode.push_back("PPFXMaster");
+	std::vector<std::string> inputmode = {"PPFXMIPPKaon","PPFXMIPPPion","PPFXOther","PPFXTargAtten","PPFXThinKaon","PPFXThinMeson","PPFXThinNeutron","PPFXThinNucA","PPFXThinNuc","PPFXThinPion","PPFXTotAbsorp","PPFXMaster"};
+	
 	// Pre declare variables
 	TString g_simp_names;
 	TH1D *hCV_Flux, *hUW_Flux, *h_g_simp ;
 	TFile *f_gsimple;
-	TFile* f1 = TFile::Open(inputfile);
+	TFile* f1;
+	boolfile  = GetFile(f1 , "/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root"); if (boolfile == false) gSystem->Exit(0);
 
 	// Select neutrino type to run with 
 	switch (return_mode(mode)){
@@ -83,16 +93,11 @@ void plot_uboone_flux(TString inputfile, const char* mode) { // (input, numu/nue
 	// Pretty
 	hCV_Flux->SetLineColor(kRed+1);
 	hCV_Flux->SetLineWidth(2);
-
-	// TO DO: Put this into a function
-	if (strncmp("numu", mode, 4) == 0)		hCV_Flux->SetTitle("#nu_{#mu}; E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
-	if (strncmp("nue", mode, 3) == 0)		hCV_Flux->SetTitle("#nu_{e}; E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
-	if (strncmp("numubar", mode, 7) == 0)	hCV_Flux->SetTitle("#bar{#nu_{#mu}}; E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
-	if (strncmp("nuebar", mode, 6) == 0)	hCV_Flux->SetTitle("#bar{#nu_{e}}; E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
+	hCV_Flux->SetTitle(Form("%s; E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}", mode_title));
 	hCV_Flux->Draw("hist,same");
 		
 	// --------------------- Gsimple/Flugg ------------------------- //
-	bool boolfile  = GetFile(f_gsimple , "/uboone/data/users/kmistry/work/PPFX/uboone/NuMIFlux_update_morebins.root"); if (boolfile == false) gSystem->Exit(0);
+	boolfile  = GetFile(f_gsimple , "/uboone/data/users/kmistry/work/PPFX/uboone/NuMIFlux_update_morebins.root"); if (boolfile == false) gSystem->Exit(0);
 	boolhist = GetHist(f_gsimple, h_g_simp, g_simp_names); if (boolhist == false) gSystem->Exit(0);
 	// Normalise(h_g_simp);
 	h_g_simp->SetLineWidth(2);
@@ -262,17 +267,14 @@ void plot_uboone_flux(TString inputfile, const char* mode) { // (input, numu/nue
 		if (overwrite_errors == false) legDraw(lfrac, herr[l], inputmode[l], mode);
 		
 		herr[l]->GetYaxis()->SetRangeUser(0,0.5);
-		if (strncmp("numu", mode, 4) == 0)		herr[l]->SetTitle("#nu_{#mu}; Energy [GeV];Fractional Uncertainty");
-		if (strncmp("nue", mode, 3) == 0)		herr[l]->SetTitle("#nu_{e}; Energy [GeV];Fractional Uncertainty");
-		if (strncmp("numubar", mode, 7) == 0)	herr[l]->SetTitle("#bar{#nu_{#mu}}; Energy [GeV];Fractional Uncertainty");
-		if (strncmp("nuebar", mode, 6) == 0)	herr[l]->SetTitle("#bar{#nu_{e}}; Energy [GeV];Fractional Uncertainty");
+		herr[l]->SetTitle(Form("%s; Energy [GeV];Fractional Uncertainty", mode_title));
 		// herr[l]->GetYaxis()->SetRangeUser(0,1.75);
 		
 	}
 
 
 	// Draw the legend
-	// lfrac->Draw();
+	lfrac->Draw();
 
 	// ------------------------------------------------------------------------------------------------------------
 	// Override the errors to use Leos method
@@ -289,10 +291,7 @@ void plot_uboone_flux(TString inputfile, const char* mode) { // (input, numu/nue
 			herr[l]->SetLineColor(kBlack);
 			herr[l]->SetLineWidth(2);
 			// lfrac->AddEntry(herr[l], "PPFXMaster", "l");
-			if (strncmp("numu", mode, 4) == 0)		herr[l]->SetTitle("#nu_{#mu}; Energy [GeV];Fractional Uncertainty");
-			if (strncmp("nue", mode, 3) == 0)		herr[l]->SetTitle("#nu_{e}; Energy [GeV];Fractional Uncertainty");
-			if (strncmp("numubar", mode, 7) == 0)	herr[l]->SetTitle("#bar{#nu_{#mu}}; Energy [GeV];Fractional Uncertainty");
-			if (strncmp("nuebar", mode, 6) == 0)	herr[l]->SetTitle("#bar{#nu_{e}}; Energy [GeV];Fractional Uncertainty");
+			herr[l]->SetTitle(Form("%s; Energy [GeV];Fractional Uncertainty", mode_title));
 			herr[l]->Draw("hist");
 			// lfrac->Draw();
 		}
@@ -352,23 +351,20 @@ void plot_uboone_flux(TString inputfile, const char* mode) { // (input, numu/nue
 	// Draw the CV in 2D
 	TCanvas* c_CV2d= new TCanvas();
 	c_CV2d->cd();
-	if (strncmp("numu", mode, 4) == 0)		hCV2d->SetTitle("#nu_{#mu} CV 2D; Energy [GeV]; Theta [deg] ");
-	if (strncmp("nue", mode, 3) == 0)		hCV2d->SetTitle("#nu_{e} CV 2D; Energy [GeV]; Theta [deg] ");
-	if (strncmp("numubar", mode, 7) == 0)	hCV2d->SetTitle("#bar{#nu_{#mu}} CV 2D; Energy [GeV]; Theta [deg] ");
-	if (strncmp("nuebar", mode, 6) == 0)	hCV2d->SetTitle("#bar{#nu_{e}} CV 2D; Energy [GeV]; Theta [deg] ");
+	hCV2d->SetTitle(Form("%s CV 2D; Energy [GeV]; Theta [deg] ", mode_title));
 	gPad->SetLogz();
 	gPad->Update();
 	hCV2d->Draw("colz");
 
 	//------------------------------
 	// 4D Covariance matrix	
-	cov4d  = new TH2D(Form("PPFXMaster_cov_4d"), ";Bin i; Bin j", nBinsEnu*nBinsTh, 0, nBinsEnu*nBinsTh , nBinsEnu*nBinsTh, 0, nBinsEnu*nBinsTh); // Bin i  Bin j
+	cov4d  = new TH2D(Form("%s_cov_4d", "PPFXMaster"), ";Bin i; Bin j", nBinsEnu*nBinsTh, 0, nBinsEnu*nBinsTh , nBinsEnu*nBinsTh, 0, nBinsEnu*nBinsTh); // Bin i  Bin j
 
 	// Loop over universes
 	for (int k=0; k < nuni; k++) {
 		
 		char name[500];
-		snprintf(name, 500,"%s/Multisims/%s_PPFXMaster_Uni_%i_AV_TPC_2D" ,mode, mode, k); // Get uni i
+		snprintf(name, 500,"%s/Multisims/%s_%s_Uni_%i_AV_TPC_2D" ,mode, mode, "PPFXMaster", k); // Get uni i
 		
 		// Check if sucessfully got histo
 		boolhist = GetHist(f1, hu, name); if (boolhist == false) gSystem->Exit(0);
@@ -388,11 +384,7 @@ void plot_uboone_flux(TString inputfile, const char* mode) { // (input, numu/nue
 	
 	TCanvas* c_cov= new TCanvas();
 	c_cov->cd();
-	if (strncmp("numu", mode, 4) == 0)		cov4d->SetTitle("#nu_{#mu} 4D Covariance Matrix ; Bin i; Bin j");
-	if (strncmp("nue", mode, 3) == 0)		cov4d->SetTitle("#nu_{e} 4D Covariance Matrix ; Bin i; Bin j");
-	if (strncmp("numubar", mode, 7) == 0)	cov4d->SetTitle("#bar{#nu_{#mu}} 4D Covariance Matrix ; Bin i; Bin j");
-	if (strncmp("nuebar", mode, 6) == 0)	cov4d->SetTitle("#bar{#nu_{e}} 4D Covariance Matrix ; Bin i; Bin j");
-
+	cov4d->SetTitle(Form("%s 4D Covariance Matrix ; Bin i; Bin j", mode_title));
 	gStyle->SetPalette(kDeepSea);
 	cov4d->Draw("colz");
 	gPad->SetLogz();
@@ -404,10 +396,7 @@ void plot_uboone_flux(TString inputfile, const char* mode) { // (input, numu/nue
 	c_corr4d->cd();
 	TH2D *hcorr4d = (TH2D*) cov4d->Clone("hCorr4d");
 	CalcCorrelation(hcorr4d, cov4d, nBinsEnu*nBinsTh );
-	if (strncmp("numu", mode, 4) == 0)		hcorr4d->SetTitle("#nu_{#mu} 4D Correlation Matrix ; Bin i; Bin j");
-	if (strncmp("nue", mode, 3) == 0)		hcorr4d->SetTitle("#nu_{e} 4D Correlation Matrix ; Bin i; Bin j");
-	if (strncmp("numubar", mode, 7) == 0)	hcorr4d->SetTitle("#bar{#nu_{#mu}} 4D Correlation Matrix ; Bin i; Bin j");
-	if (strncmp("nuebar", mode, 6) == 0)	hcorr4d->SetTitle("#bar{#nu_{e}} 4D Correlation Matrix ; Bin i; Bin j");
+	hcorr4d->SetTitle(Form("%s 4D Correlation Matrix ; Bin i; Bin j", mode_title));
 	hcorr4d->Draw("colz");
 	// gPad->SetLogz();
 	// gPad->Update();
@@ -417,10 +406,7 @@ void plot_uboone_flux(TString inputfile, const char* mode) { // (input, numu/nue
 	c_fraccov4d->cd();
 	TH2D *hfraccov4d = (TH2D*) cov4d->Clone("hfraccov4d");
 	CalcFracCovariance(hCV_unwrap, hfraccov4d, nBinsEnu*nBinsTh );
-	if (strncmp("numu", mode, 4) == 0)		hfraccov4d->SetTitle("#nu_{#mu} 4D Fractional Covariance Matrix ; Bin i; Bin j");
-	if (strncmp("nue", mode, 3) == 0)		hfraccov4d->SetTitle("#nu_{e} 4D Fractional Covariance Matrix ; Bin i; Bin j");
-	if (strncmp("numubar", mode, 7) == 0)	hfraccov4d->SetTitle("#bar{#nu_{#mu}} 4D Fractional Covariance Matrix ; Bin i; Bin j");
-	if (strncmp("nuebar", mode, 6) == 0)	hfraccov4d->SetTitle("#bar{#nu_{e}} 4D Fractional Covariance Matrix ; Bin i; Bin j");
+	hfraccov4d->SetTitle(Form("%s 4D Fractional Covariance Matrix ; Bin i; Bin j", mode_title));
 	hfraccov4d->Draw("colz");
 
 	//------------------------------
@@ -438,10 +424,7 @@ void plot_uboone_flux(TString inputfile, const char* mode) { // (input, numu/nue
 		}
 	}
 	// hbinidx->SetTitle("Bin Indexes; Energy [GeV]; Theta [deg]");
-	if (strncmp("numu", mode, 4) == 0)		hbinidx->SetTitle("#nu_{#mu} Bin Indexes Zoomed; Energy [GeV]; Theta [deg]");
-	if (strncmp("nue", mode, 3) == 0)		hbinidx->SetTitle("#nu_{e} Bin Indexes ; Energy [GeV]; Theta [deg]");
-	if (strncmp("numubar", mode, 7) == 0)	hbinidx->SetTitle("#bar{#nu_{#mu}} Bin Indexes Zoomed; Energy [GeV]; Theta [deg]");
-	if (strncmp("nuebar", mode, 6) == 0)	hbinidx->SetTitle("#bar{#nu_{e}} Bin Indexes ; Energy [GeV]; Theta [deg]");
+	hbinidx->SetTitle(Form("%s Bin Indexes Zoomed; Energy [GeV]; Theta [deg]", mode_title));
 	IncreaseLabelSize(hbinidx);
 	hbinidx->Draw("text00");
 
@@ -539,6 +522,7 @@ void plot_uboone_flux(TString inputfile, const char* mode) { // (input, numu/nue
 	// Redraw the plot with the new errors
 	c1->Update();
 	c_uw_v_w->Update();
+	c4->Update();
 	
 
 	// ++++++++++++++++++++++++++++++++++

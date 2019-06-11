@@ -503,10 +503,15 @@ void HPUncertainties_Leo(TFile* fIn, TH1D* &herror, std::string inputmode, const
 		hu = (TH1D*)key->ReadObj(); // get the histogram
 		i=vhuniv.size()-1;
 		
-		// Veto theta histograms
 		std::string huname = hu->GetName();
-		std::string thetaname = Form("Th_%s_PPFXMaster_Uni_%i_AV_TPC",mode , i);
-		if ( huname == thetaname ) continue;
+		// Find the label name 
+		if (huname.find(inputmode) != std::string::npos) {
+			// Veto theta and 2D histograms
+			std::string thetaname = Form("Th_%s_%s_Uni_%i_AV_TPC",mode, inputmode.c_str() , i);
+			if ( huname == thetaname ) continue;
+			if (huname.find("2D") != std::string::npos) continue;
+		}
+		else continue;
 		
 		vhuniv.push_back(hu);
 	}
