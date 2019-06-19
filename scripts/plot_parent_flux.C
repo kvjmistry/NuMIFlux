@@ -55,7 +55,7 @@ void SetColour(TH1D* hist, std::string parent, TLegend* leg){
 // Main
 void plot_parent_flux(TString mode) { // (mippon/mippoff, input, Product/noThinKaon etc. numu/nue)
 	gStyle->SetOptStat(0); // say no to stats box
-	
+
 	// Pre declare variables
 	const char *Gethist_CV_AV;
 	TFile *f;
@@ -102,7 +102,7 @@ void plot_parent_flux(TString mode) { // (mippon/mippoff, input, Product/noThinK
 	TLegend* lFlux = new TLegend(0.7, 0.45, 0.9, 0.9);
 
 	// File in 
-	boolfile  = GetFile(f,"/uboone/app/users/kmistry/MCC9_uboonecode_v08_00_00_13a/srcs/numi_validation/files/output_uboone.root"); if (boolfile == false) gSystem->Exit(0);
+	boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root"); if (boolfile == false) gSystem->Exit(0);
 	// boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/g4numi/rm_KMinus_Capture/output_wDAR.root"); if (boolfile == false) gSystem->Exit(0); // turn off K- capture at rest
 	
 	// Get POT
@@ -126,6 +126,9 @@ void plot_parent_flux(TString mode) { // (mippon/mippoff, input, Product/noThinK
 	if (mode == "nue")		h_ppfx_flux->SetTitle("#nu_{e}; Energy [GeV]; #nu / 6 #times 10^{20} POT / 25 MeV / cm^{2}");
 	if (mode == "numubar")	h_ppfx_flux->SetTitle("#bar{#nu_{#mu}}; Energy [GeV]; #nu / 6 #times 10^{20} POT / 25 MeV / cm^{2}");
 	if (mode == "nuebar")	h_ppfx_flux->SetTitle("#bar{#nu_{e}}; Energy [GeV]; #nu / 6 #times 10^{20} POT / 25 MeV / cm^{2}");
+	
+	if (mode == "nue" || mode == "numu") gStyle->SetTitleH(0.1);
+	else gStyle->SetTitleH(0.07);
 
 	lFlux->AddEntry(h_ppfx_flux, "Total Flux","l");
 	

@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+
+<!-- Production Project -->
+<!DOCTYPE project [
+<!ENTITY release "v08_00_00_14">
+<!ENTITY file_type "mc">
+<!ENTITY run_type "physics">
+<!ENTITY user "kmistry">
+<!ENTITY name "prodgenie_numi_uboone_overlay_fhc_mcc9">
+<!ENTITY tag "mcc9_v08_00_00_14">
+]>
+
+<job>
+
+<project name="&name;">
+
+  <!-- Project size -->
+  <numevents>10000</numevents>
+
+  <!-- Operating System -->
+  <os>SL6</os>
+
+  <!-- Batch resources -->
+  <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
+
+  <!-- Larsoft information -->
+  <larsoft>
+    <tag>&release;</tag>
+    <qual>e17:prof</qual>
+    <local>/pnfs/uboone/resilient/users/kmistry/tars/uboonecode_mcc9_v08_00_00_14.tar</local>
+  </larsoft>
+
+  <!-- Project stages -->
+
+  <stage name="overlay">
+    <fcl>standard_overlay_gen_numi_griddriver_fhc.fcl</fcl>
+    <fcl>wirecell_g4_uboone.fcl</fcl>
+    <fcl>wirecell_detsim_overlay_numi_uboone.fcl</fcl>
+    <fcl>standard_overlay_numi_uboone.fcl</fcl>
+    <fcl>reco_uboone_mcc9_8_driver_overlay_stage1a.fcl</fcl>
+    <fcl>reco_uboone_mcc9_8_driver_overlay_stage1b.fcl</fcl>
+    <fcl>reco_uboone_mcc9_8_driver_overlay_numi_stage1c.fcl</fcl>
+    <inputdef>prod_extunbiased_swizzle_inclusive_v3_goodruns_5e19sample_morethan40events</inputdef>
+    <datafiletypes>root,pndr</datafiletypes>
+    <outdir>/pnfs/uboone/scratch/users/&user;/MCC9/&name;/reco1</outdir>
+    <logdir>/pnfs/uboone/scratch/users/&user;/MCC9/&name;/reco1</logdir>
+    <workdir>/pnfs/uboone/scratch/users/&user;/work/MCC9/&name;/reco1</workdir>
+    <bookdir>/uboone/data/users/&user;/book/MCC9/&name;/reco1</bookdir>
+    <maxfilesperjob>1</maxfilesperjob>
+    <numjobs>200</numjobs>
+    <datatier>reconstructed</datatier>
+    <memory>4000</memory>
+    <jobsub>--expected-lifetime=36h -e IFDH_CP_UNLINK_ON_ERROR=1 </jobsub>
+    <jobsub_start>  --expected-lifetime=short</jobsub_start>
+  </stage>
+
+  <stage name="reco2">
+    <fcl>reco_uboone_mcc9_8_driver_overlay_numi_stage2.fcl</fcl>
+    <datafiletypes>root,pndr</datafiletypes>
+    <outdir>/pnfs/uboone/scratch/users/&user;/MCC9/&name;/reco2</outdir>
+    <logdir>/pnfs/uboone/scratch/users/&user;/MCC9/&name;/reco2</logdir>
+    <workdir>/pnfs/uboone/scratch/users/&user;/work/MCC9/&name;/reco2</workdir>
+    <bookdir>/uboone/data/users/&user;/book/MCC9/&name;/reco2</bookdir>
+    <maxfilesperjob>1</maxfilesperjob>
+    <numjobs>136</numjobs>
+    <datatier>reconstructed</datatier>
+    <memory>4000</memory>
+    <schema>root</schema>
+    <jobsub>--expected-lifetime=6h -e IFDH_CP_UNLINK_ON_ERROR=1 </jobsub>
+    <jobsub_start>  --expected-lifetime=short</jobsub_start>
+  </stage>
+
+  <stage name="mergeana">
+    <fcl>standard_ana_uboone_overlay.fcl</fcl>
+    <datafiletypes>root,pndr</datafiletypes>
+    <outdir>/pnfs/uboone/scratch/users/&user;/mcc9_numi_c/mergeana</outdir>
+    <logdir>/pnfs/uboone/scratch/users/&user;/mcc9_numi_c/mergeana</logdir>
+    <workdir>/pnfs/uboone/scratch/users/&user;/work/mcc9_numi_c/mergeana</workdir>
+    <bookdir>/uboone/data/users/&user;/book/mcc9_numi_c/mergeana</bookdir>
+    <maxfilesperjob>1</maxfilesperjob>
+    <numjobs>10</numjobs>
+    <anadatatier>root-tuple</anadatatier>
+    <memory>2000</memory>
+    <jobsub> -e IFDH_CP_UNLINK_ON_ERROR=1 </jobsub>
+    <jobsub_start>  --expected-lifetime=short</jobsub_start>
+  </stage>
+
+  <!-- file type -->
+  <filetype>&file_type;</filetype>
+
+  <!-- run type -->
+  <runtype>&run_type;</runtype>
+
+</project>
+
+
+</job>

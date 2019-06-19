@@ -4,10 +4,8 @@
  * Plots each individual weighting mode instead of a single one
  * does not plot the correlation matrix for each individual mode to speed up the time
 
- Lots of this code has been mutilated, and so needs a big clear out of old code.
- Nevertheless, the code still runs, and you can execute it with the commmand:
- root -l '/uboone/app/users/kmistry/PPFX/numi-validation/scripts/plot_uboone_flux.C("nue")'
- where output.root is a file that contains the 1d ppfx weighted verison of the flux. 
+ You can execute it with the commmand:
+ root -l 'plot_uboone_flux.C("nue")' 
 
  * 
  * A. Mastbaum <mastbaum@uchicago.edu> 2018/11
@@ -20,89 +18,44 @@
 // Main
 void plot_uboone_flux(const char* mode) { // (input, numu/nue)
 	gStyle->SetOptStat(0); // say no to stats box
+
+	// Declare variables
+	TH1D *hCV_Flux, *hUW_Flux;
+	TFile* f1;
 	bool overwrite_errors{false};
-	// bool overwrite_errors{true};
-
 	bool unweighted{false};
-	bool boolfile;
-
 	const char* mode_title;
 
+	// Load in the main file
+	bool boolfile  = GetFile(f1 , "/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root"); if (boolfile == false) gSystem->Exit(0);
+
+	// Create title characters from input
 	if (strncmp("numu", mode, 4) == 0)		mode_title = "#nu_{#mu}";
 	if (strncmp("nue", mode, 3) == 0)		mode_title = "#nu_{e}";
 	if (strncmp("numubar", mode, 7) == 0)	mode_title = "#bar{#nu_{#mu}}";
 	if (strncmp("nuebar", mode, 6) == 0)	mode_title = "#bar{#nu_{e}}";
 
-	//std::vector<std::string> inputmode = loopdir(inputfile, mode); // Grab the names of the input reweighters
-	//inputmode.clear();// Overwriting for now until soreted out what input modes we have
-	//inputmode.push_back("PPFXMaster");
+	// PPFX Weight Modes
 	std::vector<std::string> inputmode = {"PPFXMIPPKaon","PPFXMIPPPion","PPFXOther","PPFXTargAtten","PPFXThinKaon","PPFXThinMeson","PPFXThinNeutron","PPFXThinNucA","PPFXThinNuc","PPFXThinPion","PPFXTotAbsorp","PPFXMaster"};
-	
-	// Pre declare variables
-	TString g_simp_names;
-	TH1D *hCV_Flux, *hUW_Flux, *h_g_simp ;
-	TFile *f_gsimple;
-	TFile* f1;
-	boolfile  = GetFile(f1 , "/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root"); if (boolfile == false) gSystem->Exit(0);
 
-	// Select neutrino type to run with 
-	switch (return_mode(mode)){
-		case enumu:
-			std::cout << "\nUsing NuMu Mode!\n" << std::endl;
-			g_simp_names = "numuFluxHisto";									// G simple files
-			break;
-
-		case enue:
-			std::cout << "\nUsing Nue Mode!\n" << std::endl;
-			g_simp_names = "nueFluxHisto";
-			break;
-
-		case enumubar:
-			std::cout << "\nUsing NuMubar Mode!\n" << std::endl;
-			g_simp_names = "anumuFluxHisto";
-			break;
-
-		case enuebar:
-			std::cout << "\nUsing Nuebar Mode!\n" << std::endl;
-			g_simp_names = "anueFluxHisto";
-			break;
-
-	}
-	
 	// ------------------------------------------------------------------------------------------------------------
-	// CV Flux vs gsimple flux vs nova files flux
+	//                                                   CV Flux
 	// ------------------------------------------------------------------------------------------------------------
 	TCanvas* c1 = new TCanvas();
 	TLegend* lFlux = new TLegend(0.5, 0.65, 0.9, 0.9);
 
-	// --------------------- CV ------------------------- //
 	bool boolhist = GetHist(f1, hCV_Flux, Form("%s/Detsmear/%s_CV_AV_TPC", mode, mode)); if (boolhist == false) gSystem->Exit(0);
 	hCV_Flux->SetDirectory(0);
-
-	// Get the POT in the file
-	double fPOT = GetPOT(f1);
-	
-	// Normalise flux by bin width (gives a flux/E [GeV])
-	Normalise(hCV_Flux);
-
+	Normalise(hCV_Flux); 							// Normalise flux by bin width (gives a flux/E [GeV])
 	TH1D* horig = (TH1D*) hCV_Flux->Clone("horig"); // Clone for plotting so dont need to norm the ms histograms
 
-	// Scale
+	// Scale and pretty
+	double fPOT = GetPOT(f1); // POT
 	hCV_Flux->Scale( (6.0e20)/ (fPOT*1.0e4) );
-
-	// Pretty
 	hCV_Flux->SetLineColor(kRed+1);
 	hCV_Flux->SetLineWidth(2);
 	hCV_Flux->SetTitle(Form("%s; E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}", mode_title));
 	hCV_Flux->Draw("hist,same");
-		
-	// --------------------- Gsimple/Flugg ------------------------- //
-	boolfile  = GetFile(f_gsimple , "/uboone/data/users/kmistry/work/PPFX/uboone/NuMIFlux_update_morebins.root"); if (boolfile == false) gSystem->Exit(0);
-	boolhist = GetHist(f_gsimple, h_g_simp, g_simp_names); if (boolhist == false) gSystem->Exit(0);
-	// Normalise(h_g_simp);
-	h_g_simp->SetLineWidth(2);
-	//h_g_simp->Draw("hist, same");
-
 	gPad->SetLogy();
 	gPad->Update();
 	
@@ -112,11 +65,10 @@ void plot_uboone_flux(const char* mode) { // (input, numu/nue)
 	lFlux->SetFillStyle(0);
 	lFlux->SetTextFont(62); 
 	lFlux->AddEntry(hCV_Flux, "PPFX Flux","l");
-	//lFlux->AddEntry(h_g_simp, "gsimple Flux","l");
 	lFlux->Draw();
 	
 	// ------------------------------------------------------------------------------------------------------------
-	// Draw all fluxes on one plot
+	//                                          Draw all fluxes on one plot
 	// ------------------------------------------------------------------------------------------------------------
 	TCanvas* c_plotall = new TCanvas();
 	TLegend* l_plotall = new TLegend(0.8, 0.65, 0.95, 0.9);
@@ -134,7 +86,7 @@ void plot_uboone_flux(const char* mode) { // (input, numu/nue)
 	l_plotall->Draw();
 
 	// ------------------------------------------------------------------------------------------------------------
-	// Draw weighted flux vs unweighted flux
+	//                                     Draw weighted flux vs unweighted flux
 	// ------------------------------------------------------------------------------------------------------------
 	TCanvas* c_uw_v_w = new TCanvas();
 	TLegend* l_uw_v_w = new TLegend(0.6, 0.65, 0.75, 0.9);
@@ -143,9 +95,7 @@ void plot_uboone_flux(const char* mode) { // (input, numu/nue)
 	
 	// Check if sucessfully got histo
 	boolhist = GetHist(f1, hUW_Flux, Form("%s/Detsmear/%s_UW_AV_TPC", mode, mode )); if (boolhist == false) gSystem->Exit(0);
-	
-	// Normalise flux by bin width (gives a flux/E [GeV])
-	Normalise(hUW_Flux);
+	Normalise(hUW_Flux); // Normalise flux by bin width (gives a flux/E [GeV])
 
 	// 6e20 POT, 1e-4 for m2->cm2
 	hUW_Flux->Scale( (6.0e20)/ (fPOT*1.0e4));  
@@ -167,7 +117,7 @@ void plot_uboone_flux(const char* mode) { // (input, numu/nue)
 	l_uw_v_w->Draw();
 
 	// ------------------------------------------------------------------------------------------------------------
-	// Correlations, Covariance & uncertainties
+	//                                     Correlations, Covariance & uncertainties
 	// ------------------------------------------------------------------------------------------------------------
 	f1->cd();
 
@@ -249,15 +199,12 @@ void plot_uboone_flux(const char* mode) { // (input, numu/nue)
 		// +++++++++++++++++
 		c3->cd();
 		// Draw MasterWeight Cor plot only
-		if (inputmode.size() == 1) { // checks if long or short list
-		std::cout << "Drawing correlation plot" << std::endl;
-			cor[0]->SetTitle("Correlation Master Weight");
-			cor[0]->Draw("colz");
-		} 
-		else  {
-			// cor[11]->SetTitle("Correlation Master Weight");
-			// cor[11]->Draw("colz");
+		if (inputmode.at(l).find("PPFXMaster") != std::string::npos) {
+			std::cout << "Drawing correlation plot" << std::endl;
+			cor[l]->SetTitle("Correlation Master Weight");
+			cor[l]->Draw("colz");
 		}
+
 		gStyle->SetPalette(55); // kRainbow
 
 		// Plot fractional errors overlaid with official NOvA plot
@@ -270,36 +217,32 @@ void plot_uboone_flux(const char* mode) { // (input, numu/nue)
 		herr[l]->SetTitle(Form("%s; Energy [GeV];Fractional Uncertainty", mode_title));
 		// herr[l]->GetYaxis()->SetRangeUser(0,1.75);
 		
-	}
-
+	} // End loop over input labels
 
 	// Draw the legend
-	lfrac->Draw();
+	if (overwrite_errors == false) lfrac->Draw();
 
 	// ------------------------------------------------------------------------------------------------------------
-	// Override the errors to use Leos method
+	//                          Override the errors to use Leos method (mean instead of CV)
 	// ------------------------------------------------------------------------------------------------------------
 	// Decide if the errors need overwriting
 	if (overwrite_errors == true ){
 		c4->cd();
 		std::cout << "Overwriting the errors" << std::endl;
 		for (unsigned int l = 0; l < inputmode.size(); l++){
-			// herr[l]->Reset();
 			HPUncertainties_Leo(f1, herr[l], inputmode[l], mode);
-			// legDraw(lfrac, herr[l], prodmode, mipp, inputmode[l], mode);
-
+			legDraw(lfrac, herr[l], inputmode[l], mode);
 			herr[l]->SetLineColor(kBlack);
 			herr[l]->SetLineWidth(2);
-			// lfrac->AddEntry(herr[l], "PPFXMaster", "l");
 			herr[l]->SetTitle(Form("%s; Energy [GeV];Fractional Uncertainty", mode_title));
 			herr[l]->Draw("hist");
-			// lfrac->Draw();
+			lfrac->Draw();
 		}
 		c4->Update();
 	}
 
 	// ------------------------------------------------------------------------------------------------------------
-	// Make a plot with the uncertainties with errorbands
+	//                             Make a plot with the uncertainties with errorbands
 	// ------------------------------------------------------------------------------------------------------------
 	TCanvas* cband = new TCanvas();
 	cband->cd();
@@ -307,18 +250,8 @@ void plot_uboone_flux(const char* mode) { // (input, numu/nue)
 	DrawErrorBand(f1, mode, leg, "PPFXMaster"); // Plot for masterweight
 	leg->Draw();
 
-
-	double sigma{0}, stat{0}, sys{0};
 	// ------------------------------------------------------------------------------------------------------------
-	// Update the error to add in the beamline uncertainties
-	// ------------------------------------------------------------------------------------------------------------
-	// Choose one of these
-	// BeamlineUncertainties(herr, hCV_Flux, "file"); // likely to not be implemented anymore
-	// BeamlineUncertainties(herr, hCV_Flux, "stdev");
-	// BeamlineUncertainties(herr, hCV_Flux, "quad",mode);
-
-	// ------------------------------------------------------------------------------------------------------------
-	// Make a 4D Covariance matrix for re-weighing
+	//                                Make a 4D Covariance matrix for re-weighing
 	// ------------------------------------------------------------------------------------------------------------
 	// Call caclulate covzriance matrix function. For now write function here.
 	TH1D *hCV_unwrap, *hu_unwrap; 	// Flux hist for each universe
@@ -477,7 +410,7 @@ void plot_uboone_flux(const char* mode) { // (input, numu/nue)
 	// flat->Draw();
 
 	// ------------------------------------------------------------------------------------------------------------
-	// Make a plot of the fractional uncertainties from the 4d covariance matrix
+	//                   Make a plot of the fractional uncertainties from the 4d covariance matrix
 	// ------------------------------------------------------------------------------------------------------------
 	TCanvas *c_FracError4d = new TCanvas();
 	TH1D *hFracError4d = (TH1D*) hCV_unwrap->Clone("hFracError4d");
@@ -485,46 +418,15 @@ void plot_uboone_flux(const char* mode) { // (input, numu/nue)
 	// Function to caluclate the fractional uncertainties
 	CalcFractionalError(cov4d, hCV_unwrap, hFracError4d );
 	c_FracError4d->cd();
-	hFracError4d->Draw("hist");
+	hFracError4d->Draw("his");
 
-	// ------------------------------------------------------------------------------------------------------------
-	// Update the CV flux prediction to include stat+sys errors
-	// ------------------------------------------------------------------------------------------------------------
-	c1->cd();
 	
-
-	std::cout << "bins:\t" << hCV_Flux->GetNbinsX() << std::endl;
-
-	// Loop over the bins
-	for (int bin=1; bin<hCV_Flux->GetNbinsX()+1; bin++){
-		
-		// Get the bin error (stat)
-		stat = hCV_Flux->GetBinError(bin);
-
-		// Get the bin error (sys)
-		// sys = herr[11]->GetBinContent(bin);
-		sys = herr[0]->GetBinContent(bin);
-		sys = hCV_Flux->GetBinContent(bin) * sys; 
-
-		// add in quadrature
-		sigma =std::sqrt( stat*stat + sys*sys );
-
-		// std::cout << "stat:\t" << stat << "\t" << "sys:\t" <<sys << "\tsigma:\t"<< sigma<< "\tbin content:\t"<< hCV_Flux->GetBinContent(bin) <<  std::endl;
-
-		// Update the error on the plot
-		hCV_Flux->SetBinError(bin, sigma);
-	}
-
 	c4->Update();
 	cband->Update();
-	
-
-	// Redraw the plot with the new errors
-	c1->Update();
+	// c1->Update();
 	c_uw_v_w->Update();
 	c4->Update();
 	
-
 	// ++++++++++++++++++++++++++++++++++
 	// Save the plots as pdfs in the plots folder
 	// ++++++++++++++++++++++++++++++++++

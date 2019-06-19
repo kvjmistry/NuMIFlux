@@ -22,6 +22,30 @@ std::vector<std::string> loopdir(TString  inputfile, TString mode) {
 	return (inputmode);
 }
 // ------------------------------------------------------------------------------------------------------------
+// Function to increase to axes labels
+void IncreaseLabelSize(TH1D* h){
+
+	h->GetXaxis()->SetRangeUser(0,3.5);
+	h->GetXaxis()->SetLabelSize(0.05);
+	h->GetXaxis()->SetTitleSize(0.05);
+	h->GetYaxis()->SetLabelSize(0.05);
+	h->GetYaxis()->SetTitleSize(0.05);
+	gPad->SetLeftMargin(0.15);
+	gPad->SetBottomMargin(0.12);
+}
+void IncreaseLabelSize(TH2D* h){
+
+	h->GetXaxis()->SetRangeUser(0,3.5);
+	h->GetXaxis()->SetLabelSize(0.05);
+	h->GetXaxis()->SetTitleSize(0.05);
+	h->GetYaxis()->SetLabelSize(0.05);
+	h->GetYaxis()->SetTitleSize(0.05);
+	gPad->SetLeftMargin(0.15);
+	gPad->SetBottomMargin(0.2);
+	h->SetMarkerSize(1.8);
+	// gPad->SetGridx(); 
+}
+// ------------------------------------------------------------------------------------------------------------
 // function that makes a legend for multiple histograms and draws them to the canvas
 void legDraw(TLegend * &legend, TH1D *&hist, std::string inputmode, TString mode){
 	
@@ -132,6 +156,15 @@ e_mode return_mode(const char* mode){
 		if (strncmp("nue", mode, 3) == 0)     return enue;
 		if (strncmp("numubar", mode, 7) == 0) return enumubar;
 		if (strncmp("nuebar", mode, 6) == 0)  return enuebar;
+		else return enumu;
+
+}
+// Function to retun enum from mode label
+e_mode return_mode(TString mode){
+		if (mode == "numu")    return enumu;
+		if (mode == "nue")      return enue;
+		if (mode == "numubar") return enumubar;
+		if (mode == "nuebar")  return enuebar;
 		else return enumu;
 
 }
@@ -608,22 +641,25 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
 	bool boolhist = GetHist(f1, h_flux, Gethist_TPC); if (boolhist == false) gSystem->Exit(0);
 	h_flux->SetDirectory(0);
 	
+	// Rebon
+	h_flux->Rebin(2);
+	
 	// Normalise flux by bin width (gives a flux/E [GeV])
-	for (int i=1;i<h_flux->GetNbinsX()+1;i++) {
-		h_flux->SetBinContent(i, h_flux->GetBinContent(i)/h_flux->GetBinWidth(i));		
-	}
+	//for (int i=1;i<h_flux->GetNbinsX()+1;i++) {
+	//	h_flux->SetBinContent(i, h_flux->GetBinContent(i)/h_flux->GetBinWidth(i));		
+	//}
+	Normalise(h_flux);
 
 
 	// 6e20 POT, 50/1000 for 50 MeV from 1GeV, 1e-4 for m2->cm2
 	h_flux->Scale( (6.0e20)/ (fPOT*1.0e4) );  
 
-	h_flux->Rebin(5);
-	
+	IncreaseLabelSize(h_flux);	
 
 	if (mode == "numu"){
 		h_flux->SetLineColor(kRed+1);
 		h_flux->SetLineWidth(2);
-		h_flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / 25 MeV / cm^{2}");
+		h_flux->SetTitle(";Neutrino Energy [GeV];#nu / 6 #times 10^{20} POT / 10 MeV / cm^{2}");
 		leg->AddEntry(h_flux, "#nu_{#mu}","l");
 		h_flux->Draw("hist,same");
 	}
@@ -632,7 +668,7 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
 		h_flux->SetLineColor(kRed+1);
 		h_flux->SetLineWidth(2);
 		h_flux->SetLineStyle(2);
-		h_flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / 25 MeV / cm^{2}");
+		h_flux->SetTitle(";Neutrino Energy [GeV];#nu / 6 #times 10^{20} POT / 10 MeV / cm^{2}");
 		leg->AddEntry(h_flux, "#nu_{e}","l");
 		h_flux->Draw("hist,same");
 
@@ -641,7 +677,7 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
 	else if (mode == "numubar"){
 		h_flux->SetLineColor(kBlue+1);
 		h_flux->SetLineWidth(2);
-		h_flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / 25 MeV / cm^{2}");
+		h_flux->SetTitle(";Neutrino Energy [GeV];#nu / 6 #times 10^{20} POT / 10 MeV / cm^{2}");
 		leg->AddEntry(h_flux, "#bar{#nu_{#mu}}","l");
 		h_flux->Draw("hist,same");
 	}
@@ -650,7 +686,7 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
 		h_flux->SetLineColor(kBlue+1);
 		h_flux->SetLineWidth(2);
 		h_flux->SetLineStyle(2);
-		h_flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / 25 MeV / cm^{2}");
+		h_flux->SetTitle(";Neutrino Energy [GeV];#nu / 6 #times 10^{20} POT / 10 MeV / cm^{2}");
 		leg->AddEntry(h_flux, "#bar{#nu_{e}} ","l");
 		h_flux->Draw("hist,same");
 	
@@ -687,10 +723,15 @@ void CalcMeanHist(TFile* fIn, TH1D* &hMean_unwrap, int nBinsEnu, int nBinsTh, co
 		hu = (TH2D*)key->ReadObj(); // Get the histogram
 		i=vhuniv.size()-1;
 		
-		// Veto theta histograms
+		// Veto theta histograms and 2d
 		std::string huname = hu->GetName();
-		std::string thetaname = Form("Th_%s_PPFXMaster_Uni_%i_AV_TPC", mode, i);
-		if ( huname == thetaname ) continue;
+		if (huname.find("PPFXMaster") != std::string::npos) {
+			// Veto theta and 2D histograms
+			std::string thetaname = Form("Th_%s_PPFXMaster_Uni_%i_AV_TPC", mode, i);
+			if ( huname == thetaname ) continue;
+			if (huname.find("1D") != std::string::npos) continue;
+		}
+		else continue;
 
 		// Normalise 2d hist by bin area / deg / GeV
 		// Loop over rows
@@ -839,30 +880,6 @@ void UnwrapHist(TH2D* h2d, TH1D* &h_unwrap){
 			h_unwrap->SetBinContent(counter, h2d->GetBinContent(i , j)  );
 		}
 	}
-}
-// ------------------------------------------------------------------------------------------------------------
-// Function to increase to axes labels
-void IncreaseLabelSize(TH1D* h){
-
-	h->GetXaxis()->SetRangeUser(0,3.5);
-	h->GetXaxis()->SetLabelSize(0.05);
-	h->GetXaxis()->SetTitleSize(0.05);
-	h->GetYaxis()->SetLabelSize(0.05);
-	h->GetYaxis()->SetTitleSize(0.05);
-	gPad->SetLeftMargin(0.15);
-	gPad->SetBottomMargin(0.12);
-}
-void IncreaseLabelSize(TH2D* h){
-
-	h->GetXaxis()->SetRangeUser(0,3.5);
-	h->GetXaxis()->SetLabelSize(0.05);
-	h->GetXaxis()->SetTitleSize(0.05);
-	h->GetYaxis()->SetLabelSize(0.05);
-	h->GetYaxis()->SetTitleSize(0.05);
-	gPad->SetLeftMargin(0.15);
-	gPad->SetBottomMargin(0.2);
-	h->SetMarkerSize(1.8);
-	// gPad->SetGridx(); 
 }
 // ------------------------------------------------------------------------------------------------------------
 // Function to return a vector of tlines for a 2d hist. Contaons hardcoded bins for this analysis

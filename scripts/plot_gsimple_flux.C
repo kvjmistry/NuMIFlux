@@ -14,7 +14,7 @@ sure this file is included in the same directory.
 
 // ----------------------------------------------------------------------------
 // Main
-void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThinKaon etc. numu/nue)
+void plot_gsimple_flux() { // (mippon/mippoff, input, Product/noThinKaon etc. numu/nue)
 	gStyle->SetOptStat(0); // say no to stats box
 
 	// Pre declare variables
@@ -24,36 +24,35 @@ void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThin
 	bool boolfile, boolhist;
 	double rebin{5}; // number to rebin the histograms by
 
-	// Select neutrino type to run with 
-	switch (return_mode(mode)){
-		case enumu:
-			std::cout << "\nUsing NuMu Mode!\n" << std::endl;
-			Gethist_TPC = "numu/Detsmear/numu_CV_AV_TPC_5MeV_bin";							// AV in TPC flux prediction
-			g_simp_names = "numuFluxHisto";									// G simple files
-			Gethist_TPC_dk2nu = "numu/Detsmear/numu_UW_AV_TPC_5MeV_bin";				// uw AV in TPC flux prediction
-			break;
+	TString mode="nue";
 
-		case enue:
+	// Select neutrino type to run with 
+	if (mode == "numu"){
+			std::cout << "\nUsing NuMu Mode!\n" << std::endl;
+			Gethist_TPC = "numu/Detsmear/numu_CV_AV_TPC_5MeV_bin";			// AV in TPC flux prediction
+			g_simp_names = "numuFluxHisto";									// G simple files
+			Gethist_TPC_dk2nu = "numu/Detsmear/numu_UW_AV_TPC_5MeV_bin";	// uw AV in TPC flux prediction
+	}
+	else if (mode == "nue"){
 			std::cout << "\nUsing Nue Mode!\n" << std::endl;
 			Gethist_TPC = "nue/Detsmear/nue_CV_AV_TPC_5MeV_bin";
 			g_simp_names = "nueFluxHisto";
 			Gethist_TPC_dk2nu = "nue/Detsmear/nue_UW_AV_TPC_5MeV_bin";
-			break;
-
-		case enumubar:
+	}
+	else if (mode == "numubar"){
 			std::cout << "\nUsing NuMubar Mode!\n" << std::endl;
 			Gethist_TPC = "numubar/Detsmear/numubar_CV_AV_TPC_5MeV_bin";
 			g_simp_names = "anumuFluxHisto";
 			Gethist_TPC_dk2nu = "numubar/Detsmear/numubar_UW_AV_TPC_5MeV_bin";
-			break;
-
-		case enuebar:
+	}
+	else if (mode == "nuebar"){
 			std::cout << "\nUsing Nuebar Mode!\n" << std::endl;
 			Gethist_TPC = "nuebar/Detsmear/nuebar_CV_AV_TPC_5MeV_bin";
 			g_simp_names = "anueFluxHisto";
 			Gethist_TPC_dk2nu = "nuebar/Detsmear/nuebar_UW_AV_TPC_5MeV_bin";
-			break;
-
+	}
+	else {
+		std::cout << "Unknown nuetrino flavour type" << std::endl;
 	}
 	
 	// ------------------------------------------------------------------------------------------------------------
@@ -65,7 +64,7 @@ void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThin
 	// Dk2nu
 	// boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/DetectorWeights_withtilt/output.root"); if (boolfile == false) gSystem->Exit(0);
 	// boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/parent/v3/output_parent_all.root"); if (boolfile == false) gSystem->Exit(0); // file with all large weights kept and just the ones which are < 0 removed
-	boolfile  = GetFile(f_ppfx_mod ,"/uboone/app/users/kmistry/MCC9_uboonecode_v08_00_00_13a/srcs/numi_validation/files/output_uboone.root"); if (boolfile == false) gSystem->Exit(0);
+	boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root"); if (boolfile == false) gSystem->Exit(0);
 	double fPOT = GetPOT(f_ppfx_mod);
 	boolhist = GetHist(f_ppfx_mod, h_dk2nu_flux, Gethist_TPC_dk2nu); if (boolhist == false) gSystem->Exit(0);
 	h_dk2nu_flux->Rebin(rebin);
@@ -82,6 +81,7 @@ void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThin
 	hppfx->Rebin(rebin);
 	Normalise(hppfx);
 	hppfx->SetDirectory(0);
+	h_dk2nu_flux->SetDirectory(0);
 
 	// Scalings
 	h_dk2nu_flux->Scale((6.0e20)/ (fPOT*1.0e4) );  
@@ -121,6 +121,10 @@ void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThin
 	if (mode == "numubar")	h_dk2nu_flux->SetTitle("#bar{#nu_{#mu}}");
 	if (mode == "nuebar")	h_dk2nu_flux->SetTitle("#bar{#nu_{e}}");
 
+	// h_dk2nu_flux->SetTitleSize(0.05);
+	if (mode == "nue" || mode == "numu") gStyle->SetTitleH(0.1);
+	else gStyle->SetTitleH(0.07);
+
 	// ------------------------------------------------------------------------------------------------------------
 	// Draw all fluxes on one plot
 	// ------------------------------------------------------------------------------------------------------------
@@ -128,10 +132,10 @@ void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThin
 	TLegend* l_plotall = new TLegend(0.8, 0.65, 0.95, 0.9);
 
 	c_plotall->cd();
-	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "numu", fPOT, "numu/Detsmear/numu_CV_AV_TPC_5MeV_bin" );
-	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "numubar", fPOT, "numubar/Detsmear/numubar_CV_AV_TPC_5MeV_bin" );
-	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "nue", fPOT, "nue/Detsmear/nue_CV_AV_TPC_5MeV_bin" );
-	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "nuebar", fPOT, "nuebar/Detsmear/nuebar_CV_AV_TPC_5MeV_bin" );
+	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "numu", fPOT, "numu/Detsmear/numu_UW_AV_TPC_5MeV_bin" );
+	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "numubar", fPOT, "numubar/Detsmear/numubar_UW_AV_TPC_5MeV_bin" );
+	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "nue", fPOT, "nue/Detsmear/nue_UW_AV_TPC_5MeV_bin" );
+	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "nuebar", fPOT, "nuebar/Detsmear/nuebar_UW_AV_TPC_5MeV_bin" );
 
 	l_plotall->SetNColumns(1);
 	l_plotall->SetBorderSize(0);
@@ -141,7 +145,7 @@ void plot_gsimple_flux(TString mode) { // (mippon/mippoff, input, Product/noThin
 
 	
 	c1->Update();
-	c_plotall->Update();
+	// c_plotall->Update();
 
 	// ++++++++++++++++++++++++++++++++++
 	// Save the plots as pdfs in the plots folder
