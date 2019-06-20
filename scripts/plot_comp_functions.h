@@ -920,3 +920,26 @@ std::vector<TLine*> MakeTLineVector(TString mode){
 
 	return vLine;
 }
+// ------------------------------------------------------------------------------------------------------------
+// Function to draw whether neutrino mode or anti neutrino mode on a plot
+void Draw_Nu_Mode(TCanvas* c, const char* horn){
+	c->cd();
+
+	TPaveText *pt;
+
+	if (!strcmp(horn, "fhc")){
+		pt = new TPaveText(0.115, 0.89, 0.315, 0.96,"NDC");
+		pt->AddText("FHC Mode");
+	}
+	else {
+		pt = new TPaveText(0.115, 0.89, 0.315, 0.96,"NDC");
+		pt->AddText("RHC Mode");
+	}
+	
+	pt->SetBorderSize(0);
+    pt->SetFillColor(0);
+    pt->SetFillStyle(0);
+    pt->SetTextSize(0.04);
+	pt->SetTextColor(kRed+2);
+    pt->Draw();
+}

@@ -14,7 +14,7 @@ sure this file is included in the same directory.
 
 // ----------------------------------------------------------------------------
 // Main
-void plot_gsimple_flux() { // (mippon/mippoff, input, Product/noThinKaon etc. numu/nue)
+void plot_gsimple_flux(const char* horn, const char* mode) {
 	gStyle->SetOptStat(0); // say no to stats box
 
 	// Pre declare variables
@@ -24,28 +24,26 @@ void plot_gsimple_flux() { // (mippon/mippoff, input, Product/noThinKaon etc. nu
 	bool boolfile, boolhist;
 	double rebin{5}; // number to rebin the histograms by
 
-	TString mode="nue";
-
 	// Select neutrino type to run with 
-	if (mode == "numu"){
+	if (!strcmp(mode, "numu")){
 			std::cout << "\nUsing NuMu Mode!\n" << std::endl;
 			Gethist_TPC = "numu/Detsmear/numu_CV_AV_TPC_5MeV_bin";			// AV in TPC flux prediction
 			g_simp_names = "numuFluxHisto";									// G simple files
 			Gethist_TPC_dk2nu = "numu/Detsmear/numu_UW_AV_TPC_5MeV_bin";	// uw AV in TPC flux prediction
 	}
-	else if (mode == "nue"){
+	else if (! strcmp(mode,"nue")){
 			std::cout << "\nUsing Nue Mode!\n" << std::endl;
 			Gethist_TPC = "nue/Detsmear/nue_CV_AV_TPC_5MeV_bin";
 			g_simp_names = "nueFluxHisto";
 			Gethist_TPC_dk2nu = "nue/Detsmear/nue_UW_AV_TPC_5MeV_bin";
 	}
-	else if (mode == "numubar"){
+	else if (!strcmp(mode, "numubar")){
 			std::cout << "\nUsing NuMubar Mode!\n" << std::endl;
 			Gethist_TPC = "numubar/Detsmear/numubar_CV_AV_TPC_5MeV_bin";
 			g_simp_names = "anumuFluxHisto";
 			Gethist_TPC_dk2nu = "numubar/Detsmear/numubar_UW_AV_TPC_5MeV_bin";
 	}
-	else if (mode == "nuebar"){
+	else if (!strcmp(mode, "nuebar")){
 			std::cout << "\nUsing Nuebar Mode!\n" << std::endl;
 			Gethist_TPC = "nuebar/Detsmear/nuebar_CV_AV_TPC_5MeV_bin";
 			g_simp_names = "anueFluxHisto";
@@ -64,7 +62,16 @@ void plot_gsimple_flux() { // (mippon/mippoff, input, Product/noThinKaon etc. nu
 	// Dk2nu
 	// boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/DetectorWeights_withtilt/output.root"); if (boolfile == false) gSystem->Exit(0);
 	// boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/parent/v3/output_parent_all.root"); if (boolfile == false) gSystem->Exit(0); // file with all large weights kept and just the ones which are < 0 removed
-	boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root"); if (boolfile == false) gSystem->Exit(0);
+	
+	if (!strcmp(horn,"fhc")) {
+		boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root");
+		if (boolfile == false) gSystem->Exit(0);
+	}
+	else {
+		boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/RHC/output_uboone_run0.root");
+		if (boolfile == false) gSystem->Exit(0);
+	}
+	
 	double fPOT = GetPOT(f_ppfx_mod);
 	boolhist = GetHist(f_ppfx_mod, h_dk2nu_flux, Gethist_TPC_dk2nu); if (boolhist == false) gSystem->Exit(0);
 	h_dk2nu_flux->Rebin(rebin);
@@ -115,14 +122,16 @@ void plot_gsimple_flux() { // (mippon/mippoff, input, Product/noThinKaon etc. nu
 	lFlux->AddEntry(h_g_simp, "flugg","l");
 	lFlux->AddEntry(hppfx, "dk2nu PPFX Corrected","l");;
 	lFlux->Draw();
-	
-	if (mode == "numu")		h_dk2nu_flux->SetTitle("#nu_{#mu}");
-	if (mode == "nue")		h_dk2nu_flux->SetTitle("#nu_{e}");
-	if (mode == "numubar")	h_dk2nu_flux->SetTitle("#bar{#nu_{#mu}}");
-	if (mode == "nuebar")	h_dk2nu_flux->SetTitle("#bar{#nu_{e}}");
+
+	Draw_Nu_Mode(c1, horn);
+
+	if (!strcmp(mode, "numu"))		h_dk2nu_flux->SetTitle("#nu_{#mu}");
+	if (!strcmp(mode, "nue"))		h_dk2nu_flux->SetTitle("#nu_{e}");
+	if (!strcmp(mode, "numubar"))	h_dk2nu_flux->SetTitle("#bar{#nu_{#mu}}");
+	if (!strcmp(mode, "nuebar"))	h_dk2nu_flux->SetTitle("#bar{#nu_{e}}");
 
 	// h_dk2nu_flux->SetTitleSize(0.05);
-	if (mode == "nue" || mode == "numu") gStyle->SetTitleH(0.1);
+	if (!strcmp(mode,"nue") || !strcmp(mode,"numu")) gStyle->SetTitleH(0.1);
 	else gStyle->SetTitleH(0.07);
 
 	// ------------------------------------------------------------------------------------------------------------
@@ -136,6 +145,7 @@ void plot_gsimple_flux() { // (mippon/mippoff, input, Product/noThinKaon etc. nu
 	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "numubar", fPOT, "numubar/Detsmear/numubar_UW_AV_TPC_5MeV_bin" );
 	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "nue", fPOT, "nue/Detsmear/nue_UW_AV_TPC_5MeV_bin" );
 	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "nuebar", fPOT, "nuebar/Detsmear/nuebar_UW_AV_TPC_5MeV_bin" );
+	Draw_Nu_Mode(c_plotall, horn);
 
 	l_plotall->SetNColumns(1);
 	l_plotall->SetBorderSize(0);
@@ -144,7 +154,8 @@ void plot_gsimple_flux() { // (mippon/mippoff, input, Product/noThinKaon etc. nu
 	l_plotall->Draw();
 
 	
-	c1->Update();
+	
+	// c1->Update();
 	// c_plotall->Update();
 
 	// ++++++++++++++++++++++++++++++++++
@@ -152,29 +163,12 @@ void plot_gsimple_flux() { // (mippon/mippoff, input, Product/noThinKaon etc. nu
 	// ++++++++++++++++++++++++++++++++++
 	// create plots folder if it does not exist
 	gSystem->Exec("if [ ! -d \"plots\" ]; then echo \"\nPlots folder does not exist... creating\"; mkdir plots; fi"); 
+	gSystem->Exec("if [ ! -d \"plots/CV_Flux\" ]; then echo \"\n CV_Flux folder does not exist... creating\"; mkdir plots/CV_Flux; fi"); 
 	
-	if (mode == "numu"){ 	
-		c1->Print("plots/CV_Flux_Prediction_Numu.pdf");
-		std::cout << "\n"<< std::endl;
-	}
-	else if (mode == "nue"){
-		c1->Print("plots/CV_Flux_Prediction_Nue.pdf");
-		std::cout << "\n"<< std::endl;
+	c1->Print(Form("plots/CV_Flux/CV_Flux_Prediction_%s_%s.pdf", horn, mode));
+	c_plotall->Print(Form("plots/CV_Flux/CV_Flux_%s.pdf", horn));
 
-	}
-	else if (mode == "numubar"){
-		c1->Print("plots/CV_Flux_Prediction_Numubar.pdf");
-		std::cout << "\n"<< std::endl;
-
-	}
-	else {
-		c1->Print("plots/CV_Flux_Prediction_Nuebar.pdf");
-		std::cout << "\n"<< std::endl;
-	}
-
-	c_plotall->Print("plots/CVFlux_All_Flavours.pdf");
-
-// gSystem->Exit(0);
+	// gSystem->Exit(0);
 
 } // end of main
 
