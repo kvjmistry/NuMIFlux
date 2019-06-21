@@ -930,16 +930,17 @@ void Draw_Nu_Mode(TCanvas* c, const char* horn){
 	if (!strcmp(horn, "fhc")){
 		pt = new TPaveText(0.115, 0.89, 0.315, 0.96,"NDC");
 		pt->AddText("FHC Mode");
+		pt->SetTextColor(kRed+2);
 	}
 	else {
 		pt = new TPaveText(0.115, 0.89, 0.315, 0.96,"NDC");
 		pt->AddText("RHC Mode");
+		pt->SetTextColor(kBlue+2);
 	}
 	
 	pt->SetBorderSize(0);
     pt->SetFillColor(0);
     pt->SetFillStyle(0);
     pt->SetTextSize(0.04);
-	pt->SetTextColor(kRed+2);
     pt->Draw();
 }

@@ -5,7 +5,7 @@
  * does not plot the correlation matrix for each individual mode to speed up the time
 
  You can execute it with the commmand:
- root -l 'plot_uboone_flux.C("nue")' 
+ root -l 'plot_uboone_flux.C(nue")' 
 
  * 
  * A. Mastbaum <mastbaum@uchicago.edu> 2018/11
@@ -16,7 +16,7 @@
 
 // ----------------------------------------------------------------------------
 // Main
-void plot_uboone_flux(const char* mode) { // (input, numu/nue)
+void plot_uboone_flux( const char* mode) { // (input, numu/nue)
 	gStyle->SetOptStat(0); // say no to stats box
 
 	// Declare variables
@@ -25,6 +25,8 @@ void plot_uboone_flux(const char* mode) { // (input, numu/nue)
 	bool overwrite_errors{false};
 	bool unweighted{false};
 	const char* mode_title;
+
+	const char* horn = "fhc";
 
 	// Load in the main file
 	bool boolfile  = GetFile(f1 , "/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root"); if (boolfile == false) gSystem->Exit(0);
@@ -36,7 +38,19 @@ void plot_uboone_flux(const char* mode) { // (input, numu/nue)
 	if (strncmp("nuebar", mode, 6) == 0)	mode_title = "#bar{#nu_{e}}";
 
 	// PPFX Weight Modes
-	std::vector<std::string> inputmode = {"PPFXMIPPKaon","PPFXMIPPPion","PPFXOther","PPFXTargAtten","PPFXThinKaon","PPFXThinMeson","PPFXThinNeutron","PPFXThinNucA","PPFXThinNuc","PPFXThinPion","PPFXTotAbsorp","PPFXMaster"};
+	std::vector<std::string> inputmode = {
+		"PPFXMIPPKaon",
+		"PPFXMIPPPion",
+		"PPFXOther",
+		"PPFXTargAtten",
+		"PPFXThinKaon",
+		"PPFXThinMeson",
+		"PPFXThinNeutron",
+		"PPFXThinNucA",
+		"PPFXThinNuc",
+		"PPFXThinPion",
+		"PPFXTotAbsorp",
+		"PPFXMaster"};
 
 	// ------------------------------------------------------------------------------------------------------------
 	//                                                   CV Flux
@@ -66,25 +80,9 @@ void plot_uboone_flux(const char* mode) { // (input, numu/nue)
 	lFlux->SetTextFont(62); 
 	lFlux->AddEntry(hCV_Flux, "PPFX Flux","l");
 	lFlux->Draw();
+
+	Draw_Nu_Mode(c1, horn); // Draw FHC Mode/RHC Mode Text
 	
-	// ------------------------------------------------------------------------------------------------------------
-	//                                          Draw all fluxes on one plot
-	// ------------------------------------------------------------------------------------------------------------
-	TCanvas* c_plotall = new TCanvas();
-	TLegend* l_plotall = new TLegend(0.8, 0.65, 0.95, 0.9);
-
-	c_plotall->cd();
-	PlotFluxSame(c_plotall, l_plotall, f1, "numu",    fPOT, "numu/Detsmear/numu_CV_AV_TPC" );
-	PlotFluxSame(c_plotall, l_plotall, f1, "numubar", fPOT, "numubar/Detsmear/numubar_CV_AV_TPC" );
-	PlotFluxSame(c_plotall, l_plotall, f1, "nue",     fPOT, "nue/Detsmear/nue_CV_AV_TPC" );
-	PlotFluxSame(c_plotall, l_plotall, f1, "nuebar",  fPOT, "nuebar/Detsmear/nuebar_CV_AV_TPC" );
-
-	l_plotall->SetNColumns(1);
-	l_plotall->SetBorderSize(0);
-	l_plotall->SetFillStyle(0);
-	l_plotall->SetTextFont(62); 
-	l_plotall->Draw();
-
 	// ------------------------------------------------------------------------------------------------------------
 	//                                     Draw weighted flux vs unweighted flux
 	// ------------------------------------------------------------------------------------------------------------
@@ -115,6 +113,8 @@ void plot_uboone_flux(const char* mode) { // (input, numu/nue)
 	l_uw_v_w->SetFillStyle(0);
 	l_uw_v_w->SetTextFont(62); 
 	l_uw_v_w->Draw();
+
+	Draw_Nu_Mode(c_uw_v_w, horn); // Draw FHC Mode/RHC Mode Text
 
 	// ------------------------------------------------------------------------------------------------------------
 	//                                     Correlations, Covariance & uncertainties
@@ -205,10 +205,16 @@ void plot_uboone_flux(const char* mode) { // (input, numu/nue)
 			cor[l]->Draw("colz");
 		}
 
+		Draw_Nu_Mode(c3, horn); // Draw FHC Mode/RHC Mode Text
+
+
 		gStyle->SetPalette(55); // kRainbow
 
 		// Plot fractional errors overlaid with official NOvA plot
 		c4->cd();
+
+		Draw_Nu_Mode(c4, horn); // Draw FHC Mode/RHC Mode Text
+
 
 		// Make the plot
 		if (overwrite_errors == false) legDraw(lfrac, herr[l], inputmode[l], mode);
@@ -433,9 +439,10 @@ void plot_uboone_flux(const char* mode) { // (input, numu/nue)
 	// create plots folder if it does not exist
 	gSystem->Exec("if [ ! -d \"plots\" ]; then echo \"\nPlots folder does not exist... creating\"; mkdir plots; fi"); 
 	
-	c1->Print(Form("plots/CV_Flux_Prediction_%s.pdf", mode));
+	c1->Print(Form("plots/CV_Flux_Prediction_Uneven_bins_%s.pdf", mode));
 	c3->Print(Form("plots/Correlation_Matrix_%s.pdf", mode));
 	c4->Print(Form("plots/Fractional_Uncertainties_%s.pdf", mode));
+	
 	c_uw_v_w->Print(Form("plots/Unweighted_vs_ppfx_%s.pdf", mode));
 	c_cov->Print(Form("plots/CovarianceMarix4D_%s.pdf", mode));
 	c_corr4d->Print(Form("plots/CorrelationMarix4D_%s.pdf", mode));
@@ -444,7 +451,6 @@ void plot_uboone_flux(const char* mode) { // (input, numu/nue)
 	c_fraccov4d->Print(Form("plots/FracCovariance4d_%s.pdf", mode));
 	c_CV2d->Print(Form("plots/CV2d_%s.pdf", mode));
 	cband->Print(Form("plots/CV_vs_Mean_Flux_%s.pdf", mode));
-	c_plotall->Print("plots/flux_all_flavours.pdf");
 	std::cout << "\n"<< std::endl;
 	
 } // end of main

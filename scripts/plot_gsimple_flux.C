@@ -104,7 +104,7 @@ void plot_gsimple_flux(const char* horn, const char* mode) {
 	h_dk2nu_flux->Draw("hist");
 
 	h_g_simp->SetLineWidth(2);
-	h_g_simp->Draw("hist, same");
+	if (!strcmp(horn,"fhc")) h_g_simp->Draw("hist, same"); // Only Draw for FHC mode 
 
 	hppfx->SetLineColor(kGreen+1);
 	hppfx->SetLineWidth(2);
@@ -119,7 +119,7 @@ void plot_gsimple_flux(const char* horn, const char* mode) {
 	lFlux->SetTextFont(62); 
 	
 	lFlux->AddEntry(h_dk2nu_flux, "dk2nu","l");
-	lFlux->AddEntry(h_g_simp, "flugg","l");
+	if (!strcmp(horn,"fhc")) lFlux->AddEntry(h_g_simp, "flugg","l");
 	lFlux->AddEntry(hppfx, "dk2nu PPFX Corrected","l");;
 	lFlux->Draw();
 	Draw_Nu_Mode(c1, horn); // Draw FHC Mode/RHC Mode Text
