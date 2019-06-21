@@ -1,8 +1,8 @@
 /*
 This script will plot the nuetrino flux broken down into the various parent types.
 
-To run this script execute the command root -l 'plot_parent_flux.C("nue")'
-where nue, nuebar, numu and numubar are the available options.
+To run this script execute the command root -l 'plot_parent_flux.C("fhc","nue")'
+where fhc/rhc, nue/nuebar/numu/numubar are the available options.
 
 */
 
@@ -53,7 +53,7 @@ void SetColour(TH1D* hist, std::string parent, TLegend* leg){
 }
 // ----------------------------------------------------------------------------
 // Main
-void plot_parent_flux(TString mode) { // (mippon/mippoff, input, Product/noThinKaon etc. numu/nue)
+void plot_parent_flux(const char* horn, TString mode) { // (fhc/rhc, numu/nue)
 	gStyle->SetOptStat(0); // say no to stats box
 
 	// Pre declare variables
@@ -101,9 +101,15 @@ void plot_parent_flux(TString mode) { // (mippon/mippoff, input, Product/noThinK
 	TCanvas* c1 = new TCanvas();
 	TLegend* lFlux = new TLegend(0.7, 0.45, 0.9, 0.9);
 
-	// File in 
-	boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root"); if (boolfile == false) gSystem->Exit(0);
-	// boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/g4numi/rm_KMinus_Capture/output_wDAR.root"); if (boolfile == false) gSystem->Exit(0); // turn off K- capture at rest
+	// FHC File in 
+	if (!strcmp(horn, "fhc")) {
+		boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root");
+		if (boolfile == false) gSystem->Exit(0);
+	}
+	else { // RHC file
+		boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/RHC/output_uboone_run0.root");
+		if (boolfile == false) gSystem->Exit(0); // turn off K- capture at rest
+	}
 	
 	// Get POT
 	double fPOT = GetPOT(f);
@@ -145,6 +151,8 @@ void plot_parent_flux(TString mode) { // (mippon/mippoff, input, Product/noThinK
 	}
 	h_ppfx_flux->Draw("hist,same"); // draw again so it is on top of all the other components
 
+	Draw_Nu_Mode(c1, horn); // Draw FHC Mode/RHC Mode Text
+
 	lFlux->SetNColumns(1);
 	lFlux->SetBorderSize(0);
 	lFlux->SetFillStyle(0);
@@ -158,10 +166,9 @@ void plot_parent_flux(TString mode) { // (mippon/mippoff, input, Product/noThinK
 	// Save the plots as pdfs in the plots folder
 	// ++++++++++++++++++++++++++++++++++
 	// create plots folder if it does not exist
-	gSystem->Exec("if [ ! -d \"plots\" ]; then echo \"\nPlots folder does not exist... creating\"; mkdir plots; fi"); 
+	gSystem->Exec("if [ ! -d \"plots/parent\" ]; then echo \"\nPlots folder does not exist... creating\"; mkdir -p plots/parent; fi"); 
 	
-		
-	c1->Print(Form("plots/%s_parentflux.pdf", mode_char));
+	c1->Print(Form("plots/parent/parentflux_%s_%s.pdf", horn, mode_char));
 	std::cout << "\n"<< std::endl;
 	
 	

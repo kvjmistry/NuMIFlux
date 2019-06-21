@@ -2,8 +2,8 @@
 This script will plot the flux at microboone for the flux made using flugg/gsimple files
 and compare this with the dk2nu and ppfx predictions.
 
-To run this script run the command root -l 'plot_gsimple_flux.C("nue")' 
-where nue, nuebar, numu and numubar are the available options.
+To run this script run the command root -l 'plot_gsimple_flux.C("fhc", "nue")' 
+where fhc/rhc, nue/nuebar/numu/numubar are the available options.
 
 This file depends on the plot_comp_functions.h script so make
 sure this file is included in the same directory.
@@ -122,8 +122,7 @@ void plot_gsimple_flux(const char* horn, const char* mode) {
 	lFlux->AddEntry(h_g_simp, "flugg","l");
 	lFlux->AddEntry(hppfx, "dk2nu PPFX Corrected","l");;
 	lFlux->Draw();
-
-	Draw_Nu_Mode(c1, horn);
+	Draw_Nu_Mode(c1, horn); // Draw FHC Mode/RHC Mode Text
 
 	if (!strcmp(mode, "numu"))		h_dk2nu_flux->SetTitle("#nu_{#mu}");
 	if (!strcmp(mode, "nue"))		h_dk2nu_flux->SetTitle("#nu_{e}");
@@ -145,7 +144,7 @@ void plot_gsimple_flux(const char* horn, const char* mode) {
 	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "numubar", fPOT, "numubar/Detsmear/numubar_UW_AV_TPC_5MeV_bin" );
 	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "nue", fPOT, "nue/Detsmear/nue_UW_AV_TPC_5MeV_bin" );
 	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "nuebar", fPOT, "nuebar/Detsmear/nuebar_UW_AV_TPC_5MeV_bin" );
-	Draw_Nu_Mode(c_plotall, horn);
+	Draw_Nu_Mode(c_plotall, horn); // Draw FHC Mode/RHC Mode Text
 
 	l_plotall->SetNColumns(1);
 	l_plotall->SetBorderSize(0);
