@@ -633,13 +633,20 @@ void DrawErrorBand(TFile* f, const char* mode, TLegend* leg, std::string inputmo
 }
 // ------------------------------------------------------------------------------------------------------------
 // function to plot each neutrino flux on the same graph
-void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT, TString Gethist_TPC ){
+void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT, TString Gethist_TPC, double tot_flux ){
 	TH1D *h_flux;
 	c->cd();
 	
 	// Check if sucessfully got histo
 	bool boolhist = GetHist(f1, h_flux, Gethist_TPC); if (boolhist == false) gSystem->Exit(0);
 	h_flux->SetDirectory(0);
+
+	// Get the flux for the neutrino flavour
+	double flux_flav = h_flux->Integral(0,  h_flux->GetNbinsX()+1);
+
+	// Convert the flux percentage to a char
+	char flux_pcent[15];
+	snprintf(flux_pcent, 15,"%2.1f" ,100 * flux_flav / tot_flux);
 	
 	// Rebon
 	h_flux->Rebin(2);
@@ -660,7 +667,7 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
 		h_flux->SetLineColor(kRed+1);
 		h_flux->SetLineWidth(2);
 		h_flux->SetTitle(";Neutrino Energy [GeV];#nu / 6 #times 10^{20} POT / 10 MeV / cm^{2}");
-		leg->AddEntry(h_flux, "#nu_{#mu}","l");
+		leg->AddEntry(h_flux, Form("#nu_{#mu} (%s%%)", flux_pcent),"l");
 		h_flux->Draw("hist,same");
 	}
 
@@ -669,7 +676,7 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
 		h_flux->SetLineWidth(2);
 		h_flux->SetLineStyle(2);
 		h_flux->SetTitle(";Neutrino Energy [GeV];#nu / 6 #times 10^{20} POT / 10 MeV / cm^{2}");
-		leg->AddEntry(h_flux, "#nu_{e}","l");
+		leg->AddEntry(h_flux, Form("#nu_{e} (%s%%)", flux_pcent),"l");
 		h_flux->Draw("hist,same");
 
 	}
@@ -678,7 +685,7 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
 		h_flux->SetLineColor(kBlue+1);
 		h_flux->SetLineWidth(2);
 		h_flux->SetTitle(";Neutrino Energy [GeV];#nu / 6 #times 10^{20} POT / 10 MeV / cm^{2}");
-		leg->AddEntry(h_flux, "#bar{#nu_{#mu}}","l");
+		leg->AddEntry(h_flux, Form("#bar{#nu_{#mu}} (%s%%)", flux_pcent),"l");
 		h_flux->Draw("hist,same");
 	}
 	
@@ -687,7 +694,7 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
 		h_flux->SetLineWidth(2);
 		h_flux->SetLineStyle(2);
 		h_flux->SetTitle(";Neutrino Energy [GeV];#nu / 6 #times 10^{20} POT / 10 MeV / cm^{2}");
-		leg->AddEntry(h_flux, "#bar{#nu_{e}} ","l");
+		leg->AddEntry(h_flux, Form("#bar{#nu_{e}} (%s%%)", flux_pcent),"l");
 		h_flux->Draw("hist,same");
 	
 	}
@@ -699,6 +706,32 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
 	
 
 }
+// ------------------------------------------------------------------------------------------------------------
+// Function to get the total flux for each neutrino flavour
+double GetTotalFlux(TFile *f1){
+
+	bool boolhist;
+	TH1D *h;
+
+	double flux_cv{0.0}; 
+
+	boolhist = GetHist(f1, h, "numu/Detsmear/numu_UW_AV_TPC_5MeV_bin"); if (boolhist == false) gSystem->Exit(0);
+	flux_cv += h->Integral(0,  h->GetNbinsX()+1);
+
+	boolhist = GetHist(f1, h, "numubar/Detsmear/numubar_UW_AV_TPC_5MeV_bin"); if (boolhist == false) gSystem->Exit(0);
+	flux_cv += h->Integral(0,  h->GetNbinsX()+1);
+
+	boolhist = GetHist(f1, h, "nue/Detsmear/nue_UW_AV_TPC_5MeV_bin"); if (boolhist == false) gSystem->Exit(0);
+	flux_cv += h->Integral(0,  h->GetNbinsX()+1);
+
+	boolhist = GetHist(f1, h, "nuebar/Detsmear/nuebar_UW_AV_TPC_5MeV_bin"); if (boolhist == false) gSystem->Exit(0);
+	flux_cv += h->Integral(0,  h->GetNbinsX()+1);
+
+	return flux_cv;
+
+}
+
+
 // ------------------------------------------------------------------------------------------------------------
 // Function to calculate the mean 2d histogram from the multisim variations and retun the unwarapped version
 void CalcMeanHist(TFile* fIn, TH1D* &hMean_unwrap, int nBinsEnu, int nBinsTh, const char* mode){

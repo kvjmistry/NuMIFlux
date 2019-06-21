@@ -137,13 +137,14 @@ void plot_gsimple_flux(const char* horn, const char* mode) {
 	// Draw all fluxes on one plot
 	// ------------------------------------------------------------------------------------------------------------
 	TCanvas* c_plotall = new TCanvas();
-	TLegend* l_plotall = new TLegend(0.8, 0.65, 0.95, 0.9);
+	TLegend* l_plotall = new TLegend(0.74, 0.65, 0.89, 0.9);
 
 	c_plotall->cd();
-	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "numu", fPOT, "numu/Detsmear/numu_UW_AV_TPC_5MeV_bin" );
-	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "numubar", fPOT, "numubar/Detsmear/numubar_UW_AV_TPC_5MeV_bin" );
-	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "nue", fPOT, "nue/Detsmear/nue_UW_AV_TPC_5MeV_bin" );
-	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "nuebar", fPOT, "nuebar/Detsmear/nuebar_UW_AV_TPC_5MeV_bin" );
+	double tot_flux = GetTotalFlux(f_ppfx_mod); // Get the total integrated flux from all flavours
+	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "numu", fPOT, "numu/Detsmear/numu_UW_AV_TPC_5MeV_bin", tot_flux );
+	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "numubar", fPOT, "numubar/Detsmear/numubar_UW_AV_TPC_5MeV_bin", tot_flux );
+	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "nue", fPOT, "nue/Detsmear/nue_UW_AV_TPC_5MeV_bin", tot_flux );
+	PlotFluxSame(c_plotall, l_plotall, f_ppfx_mod, "nuebar", fPOT, "nuebar/Detsmear/nuebar_UW_AV_TPC_5MeV_bin", tot_flux );
 	Draw_Nu_Mode(c_plotall, horn); // Draw FHC Mode/RHC Mode Text
 
 	l_plotall->SetNColumns(1);

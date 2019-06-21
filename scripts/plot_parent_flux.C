@@ -10,42 +10,42 @@ where fhc/rhc, nue/nuebar/numu/numubar are the available options.
 
 // ----------------------------------------------------------------------------
 // Function for plotting
-void SetColour(TH1D* hist, std::string parent, TLegend* leg){
+void SetColour(TH1D* hist, std::string parent, TLegend* leg, char flux_pcent[15]){
 	hist->SetLineWidth(2);
 	
 	if (parent == "PI_Plus"){
 		hist->SetLineColor(42);
-		leg->AddEntry(hist, "#pi^{+}","l");
+		leg->AddEntry(hist, Form("#pi^{+} (%s%%)", flux_pcent),"l");
 		hist->Draw("hist,same");
 	} 
 	else if  (parent == "PI_Minus"){
 		hist->SetLineColor(kMagenta+2);
-		leg->AddEntry(hist, "#pi^{-}","l");
+		leg->AddEntry(hist, Form("#pi^{-} (%s%%)", flux_pcent),"l");
 		hist->Draw("hist,same");
 	}
 	else if  (parent == "Mu_Plus"){ // only turn on if there is MIPP
 		hist->SetLineColor(30);
-		leg->AddEntry(hist, "#mu^{+}","l");
+		leg->AddEntry(hist, Form("#mu^{+} (%s%%)", flux_pcent),"l");
 		hist->Draw("hist,same");
 	}
 	else if  ( parent == "Mu_Minus"){ // only turn on if there is MIPP
 		hist->SetLineColor(38);
-		leg->AddEntry(hist, "#mu^{-}","l");
+		leg->AddEntry(hist, Form("#mu^{-} (%s%%)", flux_pcent),"l");
 		hist->Draw("hist,same");
 	}
 	else if  (parent == "Kaon_Plus"){
 		hist->SetLineColor(28);
-		leg->AddEntry(hist, "K^{+}","l");
+		leg->AddEntry(hist, Form("K^{+} (%s%%)", flux_pcent),"l");
 		hist->Draw("hist,same");
 	}
 	else if  (parent == "Kaon_Minus"){
 		hist->SetLineColor(36);
-		leg->AddEntry(hist, "K^{-}","l");
+		leg->AddEntry(hist, Form("K^{-} (%s%%)", flux_pcent),"l");
 		hist->Draw("hist,same");
 	}
 	else if  (parent == "K0L"){
 		hist->SetLineColor(1001);
-		leg->AddEntry(hist, "K^{0}_{L}","l");
+		leg->AddEntry(hist, Form("K^{0}_{L} (%s%%)", flux_pcent),"l");
 		hist->Draw("hist,same");
 	}
 	else
@@ -99,7 +99,7 @@ void plot_parent_flux(const char* horn, TString mode) { // (fhc/rhc, numu/nue)
 	// Flux Comparisons
 	// ------------------------------------------------------------------------------------------------------------
 	TCanvas* c1 = new TCanvas();
-	TLegend* lFlux = new TLegend(0.7, 0.45, 0.9, 0.9);
+	TLegend* lFlux = new TLegend(0.69, 0.45, 0.89, 0.9);
 
 	// FHC File in 
 	if (!strcmp(horn, "fhc")) {
@@ -110,7 +110,7 @@ void plot_parent_flux(const char* horn, TString mode) { // (fhc/rhc, numu/nue)
 		boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/RHC/output_uboone_run0.root");
 		if (boolfile == false) gSystem->Exit(0); // turn off K- capture at rest
 	}
-	
+
 	// Get POT
 	double fPOT = GetPOT(f);
 	double normfactor = 6.0e20 / (fPOT*1e4);
@@ -119,6 +119,11 @@ void plot_parent_flux(const char* horn, TString mode) { // (fhc/rhc, numu/nue)
 	TH1D* h_ppfx_flux;
 	boolhist = GetHist(f, h_ppfx_flux, Gethist_CV_AV); if (boolhist == false) gSystem->Exit(0);
 	
+
+	// Define Integrals
+	double flux_cv  = h_ppfx_flux->Integral(0,  h_ppfx_flux->GetNbinsX()+1) * normfactor;
+	std::vector<double> flux_parent(parent.size());
+
 	// Rebin and normalise
 	h_ppfx_flux->Rebin(rebin);
 	Normalise(h_ppfx_flux);
@@ -143,11 +148,16 @@ void plot_parent_flux(const char* horn, TString mode) { // (fhc/rhc, numu/nue)
 
 	for (unsigned int i = 0; i < parent.size(); i++){
 		boolhist = GetHist(f, h_parent.at(i), Form("%s/%s/Enu_%s_%s_AV_TPC", mode_char, parent.at(i).c_str(),mode_char, parent.at(i).c_str() )); if (boolhist == false) gSystem->Exit(0);
+		flux_parent.at(i) =  h_parent.at(i)->Integral(0,  h_parent.at(i)->GetNbinsX()+1) * normfactor;
 		h_parent.at(i)->Rebin(rebin);
 		Normalise(h_parent.at(i));
 		h_parent.at(i)->Scale(normfactor);
-		SetColour(h_parent.at(i), parent.at(i), lFlux);
-		// lFlux->AddEntry(h_parent.at(i), parent.at(i).c_str(),"l");
+
+		// Convert the flux percentage to a char
+		char flux_pcent[15];
+		snprintf(flux_pcent, 15,"%2.1f" ,100 * flux_parent.at(i) / flux_cv);
+
+		SetColour(h_parent.at(i), parent.at(i), lFlux, flux_pcent );
 	}
 	h_ppfx_flux->Draw("hist,same"); // draw again so it is on top of all the other components
 
@@ -160,6 +170,16 @@ void plot_parent_flux(const char* horn, TString mode) { // (fhc/rhc, numu/nue)
 	lFlux->SetTextSize(0.05);
 	lFlux->Draw();
 	gPad->SetLogy();
+
+	// Now print the percentages for the flux
+	std::cout << std::setw(10);
+	std::cout << "----------------------------------" << std::endl;
+	std::cout << "\nFlux Percentages" << std::endl;
+	std::cout << std::setw(10) <<"\nCV:\t" << flux_cv << "\n" << std::endl;
+	for (unsigned int i = 0; i < parent.size(); i++){
+		std::cout << std::setprecision(3) << std::setw(10) << parent.at(i)<< ":\t" << std::setw(10) << flux_parent.at(i) << "\tPercentage\t" << 100 * flux_parent.at(i) / flux_cv << "\%" << std::endl;
+	}
+	std::cout << "----------------------------------" << std::endl;
 
 
 	// ++++++++++++++++++++++++++++++++++
