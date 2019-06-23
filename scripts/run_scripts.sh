@@ -5,22 +5,22 @@ horn=$2
 
 if [ $mode == "all" ]
 then
-	root -l -q $* 'plot_uboone_flux.C("nue")'
-	root -l -q $* 'plot_uboone_flux.C("nuebar")'
-	root -l -q $* 'plot_uboone_flux.C("numu")'
-	root -l -q $* 'plot_uboone_flux.C("numubar")'
+	root -l -q 'plot_uboone_flux.C("'$horn'","nue")'
+	root -l -q 'plot_uboone_flux.C("'$horn'","nuebar")'
+	root -l -q 'plot_uboone_flux.C("'$horn'","numu")'
+	root -l -q 'plot_uboone_flux.C("'$horn'","numubar")'
 elif [ $mode == "parent" ]
 then 
-	root -l -q 'plot_parent_flux.C("$horn","nue")'
-	root -l -q 'plot_parent_flux.C("$horn","nuebar")'
-	root -l -q 'plot_parent_flux.C("$horn","numu")'
-	root -l -q 'plot_parent_flux.C("$horn","numubar")'
+	root -l -q 'plot_parent_flux.C("'$horn'","nue")'
+	root -l -q 'plot_parent_flux.C("'$horn'","nuebar")'
+	root -l -q 'plot_parent_flux.C("'$horn'","numu")'
+	root -l -q 'plot_parent_flux.C("'$horn'","numubar")'
 elif [ $mode == "gsimple" ]
 then 
-	root -l -q $* 'plot_gsimple_flux.C("$horn","nue")'
-	root -l -q $* 'plot_gsimple_flux.C("$horn","nuebar")'
-	root -l -q $* 'plot_gsimple_flux.C("$horn","numu")'
-	root -l -q $* 'plot_gsimple_flux.C("$horn","numubar")'
+	root -l -q 'plot_gsimple_flux.C("'$horn'","nue")'
+	root -l -q 'plot_gsimple_flux.C("'$horn'","nuebar")'
+	root -l -q 'plot_gsimple_flux.C("'$horn'","numu")'
+	root -l -q 'plot_gsimple_flux.C("'$horn'","numubar")'
 else 
 	echo "Enter Mode from: all, parent, gsimple"
 fi

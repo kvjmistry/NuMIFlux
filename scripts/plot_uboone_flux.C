@@ -1,22 +1,23 @@
 /**
  * NuMI Flux at uboone Plotting
  *
- * Plots each individual weighting mode instead of a single one
- * does not plot the correlation matrix for each individual mode to speed up the time
+ * Script will generate all the correlation and covariance matrices of interest
 
  You can execute it with the commmand:
- root -l 'plot_uboone_flux.C(nue")' 
+ root -l 'plot_uboone_flux.C("<horn_mode>", "<nu_flav>")'
+ where <horn_mode> = fhc or rhc
+ and <nu_flav> = nue or nuebar or numu or numubar 
 
  * 
  * A. Mastbaum <mastbaum@uchicago.edu> 2018/11
- * Modified by K. Mistry 12/18
+ * Modified by K. Mistry 22/06/19
  */
 
 #include "plot_comp_functions.h"
 
 // ----------------------------------------------------------------------------
 // Main
-void plot_uboone_flux( const char* mode) { // (input, numu/nue)
+void plot_uboone_flux(const char* horn,  const char* mode) { // (input, numu/nue)
 	gStyle->SetOptStat(0); // say no to stats box
 
 	// Declare variables
@@ -24,12 +25,18 @@ void plot_uboone_flux( const char* mode) { // (input, numu/nue)
 	TFile* f1;
 	bool overwrite_errors{false};
 	bool unweighted{false};
+	bool boolfile;
 	const char* mode_title;
 
-	const char* horn = "fhc";
-
-	// Load in the main file
-	bool boolfile  = GetFile(f1 , "/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root"); if (boolfile == false) gSystem->Exit(0);
+	// Load in the file, either fhc or rhc
+	if (!strcmp(horn,"fhc")) {
+		boolfile  = GetFile(f1 ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root");
+		if (boolfile == false) gSystem->Exit(0);
+	}
+	else {
+		boolfile  = GetFile(f1 ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/RHC/output_uboone_run0.root");
+		if (boolfile == false) gSystem->Exit(0);
+	}
 
 	// Create title characters from input
 	if (strncmp("numu", mode, 4) == 0)		mode_title = "#nu_{#mu}";
@@ -218,11 +225,9 @@ void plot_uboone_flux( const char* mode) { // (input, numu/nue)
 
 		// Make the plot
 		if (overwrite_errors == false) legDraw(lfrac, herr[l], inputmode[l], mode);
-		IncreaseLabelSize(herr[l]);
-		
-		
 		herr[l]->GetYaxis()->SetRangeUser(0,0.5);
 		herr[l]->SetTitle(Form("%s; Energy [GeV];Fractional Uncertainty", mode_title));
+		IncreaseLabelSize(herr[l]);
 		// herr[l]->GetYaxis()->SetRangeUser(0,1.75);
 		
 	} // End loop over input labels
@@ -414,7 +419,7 @@ void plot_uboone_flux( const char* mode) { // (input, numu/nue)
 
 	CalcPull(hCV_unwrap, hMean_unwrap, hPull);
 	hPull->Draw("hist");
-	gPad->SetLogy();
+	// gPad->SetLogy();
 	IncreaseLabelSize(hPull);
 	Draw_Nu_Mode(cMeanCV, horn); // Draw FHC Mode/RHC Mode Text
 

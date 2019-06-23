@@ -407,8 +407,6 @@ void BeamlineUncertainties(std::vector<TH1D*> &herr, TH1D* hCV_Flux, std::string
 	
 	TFile* f3;
 	bool boolfile;
-	// if (mode_str == "numu")   boolfile = GetFile(f3,Form("/uboone/data/users/kmistry/work/PPFX/nova/no_ThinKaon_Indiv/%s_Energy_ratios_quad.root", mode )); 
-	// else  boolfile = GetFile(f3,Form("/uboone/data/users/kmistry/work/PPFX/nova/no_ThinKaon_Indiv/%s_Energy_ratios.root", mode ));
 	boolfile = GetFile(f3,Form("/uboone/data/users/kmistry/work/PPFX/nova/no_ThinKaon_Indiv/beamline_uncertainties/%s_beam_errors.root", mode )); 
 	
 	if ( boolfile == false) gSystem->Exit(0);
