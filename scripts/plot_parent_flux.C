@@ -6,7 +6,7 @@ where fhc/rhc, nue/nuebar/numu/numubar are the available options.
 
 */
 
-#include "plot_comp_functions.h"
+#include "functions.h"
 
 // ----------------------------------------------------------------------------
 // Function for plotting

@@ -642,8 +642,8 @@ void DrawErrorBand(TFile* f, const char* mode, TLegend* leg, std::string inputmo
 	htemp->SetMarkerSize(0);
 	// htemp->SetTitle(Form("Error band for %s",mode));
 	htemp->GetXaxis()->SetTitle("Neutrino Energy [GeV]");
-
 	htemp->GetYaxis()->SetTitle(Form("%s / 6 #times 10^{20} POT / cm^{2} / GeV", mode_title));
+	htemp->SetTitle(Form("%s", mode_title));
 
 	htemp->Draw("e2");
 	htemp_clone->Draw("same,hist");

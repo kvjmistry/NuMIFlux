@@ -13,7 +13,7 @@
  * Modified by K. Mistry 22/06/19
  */
 
-#include "plot_comp_functions.h"
+#include "functions.h"
 
 // ----------------------------------------------------------------------------
 // Main

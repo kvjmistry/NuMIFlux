@@ -5,12 +5,12 @@ and compare this with the dk2nu and ppfx predictions.
 To run this script run the command root -l 'plot_gsimple_flux.C("fhc", "nue")' 
 where fhc/rhc, nue/nuebar/numu/numubar are the available options.
 
-This file depends on the plot_comp_functions.h script so make
+This file depends on the functions.h script so make
 sure this file is included in the same directory.
 
 */
 
-#include "plot_comp_functions.h"
+#include "functions.h"
 
 // ----------------------------------------------------------------------------
 // Main
