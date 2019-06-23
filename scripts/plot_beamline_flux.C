@@ -2,18 +2,18 @@
 This script was intended to plot the beamline variations unwrapped 2d flux and 
 also plot their ratio for inspection.
 
-To run this script execute the command root -l plot_uboone_beamline.C()
+To run this script execute the command root -l plot_uboone_beamline.C(<nu flavour>)
 The nuetrino flvaour to plot is currently hardcoded into the code,
 just find the variable mode and change this to the desired neutrino flavour.
 
-This file depends on the plot_comp_functions.h script so make
+This file depends on the functions.h script so make
 sure this file is included in the same  directory.
 
 */
 
 
 // Function to plot the beamline uncertainties compared to the CV
-#include "plot_comp_functions.h"
+#include "functions.h"
 // ------------------------------------------------------------------------------------------------------------
 // Function to unwrap the histogram
 void UnwrapTH2D(TH2D* &hFlux2d,TH1D* &h_unwrap, double POT){
@@ -209,7 +209,7 @@ void DivideHists(TH1D* hCV, TH1D* hUniv, TH1D* &h_1D){
 }
 
 // ------------------------------------------------------------------------------------------------------------
-void plot_uboone_beamline(){
+void plot_beamline_flux(const char* mode){
 	gStyle->SetOptStat(0); // say no to stats box
 
 	std::vector<std::string> params = { // A vector with the variations NEW ONES with no threshold
@@ -277,8 +277,6 @@ void plot_uboone_beamline(){
 	lFlux_ratio_1D->SetFillStyle(0);
 	lFlux_ratio_1D->SetTextFont(62); 
 
-
-	const char* mode = "nuebar"; // choose the nuetrino flavour here
 	const char* mode_title;
 
 	if (strncmp("numu", mode, 4) == 0)		mode_title = "#nu_{#mu}";
@@ -389,8 +387,7 @@ void plot_uboone_beamline(){
 	// Save the plots as pdfs in the plots folder
 	// ++++++++++++++++++++++++++++++++++
 	// create plots folder if it does not exist
-	gSystem->Exec("if [ ! -d \"plots\" ]; then echo \"\nPlots folder does not exist... creating\"; mkdir plots; fi"); 
-	gSystem->Exec("if [ ! -d \"plots/beamline\" ]; then echo \"\nBeamline folder does not exist... creating\"; mkdir plots/beamline; fi"); 
+	gSystem->Exec("if [ ! -d \"plots/beamline\" ]; then echo \"\nBeamline folder does not exist... creating\"; mkdir -p plots/beamline; fi"); 
 	c_beamline->Print(Form("plots/beamline/%s_Beamline_2D_unwrapped_Flux.pdf",mode));
 	c_beamline_1D->Print(Form("plots/beamline/%s_Beamline_1D_unwrapped_Flux.pdf",mode));
 
