@@ -25,7 +25,7 @@ std::vector<std::string> loopdir(TString  inputfile, TString mode) {
 // Function to increase to axes labels
 void IncreaseLabelSize(TH1D* h){
 
-	h->GetXaxis()->SetRangeUser(0,3.5);
+	// h->GetXaxis()->SetRangeUser(0,3.5);
 	h->GetXaxis()->SetLabelSize(0.05);
 	h->GetXaxis()->SetTitleSize(0.05);
 	h->GetYaxis()->SetLabelSize(0.05);
@@ -35,13 +35,16 @@ void IncreaseLabelSize(TH1D* h){
 }
 void IncreaseLabelSize(TH2D* h){
 
-	h->GetXaxis()->SetRangeUser(0,3.5);
+	// h->GetXaxis()->SetRangeUser(0,3.5);
 	h->GetXaxis()->SetLabelSize(0.05);
 	h->GetXaxis()->SetTitleSize(0.05);
 	h->GetYaxis()->SetLabelSize(0.05);
 	h->GetYaxis()->SetTitleSize(0.05);
+	h->GetZaxis()->SetLabelSize(0.05);
+	h->GetZaxis()->SetTitleSize(0.05);
 	gPad->SetLeftMargin(0.15);
-	gPad->SetBottomMargin(0.2);
+	gPad->SetRightMargin(0.2);
+	gPad->SetBottomMargin(0.13);
 	h->SetMarkerSize(1.8);
 	// gPad->SetGridx(); 
 }
@@ -52,7 +55,7 @@ void legDraw(TLegend * &legend, TH1D *&hist, std::string inputmode, TString mode
 	if (inputmode == "PPFXMaster"){
 	hist->SetLineColor(kBlack);
 	hist->SetLineWidth(2);
-	legend->AddEntry(hist, "PPFXMaster", "l");
+	legend->AddEntry(hist, "Master Weight", "l");
 	hist->Draw("hist,same");
 	} 
 	else if  (inputmode == "ms_PPFX"){
@@ -247,6 +250,8 @@ double GetPOT(TFile* f, bool disp){
 	double fPOT{0};
 	TPOT->SetBranchAddress("POT", &fPOT); // Get the POT
 	TPOT->GetEntry(0);
+	double total_entries = TPOT->GetEntries(); // if using hadd, this will not be 1 equal to 1 anymore
+	fPOT*=total_entries;
 	if (disp) std::cout << "TOTAL POT READ IN:\t" << fPOT << std::endl;
 
     return fPOT;
@@ -274,6 +279,18 @@ void Normalise(TH2D* &h){
 				
 			}
 		} 
+}
+// ------------------------------------------------------------------------------------------------------------
+// Unwrap histogram
+void UnwrapHist(TH2D* h2d, TH1D* &h_unwrap){
+	
+	int counter{0};
+	for (int i=1; i<h2d->GetXaxis()->GetNbins()+1; i++) { // Loop over rows
+		for (int j=1; j<h2d->GetYaxis()->GetNbins()+1; j++){// Loop over columns
+			counter++;
+			h_unwrap->SetBinContent(counter, h2d->GetBinContent(i , j)  );
+		}
+	}
 }
 // ------------------------------------------------------------------------------------------------------------
 void CalcCovariance(std::string inputmode, const char* mode, TString Cov_names, TFile* f, TH2D* &cov, TH1D* horig, const int nbins  ){
@@ -471,7 +488,7 @@ TH1D* getBand(std::vector<TH1D*> vhIn){
 	int Nbins   = hband->GetXaxis()->GetNbins(); 
 
 	// Loop over the bins
-	for(int jj=1;jj<=Nbins;jj++){
+	for(int jj=1; jj < Nbins+1; jj++){
 	
 		// Mean of each bin
 		double mean = 0;
@@ -559,6 +576,13 @@ void HPUncertainties_Leo(TFile* fIn, TH1D* &herror, std::string inputmode, const
 // Function to draw assymetric errorband with CV and mean
 void DrawErrorBand(TFile* f, const char* mode, TLegend* leg, std::string inputmode){
 
+	const char* mode_title;
+	// Create title characters from input
+	if (strncmp("numu", mode, 4) == 0)		mode_title = "#nu_{#mu}";
+	if (strncmp("nue", mode, 3) == 0)		mode_title = "#nu_{e}";
+	if (strncmp("numubar", mode, 7) == 0)	mode_title = "#bar{#nu_{#mu}}";
+	if (strncmp("nuebar", mode, 6) == 0)	mode_title = "#bar{#nu_{e}}";
+
 	TH1D* hcv;
 
 	std::vector<TH1D*> vhuniv;
@@ -577,10 +601,15 @@ void DrawErrorBand(TFile* f, const char* mode, TLegend* leg, std::string inputmo
 		hu = (TH1D*)key->ReadObj(); // get the histogram
 		i=vhuniv.size()-1;
 
-		// Veto theta histograms
 		std::string huname = hu->GetName();
-		std::string thetaname = Form("Th_%s_PPFXMaster_Uni_%i_AV_TPC",mode, i);
-		if ( huname == thetaname ) continue;
+		// Find the label name 
+		if (huname.find(inputmode) != std::string::npos) {
+			// Veto theta and 2D histograms
+			std::string thetaname = Form("Th_%s_%s_Uni_%i_AV_TPC",mode, inputmode.c_str() , i);
+			if ( huname == thetaname ) continue;
+			if (huname.find("2D") != std::string::npos) continue;
+		}
+		else continue;
 		
 		vhuniv.push_back(hu);
 	}
@@ -614,13 +643,15 @@ void DrawErrorBand(TFile* f, const char* mode, TLegend* leg, std::string inputmo
 	htemp->SetStats(0);
 	htemp->SetMarkerSize(0);
 	// htemp->SetTitle(Form("Error band for %s",mode));
-	htemp->GetXaxis()->SetTitle("#nu energy [GeV]");
+	htemp->GetXaxis()->SetTitle("Neutrino Energy [GeV]");
 
-	htemp->GetYaxis()->SetTitle(Form("%s / 6e20 POT / m^{2} / GeV", mode));
+	htemp->GetYaxis()->SetTitle(Form("%s / 6 #times 10^{20} POT / cm^{2} / GeV", mode_title));
 
 	htemp->Draw("e2");
 	htemp_clone->Draw("same,hist");
 	hcv->Draw("hist,same");
+
+	IncreaseLabelSize(htemp);
 
 	leg->AddEntry(htemp,"Mean Flux","LF");
 	leg->AddEntry(hcv,"CV Flux","l");
@@ -730,8 +761,6 @@ double GetTotalFlux(TFile *f1){
 	return flux_cv;
 
 }
-
-
 // ------------------------------------------------------------------------------------------------------------
 // Function to calculate the mean 2d histogram from the multisim variations and retun the unwarapped version
 void CalcMeanHist(TFile* fIn, TH1D* &hMean_unwrap, int nBinsEnu, int nBinsTh, const char* mode){
@@ -756,7 +785,7 @@ void CalcMeanHist(TFile* fIn, TH1D* &hMean_unwrap, int nBinsEnu, int nBinsTh, co
 		hu = (TH2D*)key->ReadObj(); // Get the histogram
 		i=vhuniv.size()-1;
 		
-		// Veto theta histograms and 2d
+		// Veto theta histograms and 1D
 		std::string huname = hu->GetName();
 		if (huname.find("PPFXMaster") != std::string::npos) {
 			// Veto theta and 2D histograms
@@ -767,27 +796,12 @@ void CalcMeanHist(TFile* fIn, TH1D* &hMean_unwrap, int nBinsEnu, int nBinsTh, co
 		else continue;
 
 		// Normalise 2d hist by bin area / deg / GeV
-		// Loop over rows
-		for (int p=1; p<nBinsEnu+1; p++) {
-			// Loop over columns
-			for (int q=1; q<nBinsTh+1; q++) {
-				hu->SetBinContent(p,q, hu->GetBinContent(p, q)/ ( hu->GetXaxis()->GetBinWidth(p) * hu->GetYaxis()->GetBinWidth(q) ));
-			}
-		} 
-		hu->Scale((6.0e20)/ (GetPOT(fIn,false) *1.0e4)); // scale to right POT and m2
+		Normalise(hu);
+		hu->Scale((6.0e20)/ (GetPOT(fIn, false) *1.0e4)); // scale to right POT and m2
 
 		// Unwrap the histogram to binindex
 		hu_unwrap = new TH1D("", "",nBinsEnu*nBinsTh, 0, nBinsEnu*nBinsTh );
-
-		counter = 0;
-		// Loop over rows
-		for (int i=1; i<nBinsEnu+1; i++) { 
-			// Loop over columns
-			for (int j=1; j<nBinsTh+1; j++){
-				counter ++;
-				hu_unwrap->SetBinContent( counter, hu->GetBinContent(i , j)  );
-			}
-		}
+		UnwrapHist( hu, hu_unwrap);
 		
 		// Push back to vector
 		vhuniv.push_back(hu_unwrap);
@@ -838,8 +852,9 @@ void CalcPull(TH1D* hCV, TH1D *hMean, TH1D* &hPull){
 
 	std::cout << "Calculating the Pull"<<std::endl;
 	
-	for (unsigned int i = 1; i< hCV->GetNbinsX() + 1; i++)
+	for (unsigned int i = 1; i< hCV->GetNbinsX() + 1; i++){
 		hPull->Fill( (hCV->GetBinContent(i) - hMean->GetBinContent(i) )/ (hMean->GetBinError(i)/sqrt(100))  );
+		}
 	
 	hPull->SetLineWidth(2);
 	hPull->SetLineColor(kBlack);
@@ -860,7 +875,7 @@ void CalcFractionalError(TH2D* cov4d, TH1D* hCV, TH1D* &hFracError4d ){
 		else hFracError4d->SetBinContent(i, sqrt(cii) / hCV->GetBinContent(i));
 
 	}
-	hFracError4d->SetTitle("4d Covariance Matrix Fractional Error; Bin index; Fractional Error");
+	hFracError4d->SetTitle("Covariance Matrix Fractional Error; Bin index; Fractional Error");
 	hFracError4d->SetLineColor(kBlack);
 	hFracError4d->SetLineWidth(2);
 }
@@ -903,18 +918,6 @@ double IntegrateHist2D(TH2D* h){
 	return flux;
 }
 // ------------------------------------------------------------------------------------------------------------
-// Unwrap histogram
-void UnwrapHist(TH2D* h2d, TH1D* &h_unwrap){
-	
-	int counter{0};
-	for (int i=1; i<h2d->GetXaxis()->GetNbins()+1; i++) { // Loop over rows
-		for (int j=1; j<h2d->GetYaxis()->GetNbins()+1; j++){// Loop over columns
-			counter++;
-			h_unwrap->SetBinContent(counter, h2d->GetBinContent(i , j)  );
-		}
-	}
-}
-// ------------------------------------------------------------------------------------------------------------
 // Function to return a vector of tlines for a 2d hist. Contaons hardcoded bins for this analysis
 std::vector<TLine*> MakeTLineVector(TString mode){
 
@@ -925,8 +928,8 @@ std::vector<TLine*> MakeTLineVector(TString mode){
 		Ebins = { 0.00 ,0.06, 0.125,  0.25, 0.5, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 3.50};
 	} 
 	else{ // numu or numubar
-		// Ebins = {0.00, 0.025, 0.03, 0.235 ,0.24, 0.50, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 3.00, 4.00};
-		Ebins = {0.00, 0.025, 0.03, 0.235 ,0.24, 0.50}; // for zoomed version
+		Ebins = {0.00, 0.025, 0.03, 0.235 ,0.24, 0.50, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 3.00, 4.00};
+		// Ebins = {0.00, 0.025, 0.03, 0.235 ,0.24, 0.50}; // for zoomed version
 
 	}
 
@@ -977,3 +980,4 @@ void Draw_Nu_Mode(TCanvas* c, const char* horn){
     pt->SetTextSize(0.04);
     pt->Draw();
 }
+// ------------------------------------------------------------------------------------------------------------

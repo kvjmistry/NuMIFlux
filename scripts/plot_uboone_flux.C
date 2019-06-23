@@ -71,7 +71,6 @@ void plot_uboone_flux( const char* mode) { // (input, numu/nue)
 	hCV_Flux->SetTitle(Form("%s; E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}", mode_title));
 	hCV_Flux->Draw("hist,same");
 	gPad->SetLogy();
-	gPad->Update();
 	
 	// Legend
 	lFlux->SetNColumns(1);
@@ -80,7 +79,9 @@ void plot_uboone_flux( const char* mode) { // (input, numu/nue)
 	lFlux->SetTextFont(62); 
 	lFlux->AddEntry(hCV_Flux, "PPFX Flux","l");
 	lFlux->Draw();
+	IncreaseLabelSize(hCV_Flux);
 
+	// IncreaseLabelSize(hCV_Flux);
 	Draw_Nu_Mode(c1, horn); // Draw FHC Mode/RHC Mode Text
 	
 	// ------------------------------------------------------------------------------------------------------------
@@ -104,7 +105,6 @@ void plot_uboone_flux( const char* mode) { // (input, numu/nue)
 	hCV_Flux->Draw("hist");
 	hUW_Flux->Draw("hist,same");
 	gPad->SetLogy();
-	gPad->Update();
 	
 	l_uw_v_w->AddEntry(hUW_Flux, "Unweighted","l");
 	l_uw_v_w->AddEntry(hCV_Flux, "PPFX","l");
@@ -114,6 +114,8 @@ void plot_uboone_flux( const char* mode) { // (input, numu/nue)
 	l_uw_v_w->SetTextFont(62); 
 	l_uw_v_w->Draw();
 
+	// IncreaseLabelSize(hUW_Flux);
+	IncreaseLabelSize(hCV_Flux);
 	Draw_Nu_Mode(c_uw_v_w, horn); // Draw FHC Mode/RHC Mode Text
 
 	// ------------------------------------------------------------------------------------------------------------
@@ -203,9 +205,10 @@ void plot_uboone_flux( const char* mode) { // (input, numu/nue)
 			std::cout << "Drawing correlation plot" << std::endl;
 			cor[l]->SetTitle("Correlation Master Weight");
 			cor[l]->Draw("colz");
+			IncreaseLabelSize(cor[l]);
 		}
 
-		Draw_Nu_Mode(c3, horn); // Draw FHC Mode/RHC Mode Text
+		// Draw_Nu_Mode(c3, horn); // Draw FHC Mode/RHC Mode Text
 
 
 		gStyle->SetPalette(55); // kRainbow
@@ -213,11 +216,10 @@ void plot_uboone_flux( const char* mode) { // (input, numu/nue)
 		// Plot fractional errors overlaid with official NOvA plot
 		c4->cd();
 
-		Draw_Nu_Mode(c4, horn); // Draw FHC Mode/RHC Mode Text
-
-
 		// Make the plot
 		if (overwrite_errors == false) legDraw(lfrac, herr[l], inputmode[l], mode);
+		IncreaseLabelSize(herr[l]);
+		
 		
 		herr[l]->GetYaxis()->SetRangeUser(0,0.5);
 		herr[l]->SetTitle(Form("%s; Energy [GeV];Fractional Uncertainty", mode_title));
@@ -227,6 +229,7 @@ void plot_uboone_flux( const char* mode) { // (input, numu/nue)
 
 	// Draw the legend
 	if (overwrite_errors == false) lfrac->Draw();
+	Draw_Nu_Mode(c4, horn); // Draw FHC Mode/RHC Mode Text
 
 	// ------------------------------------------------------------------------------------------------------------
 	//                          Override the errors to use Leos method (mean instead of CV)
@@ -254,6 +257,7 @@ void plot_uboone_flux( const char* mode) { // (input, numu/nue)
 	cband->cd();
 	TLegend* leg = new TLegend(0.60,0.70,0.90,0.90);
 	DrawErrorBand(f1, mode, leg, "PPFXMaster"); // Plot for masterweight
+	Draw_Nu_Mode(cband, horn); // Draw FHC Mode/RHC Mode Text
 	leg->Draw();
 
 	// ------------------------------------------------------------------------------------------------------------
@@ -272,13 +276,13 @@ void plot_uboone_flux( const char* mode) { // (input, numu/nue)
 	//------------------------------
 	// Normalise 2d hist by bin area / deg / GeV
 	Normalise(hCV2d);
-	double POT_2d = GetPOT(f1);
+	double POT_2d = GetPOT(f1,false);
 	hCV2d->Scale((6.0e20)/ (POT_2d * 1.0e4)); // scale to POT
 	//------------------------------
 	// Unwrap the histogram to binindex
 	hCV_unwrap = new TH1D("", "",nBinsEnu*nBinsTh, 0, nBinsEnu*nBinsTh );
 	UnwrapHist( hCV2d, hCV_unwrap);
-	
+
 	// Draw the CV Unwrapped
 	TCanvas* c_CV_unwrap= new TCanvas();
 	c_CV_unwrap->cd();
@@ -286,14 +290,21 @@ void plot_uboone_flux( const char* mode) { // (input, numu/nue)
 	hCV_unwrap->SetLineWidth(2);
 	hCV_unwrap->SetLineColor(kBlack);
 	hCV_unwrap->Draw("hist");
+	gPad->SetLogy();
+	IncreaseLabelSize(hCV_unwrap);
+	Draw_Nu_Mode(c_CV_unwrap, horn); // Draw FHC Mode/RHC Mode Text
 
 	// Draw the CV in 2D
 	TCanvas* c_CV2d= new TCanvas();
 	c_CV2d->cd();
 	hCV2d->SetTitle(Form("%s CV 2D; Energy [GeV]; Theta [deg] ", mode_title));
 	gPad->SetLogz();
-	gPad->Update();
+	// gPad->Update();
 	hCV2d->Draw("colz");
+	hCV2d->GetZaxis()->SetTitle("#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
+	hCV2d->GetZaxis()->SetTitleOffset(+1.3);
+	IncreaseLabelSize(hCV2d);
+	Draw_Nu_Mode(c_CV2d, horn); // Draw FHC Mode/RHC Mode Text
 
 	//------------------------------
 	// 4D Covariance matrix	
@@ -323,11 +334,15 @@ void plot_uboone_flux( const char* mode) { // (input, numu/nue)
 	
 	TCanvas* c_cov= new TCanvas();
 	c_cov->cd();
-	cov4d->SetTitle(Form("%s 4D Covariance Matrix ; Bin i; Bin j", mode_title));
-	gStyle->SetPalette(kDeepSea);
+	cov4d->SetTitle(Form("%s Covariance Matrix ; Bin i; Bin j", mode_title));
+	gStyle->SetPalette(kViridis);
 	cov4d->Draw("colz");
+	cov4d->GetZaxis()->SetTitle("#nu^{2} / 3.6 #times 10^{41} POT / GeV^{2} / cm^{4}");
+	cov4d->GetZaxis()->SetTitleOffset(+1.3);
+	IncreaseLabelSize(cov4d);
+	Draw_Nu_Mode(c_cov, horn); // Draw FHC Mode/RHC Mode Text
 	gPad->SetLogz();
-	gPad->Update();
+	// gPad->Update();
 
 	//------------------------------
 	// Calculate the correlation matrix
@@ -335,8 +350,11 @@ void plot_uboone_flux( const char* mode) { // (input, numu/nue)
 	c_corr4d->cd();
 	TH2D *hcorr4d = (TH2D*) cov4d->Clone("hCorr4d");
 	CalcCorrelation(hcorr4d, cov4d, nBinsEnu*nBinsTh );
-	hcorr4d->SetTitle(Form("%s 4D Correlation Matrix ; Bin i; Bin j", mode_title));
+	hcorr4d->SetTitle(Form("%s Correlation Matrix ; Bin i; Bin j", mode_title));
 	hcorr4d->Draw("colz");
+	hcorr4d->GetZaxis()->SetTitle(" ");
+	IncreaseLabelSize(hcorr4d);
+	Draw_Nu_Mode(c_corr4d, horn); // Draw FHC Mode/RHC Mode Text
 	// gPad->SetLogz();
 	// gPad->Update();
 	//------------------------------
@@ -345,8 +363,11 @@ void plot_uboone_flux( const char* mode) { // (input, numu/nue)
 	c_fraccov4d->cd();
 	TH2D *hfraccov4d = (TH2D*) cov4d->Clone("hfraccov4d");
 	CalcFracCovariance(hCV_unwrap, hfraccov4d, nBinsEnu*nBinsTh );
-	hfraccov4d->SetTitle(Form("%s 4D Fractional Covariance Matrix ; Bin i; Bin j", mode_title));
+	hfraccov4d->SetTitle(Form("%s Fractional Covariance Matrix ; Bin i; Bin j", mode_title));
+	hfraccov4d->GetZaxis()->SetTitle(" ");
 	hfraccov4d->Draw("colz");
+	IncreaseLabelSize(hfraccov4d);
+	Draw_Nu_Mode(c_fraccov4d, horn); // Draw FHC Mode/RHC Mode Text
 
 	//------------------------------
 	// Create a histogram with the bin indexes
@@ -363,9 +384,9 @@ void plot_uboone_flux( const char* mode) { // (input, numu/nue)
 		}
 	}
 	// hbinidx->SetTitle("Bin Indexes; Energy [GeV]; Theta [deg]");
-	hbinidx->SetTitle(Form("%s Bin Indexes Zoomed; Energy [GeV]; Theta [deg]", mode_title));
-	IncreaseLabelSize(hbinidx);
+	hbinidx->SetTitle(Form("%s Bin Indexes; Energy [GeV]; Theta [deg]", mode_title));
 	hbinidx->Draw("text00");
+	IncreaseLabelSize(hbinidx);
 
 	std::vector<TLine*> vLine = MakeTLineVector(mode);
 	for (unsigned int i =0; i < vLine.size(); i++){
@@ -374,12 +395,10 @@ void plot_uboone_flux( const char* mode) { // (input, numu/nue)
         vLine[i]->SetLineStyle(3);
         vLine[i]->Draw("SAME");
     }
-
 	
-	// hbinidx->GetXaxis()->SetRangeUser(0,0.5);
-	// gPad->SetLogx();
-	// gPad->Update();
-
+	hbinidx->GetXaxis()->SetRangeUser(0,0.5);
+	hbinidx->GetXaxis()->SetRangeUser(0,3.5);
+	gPad->SetRightMargin(0.1);
 
 	// ------------------------------------------------------------------------------------------------------------
 	// Compare the percentage difference between the mean and the CV in each unwrapped histogram bin right now we output the pull
@@ -389,21 +408,25 @@ void plot_uboone_flux( const char* mode) { // (input, numu/nue)
 	TH1D *hMean_unwrap = (TH1D*) hCV_unwrap->Clone("hMean_unwrap");
 	CalcMeanHist(f1, hMean_unwrap, nBinsEnu, nBinsTh,mode);
 
-	// Now call a function that calcuates the ratio between them
-	CalcRatioMeanCV(hCV_unwrap, hMean_unwrap, hRatioCVMean);
-
 	// Fill a histogram with the Ratio values to better visualise
 	TH1D* hRatioMeanCVHist = new TH1D("hRatioMeanCVHist", "Ratio CV to Mean; Ratio; Entries", 30, 0.6, 1.4);
 	TH1D* hPull = new TH1D("hPull", "CV - Mean / (stdev/#sqrt{n}); Pull; Entries", 25,-10, 10); // histogram with the pull 
 
-	// Get rid of zeros
-	for (unsigned int i =1; i <  hRatioCVMean->GetNbinsX()+1; i++ ){
-		if (hRatioCVMean->GetBinContent(i) == 0) continue;
-		hRatioMeanCVHist->Fill(hRatioCVMean->GetBinContent(i));
-	}
-
 	CalcPull(hCV_unwrap, hMean_unwrap, hPull);
 	hPull->Draw("hist");
+	gPad->SetLogy();
+	IncreaseLabelSize(hPull);
+	Draw_Nu_Mode(cMeanCV, horn); // Draw FHC Mode/RHC Mode Text
+
+	// // Now call a function that calcuates the ratio between them
+	// CalcRatioMeanCV(hCV_unwrap, hMean_unwrap, hRatioCVMean);
+
+	// // Get rid of zeros
+	// for (unsigned int i =1; i <  hRatioCVMean->GetNbinsX()+1; i++ ){
+	// 	if (hRatioCVMean->GetBinContent(i) == 0) continue;
+	// 	// std::cout << hRatioCVMean->GetBinContent(i) << std::endl;
+	// 	hRatioMeanCVHist->Fill(hRatioCVMean->GetBinContent(i));
+	// }
 
 	// hCV_unwrap->Draw("hist");
 	// hMean_unwrap->Draw("histsame");
@@ -425,32 +448,43 @@ void plot_uboone_flux( const char* mode) { // (input, numu/nue)
 	CalcFractionalError(cov4d, hCV_unwrap, hFracError4d );
 	c_FracError4d->cd();
 	hFracError4d->Draw("his");
+	IncreaseLabelSize(hFracError4d);
+	Draw_Nu_Mode(c_FracError4d, horn); // Draw FHC Mode/RHC Mode Text
 
-	
-	c4->Update();
-	cband->Update();
-	// c1->Update();
-	c_uw_v_w->Update();
-	c4->Update();
 	
 	// ++++++++++++++++++++++++++++++++++
 	// Save the plots as pdfs in the plots folder
 	// ++++++++++++++++++++++++++++++++++
+	std::cout << "-------------------------------------"<< std::endl;
+	std::cout << "Now Saving Histograms.....\n"<< std::endl;
+
 	// create plots folder if it does not exist
-	gSystem->Exec("if [ ! -d \"plots\" ]; then echo \"\nPlots folder does not exist... creating\"; mkdir plots; fi"); 
+	gSystem->Exec("if [ ! -d \"plots/Hadron_Production\" ]; then echo \"\nplots/Hadron_Production folder does not exist... creating\"; mkdir -p plots/Hadron_Production; fi");
+	gSystem->Exec("if [ ! -d \"plots/CV_Flux\" ]; then echo \"\nplots/CV_Flux folder does not exist... creating\"; mkdir -p plots/CV_Flux; fi"); 
 	
-	c1->Print(Form("plots/CV_Flux_Prediction_Uneven_bins_%s.pdf", mode));
-	c3->Print(Form("plots/Correlation_Matrix_%s.pdf", mode));
-	c4->Print(Form("plots/Fractional_Uncertainties_%s.pdf", mode));
+	c1->Print(Form("plots/CV_Flux/CV_Flux_Prediction_Uneven_bins_%s_%s.pdf",horn, mode)); // CV 
 	
-	c_uw_v_w->Print(Form("plots/Unweighted_vs_ppfx_%s.pdf", mode));
-	c_cov->Print(Form("plots/CovarianceMarix4D_%s.pdf", mode));
-	c_corr4d->Print(Form("plots/CorrelationMarix4D_%s.pdf", mode));
-	c_FracError4d->Print(Form("plots/FracCovarianceMarix4D_%s.pdf", mode));
-	c_binidx->Print(Form("plots/BinIndex_%s.pdf", mode));
-	c_fraccov4d->Print(Form("plots/FracCovariance4d_%s.pdf", mode));
-	c_CV2d->Print(Form("plots/CV2d_%s.pdf", mode));
-	cband->Print(Form("plots/CV_vs_Mean_Flux_%s.pdf", mode));
-	std::cout << "\n"<< std::endl;
+	// c3->Print(Form("plots/Correlation_Matrix_%s.pdf", mode));
+	
+	c4->Print(Form("plots/Hadron_Production/Fractional_Uncertainties_%s_%s.pdf",horn, mode));
+	
+	c_uw_v_w->Print(Form("plots/CV_Flux/CV_Flux_unweighted_vs_ppfx_uneven_bins_%s_%s.pdf",horn, mode));
+	
+	c_cov->Print(Form("plots/Hadron_Production/Covariance_Marix_%s.pdf", mode));
+	
+	c_corr4d->Print(Form("plots/Hadron_Production/Correlation_Marix_%s_%s.pdf",horn,  mode));
+	
+	c_FracError4d->Print(Form("plots/Hadron_Production/Frac_Covariance_Marix_%s_%s.pdf",horn, mode));
+	
+	c_binidx->Print(Form("plots/Hadron_Production/BinIndex_%s.pdf", mode));
+	
+	c_fraccov4d->Print(Form("plots/Hadron_Production/Frac_Covariance_%s_%s.pdf",horn, mode));
+	
+	c_CV2d->Print(Form("plots/CV_Flux/CV_Flux_Energy_Theta_%s_%s.pdf",horn, mode));
+	
+	cband->Print(Form("plots/CV_Flux/CV_vs_Mean_Flux_%s_%s.pdf",horn, mode));
+
+	cMeanCV->Print(Form("plots/Hadron_Production/CV_Pull_%s_%s.pdf",horn, mode));
+	
 	
 } // end of main
