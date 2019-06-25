@@ -35,7 +35,7 @@ public :
   double NominalPOT = 6e20;
   bool debug = false;
   double fDefaultWeightCorrection = 1./(10000. * TMath::Pi());
-  double Ntarget = 4.76e31/56.41e6*256.35*233*1036.8; //TPC active!!!
+  double Ntarget = 4.76e31/56.41e6* 256.35*233*1036.8; //TPC active!!!
   double AccumulatedPOT=0.;
   int treeNumber = -1;
 

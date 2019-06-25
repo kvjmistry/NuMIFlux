@@ -153,14 +153,9 @@ void plot_gsimple_flux(const char* horn, const char* mode) {
 	l_plotall->SetTextFont(62); 
 	l_plotall->Draw();
 
-	
-	
-	// c1->Update();
-	// c_plotall->Update();
-
-	// ++++++++++++++++++++++++++++++++++
+	// ------------------------------------------------------------------------------------------------------------
 	// Save the plots as pdfs in the plots folder
-	// ++++++++++++++++++++++++++++++++++
+	// ------------------------------------------------------------------------------------------------------------
 	// create plots folder if it does not exist
 	gSystem->Exec("if [ ! -d \"plots\" ]; then echo \"\nPlots folder does not exist... creating\"; mkdir plots; fi"); 
 	gSystem->Exec("if [ ! -d \"plots/CV_Flux\" ]; then echo \"\n CV_Flux folder does not exist... creating\"; mkdir plots/CV_Flux; fi"); 

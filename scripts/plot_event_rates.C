@@ -1,0 +1,296 @@
+/*
+This script will plot the flux at microboone for the flux made using flugg/gsimple files
+and compare this with the dk2nu and ppfx predictions.
+
+To run this script run the command root -l 'plot_gsimple_flux.C("fhc", "nue")' 
+where fhc/rhc, nue/nuebar/numu/numubar are the available options.
+
+This file depends on the functions.h script so make
+sure this file is included in the same directory.
+
+*/
+
+#include "functions.h"
+
+
+void DrawSpecifiers(TCanvas* c, TH1D* &h, const char* mode){
+	c->cd();
+
+	// Plottings
+	if (!strcmp(mode, "numu")){
+		h->SetLineColor(kRed+1);
+		h->SetLineWidth(2);
+	}
+	if (!strcmp(mode, "nue")){
+		h->SetLineColor(kRed+1);
+		h->SetLineWidth(2);
+		h->SetLineStyle(2);
+	}
+	if (!strcmp(mode, "numubar")){
+		h->SetLineColor(kBlue+1);
+		h->SetLineWidth(2);
+	}
+	if (!strcmp(mode, "nuebar")){
+		h->SetLineColor(kBlue+1);
+		h->SetLineWidth(2);
+		h->SetLineStyle(2);
+	}
+	
+	IncreaseLabelSize(h);
+	h->GetXaxis()->SetRangeUser(0,7);
+}
+
+// ----------------------------------------------------------------------------
+// Main
+void plot_event_rates(const char* horn) {
+	gStyle->SetOptStat(0); // say no to stats box
+
+	// Pre declare variables
+	TString Gethist_TPC, Gethist_TPC_dk2nu;
+	TFile *f, *f_gsimp;
+	bool boolfile, boolhist;
+	double rebin{5}; // number to rebin the histograms by
+
+	// double Ntarget = 4.76e31/56.41e6* 256.35*233*1036.8; //TPC active!!!
+
+	double histMin = 0;
+	double histMax = 20;
+	int histNbins = 4000;
+	TGraph *genieXsecNumuCC;
+	TGraph *genieXsecNumubarCC;
+	TGraph *genieXsecNueCC;
+	TGraph *genieXsecNuebarCC;
+	TH1D* numuCCHisto  = new TH1D("numuCCHisto", "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC / 79 t / 6 #times 10^{20} POT",histNbins,histMin,histMax);
+	TH1D* anumuCCHisto = new TH1D("anumuCCHisto", "#bar{#nu}_{#mu} CC; #bar{#nu}_{#mu} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT",histNbins,histMin,histMax);
+	TH1D* nueCCHisto   = new TH1D("nueCCHisto", "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC / 79 t / 6 #times 10^{20} POT",histNbins,histMin,histMax);
+	TH1D* anueCCHisto  = new TH1D("anueCCHisto", "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT",histNbins,histMin,histMax);
+
+	// Gsimple 
+	TH1D* numuCCHisto_gsimp  = new TH1D("numuCCHisto_gsimp", "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC / 79 t / 6 #times 10^{20} POT",histNbins,histMin,histMax);
+	TH1D* anumuCCHisto_gsimp = new TH1D("anumuCCHisto_gsimp", "#bar{#nu}_{#mu} CC; #bar{#nu}_{#mu} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT",histNbins,histMin,histMax);
+	TH1D* nueCCHisto_gsimp   = new TH1D("nueCCHisto_gsimp", "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC / 79 t / 6 #times 10^{20} POT",histNbins,histMin,histMax);
+	TH1D* anueCCHisto_gsimp  = new TH1D("anueCCHisto_gsimp", "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT",histNbins,histMin,histMax);
+	
+	// ------------------------------------------------------------------------------------------------------------
+	// Make a plot of flux x genie spline
+	// ------------------------------------------------------------------------------------------------------------
+	if (!strcmp(horn,"fhc")) {
+		boolfile  = GetFile(f ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root");
+		if (boolfile == false) gSystem->Exit(0);
+	}
+	else {
+		boolfile  = GetFile(f ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/RHC/output_uboone_run0.root");
+		if (boolfile == false) gSystem->Exit(0);
+	}
+	
+	// Get the POT
+	double fPOT = GetPOT(f);
+
+	// Get Histograms
+	TH1D *h_nue, *h_nuebar, *h_numu, *h_numubar;
+	boolhist = GetHist(f, h_nue,     "nue/Detsmear/nue_UW_AV_TPC_5MeV_bin");         if (boolhist == false) gSystem->Exit(0);
+	boolhist = GetHist(f, h_nuebar,  "nuebar/Detsmear/nuebar_UW_AV_TPC_5MeV_bin");   if (boolhist == false) gSystem->Exit(0);
+	boolhist = GetHist(f, h_numu,    "numu/Detsmear/numu_UW_AV_TPC_5MeV_bin");       if (boolhist == false) gSystem->Exit(0);
+	boolhist = GetHist(f, h_numubar, "numubar/Detsmear/numubar_UW_AV_TPC_5MeV_bin"); if (boolhist == false) gSystem->Exit(0);
+
+	// Get Gsimple histograms	
+	TH1D *h_nue_gsimp, *h_nuebar_gsimp, *h_numu_gsimp, *h_numubar_gsimp;
+	boolfile  = GetFile(f_gsimp , "/uboone/data/users/kmistry/work/PPFX/uboone/NuMIFlux_update_morebins.root"); if (boolfile == false) gSystem->Exit(0);
+	boolhist = GetHist(f_gsimp, h_nue_gsimp,     "nueFluxHisto");   if (boolhist == false) gSystem->Exit(0);
+	boolhist = GetHist(f_gsimp, h_nuebar_gsimp,  "anueFluxHisto");  if (boolhist == false) gSystem->Exit(0);
+	boolhist = GetHist(f_gsimp, h_numu_gsimp,    "numuFluxHisto");  if (boolhist == false) gSystem->Exit(0);
+	boolhist = GetHist(f_gsimp, h_numubar_gsimp, "anumuFluxHisto"); if (boolhist == false) gSystem->Exit(0);
+	
+	// Normalise
+	// Normalise(hist);
+
+	// Scale
+	h_nue->Scale((6.0e20)/ (fPOT*1.0e4) );
+	h_nuebar->Scale((6.0e20)/ (fPOT*1.0e4) );
+	h_numu->Scale((6.0e20)/ (fPOT*1.0e4) );
+	h_numubar->Scale((6.0e20)/ (fPOT*1.0e4) );
+
+	const char* genieXsecPath = gSystem->ExpandPathName("$(GENIEXSECPATH)");
+	if ( !genieXsecPath ) {
+		std::cout << "$(GENIEXSECPATH) not defined." << std::endl;
+		std::cout << "Please setup *genie_xsec*." << std::endl; 
+	}
+
+	if ( genieXsecPath ) {
+		TString genieXsecFileName = genieXsecPath;
+		genieXsecFileName += "/xsec_graphs.root";
+		TFile *genieXsecFile = new TFile(genieXsecFileName,"READ");
+		genieXsecNumuCC    = (TGraph *) genieXsecFile->Get("nu_mu_Ar40/tot_cc");
+		genieXsecNumubarCC = (TGraph *) genieXsecFile->Get("nu_mu_bar_Ar40/tot_cc");
+		genieXsecNueCC     = (TGraph *) genieXsecFile->Get("nu_e_Ar40/tot_cc");
+		genieXsecNuebarCC  = (TGraph *) genieXsecFile->Get("nu_e_bar_Ar40/tot_cc");
+		genieXsecFile->Close();
+
+		// TSpline3* genieXsecSplineNumuCC = new TSpline3("genieXsecSplineNumuCC", genieXsecNumuCC, "", 0,6);
+
+		double value;
+		for(int i=1; i<histNbins+1; i++) {
+			
+			// Nue
+			value = h_nue->GetBinContent(i);
+			value *= genieXsecNueCC->Eval(h_nue->GetBinCenter(i)); // Eval implies linear interpolation
+			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
+			nueCCHisto->SetBinContent(i, value);
+
+			// Nuebar
+			value = h_nuebar->GetBinContent(i);
+			value *= genieXsecNuebarCC->Eval(h_nuebar->GetBinCenter(i)); // Eval implies linear interpolation
+			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
+			anueCCHisto->SetBinContent(i, value);
+
+			// Numu
+			value = h_numu->GetBinContent(i);
+			value *= genieXsecNumuCC->Eval(h_numu->GetBinCenter(i)); // Eval implies linear interpolation
+			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
+			numuCCHisto->SetBinContent(i, value);
+
+			// Numubar
+			value = h_numubar->GetBinContent(i);
+			value *= genieXsecNumubarCC->Eval(h_numubar->GetBinCenter(i)); // Eval implies linear interpolation
+			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
+			anumuCCHisto->SetBinContent(i, value);
+
+			// ------------------------------  GSimple  -------------------------------------------------
+			// Nue
+			value = h_nue_gsimp->GetBinContent(i);
+			value *= genieXsecNueCC->Eval(h_nue_gsimp->GetBinCenter(i)); // Eval implies linear interpolation
+			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
+			nueCCHisto_gsimp->SetBinContent(i, value);
+
+			// Nuebar
+			value = h_nuebar_gsimp->GetBinContent(i);
+			value *= genieXsecNuebarCC->Eval(h_nuebar_gsimp->GetBinCenter(i)); // Eval implies linear interpolation
+			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
+			anueCCHisto_gsimp->SetBinContent(i, value);
+
+			// Numu
+			value = h_numu_gsimp->GetBinContent(i);
+			value *= genieXsecNumuCC->Eval(h_numu_gsimp->GetBinCenter(i)); // Eval implies linear interpolation
+			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
+			numuCCHisto_gsimp->SetBinContent(i, value);
+
+			// Numubar
+			value = h_numubar_gsimp->GetBinContent(i);
+			value *= genieXsecNumubarCC->Eval(h_numubar_gsimp->GetBinCenter(i)); // Eval implies linear interpolation
+			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
+			anumuCCHisto_gsimp->SetBinContent(i, value);
+			// ---------------------------------------------------------------------------------------------
+
+		}
+	} // end if ( genieXsecPath )
+	TLegend* leg = new TLegend(0.75, 0.65, 0.95, 0.9);
+	leg->SetNColumns(1);
+	leg->SetBorderSize(0);
+	leg->SetFillStyle(0);
+	leg->SetTextFont(62);
+	leg->AddEntry(numuCCHisto, "#nu_{#mu}","l");
+	leg->AddEntry(anumuCCHisto, "#bar{#nu_{#mu}}","l");
+	leg->AddEntry(nueCCHisto, "#nu_{e} ","l");
+	leg->AddEntry(anueCCHisto, "#bar{#nu_{e}} ","l");
+
+	TLegend* leg_gsimp = new TLegend(0.75, 0.65, 0.95, 0.9);
+	leg_gsimp->SetNColumns(1);
+	leg_gsimp->SetBorderSize(0);
+	leg_gsimp->SetFillStyle(0);
+	leg_gsimp->SetTextFont(62);
+	leg_gsimp->SetTextSize(0.04);
+
+	// Rebin
+	nueCCHisto->Rebin(rebin);
+	anueCCHisto->Rebin(rebin);
+	numuCCHisto->Rebin(rebin);
+	anumuCCHisto->Rebin(rebin);
+	nueCCHisto_gsimp->Rebin(rebin);
+	anueCCHisto_gsimp->Rebin(rebin);
+	numuCCHisto_gsimp->Rebin(rebin);
+	anumuCCHisto_gsimp->Rebin(rebin);
+
+	// create plots folder if it does not exist
+	gSystem->Exec("if [ ! -d \"plots\" ]; then echo \"\nPlots folder does not exist... creating\"; mkdir plots; fi"); 
+	gSystem->Exec("if [ ! -d \"plots/CV_Flux\" ]; then echo \"\n CV_Flux folder does not exist... creating\"; mkdir plots/CV_Flux; fi"); 
+
+	//Nue
+	TCanvas* c_nue = new TCanvas();
+	DrawSpecifiers(c_nue, nueCCHisto, "nue");
+	DrawSpecifiers(c_nue, nueCCHisto_gsimp, "nue");
+	nueCCHisto_gsimp->SetLineColor(kGreen+1);
+	nueCCHisto->Draw("hist");
+	if (!strcmp(horn,"fhc")) nueCCHisto_gsimp->Draw("hist,same");
+	Draw_Nu_Mode(c_nue, horn); // Draw FHC Mode/RHC Mode Text
+	leg_gsimp->AddEntry(nueCCHisto, "dk2nu","l");
+	leg_gsimp->AddEntry(nueCCHisto_gsimp, "flugg","l");
+	if (!strcmp(horn,"fhc"))leg_gsimp->Draw();
+	gStyle->SetTitleH(0.07);
+	c_nue->Print(Form("plots/CV_Flux/Event_Rate_Prediction_%s_%s.pdf", horn, "nue"));
+	leg_gsimp->Clear();
+	
+	// Nuebar
+	TCanvas* c_nuebar = new TCanvas();
+	DrawSpecifiers(c_nuebar, anueCCHisto, "nuebar");
+	DrawSpecifiers(c_nuebar, anueCCHisto_gsimp, "nuebar");
+	anueCCHisto_gsimp->SetLineColor(kGreen+1);
+	anueCCHisto->Draw("hist");
+	if (!strcmp(horn,"fhc")) anueCCHisto_gsimp->Draw("hist,same");
+	Draw_Nu_Mode(c_nuebar, horn); // Draw FHC Mode/RHC Mode Text
+	leg_gsimp->AddEntry(anueCCHisto, "dk2nu","l");
+	leg_gsimp->AddEntry(anueCCHisto_gsimp, "flugg","l");
+	leg_gsimp->Draw();
+	gStyle->SetTitleH(0.07);
+	c_nuebar->Print(Form("plots/CV_Flux/Event_Rate_Prediction_%s_%s.pdf", horn, "nuebar"));
+	leg_gsimp->Clear();
+	
+	// Numu
+	TCanvas* c_numu = new TCanvas();
+	DrawSpecifiers(c_numu, numuCCHisto, "numu");
+	DrawSpecifiers(c_numu, numuCCHisto_gsimp, "numu");
+	numuCCHisto_gsimp->SetLineColor(kGreen+1);
+	numuCCHisto->Draw("hist");
+	if (!strcmp(horn,"fhc")) numuCCHisto_gsimp->Draw("hist,same");
+	Draw_Nu_Mode(c_numu, horn); // Draw FHC Mode/RHC Mode Text
+	leg_gsimp->AddEntry(numuCCHisto, "dk2nu","l");
+	leg_gsimp->AddEntry(numuCCHisto_gsimp, "flugg","l");
+	if (!strcmp(horn,"fhc"))leg_gsimp->Draw();
+	gStyle->SetTitleH(0.07);
+	c_numu->Print(Form("plots/CV_Flux/Event_Rate_Prediction_%s_%s.pdf", horn, "numu"));
+	leg_gsimp->Clear();
+	
+	// Numubar
+	TCanvas* c_numubar = new TCanvas();
+	DrawSpecifiers(c_numubar, anumuCCHisto, "numubar");
+	DrawSpecifiers(c_numubar, anumuCCHisto_gsimp, "numubar");
+	anumuCCHisto_gsimp->SetLineColor(kGreen+1);
+	anumuCCHisto->Draw("hist");
+	if (!strcmp(horn,"fhc")) anumuCCHisto_gsimp->Draw("hist,same");
+	Draw_Nu_Mode(c_numubar, horn); // Draw FHC Mode/RHC Mode Text
+	leg_gsimp->AddEntry(anumuCCHisto, "dk2nu","l");
+	leg_gsimp->AddEntry(anumuCCHisto_gsimp, "flugg","l");
+	if (!strcmp(horn,"fhc"))leg_gsimp->Draw();
+	gStyle->SetTitleH(0.07);
+	c_numubar->Print(Form("plots/CV_Flux/Event_Rate_Prediction_%s_%s.pdf", horn, "numubar"));
+	leg_gsimp->Clear();
+	
+	// All
+	TCanvas* c_all = new TCanvas();
+	gPad->SetLeftMargin(0.15);
+	gPad->SetBottomMargin(0.12);
+	numuCCHisto->SetTitle(";#nu Energy [GeV]; #nu CC / 79 t / 6 #times 10^{20} POT");
+	numuCCHisto->Draw("hist,same");
+	anumuCCHisto->Draw("hist,same");
+	nueCCHisto->Draw("hist,same");
+	anueCCHisto->Draw("hist,same");
+	Draw_Nu_Mode(c_all, horn); // Draw FHC Mode/RHC Mode Text
+	leg->Draw();
+	c_all->Print(Form("plots/CV_Flux/Event_Rate_Prediction_%s_all.pdf", horn));
+
+	// gSystem->Exit(0);
+
+} // end of main
+
+
+
+
