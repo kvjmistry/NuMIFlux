@@ -51,7 +51,9 @@ void plot_event_rates(const char* horn) {
 	bool boolfile, boolhist;
 	double rebin{5}; // number to rebin the histograms by
 
-	// double Ntarget = 4.76e31/56.41e6* 256.35*233*1036.8; //TPC active!!!
+	// double Ntarget = 4.76e31/56.41e6* 256.35*233*1036.8; //TPC active!!! Marco
+	double Ntarget = (1.3836*6.022e23*40*256.35*233*1036.8) / 39.95; //TPC active!!! Colton
+	// std::cout << "N_Targ:\t" << Ntarget << std::endl;
 
 	double histMin = 0;
 	double histMax = 20;
@@ -60,16 +62,16 @@ void plot_event_rates(const char* horn) {
 	TGraph *genieXsecNumubarCC;
 	TGraph *genieXsecNueCC;
 	TGraph *genieXsecNuebarCC;
-	TH1D* numuCCHisto  = new TH1D("numuCCHisto", "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC / 79 t / 6 #times 10^{20} POT",histNbins,histMin,histMax);
-	TH1D* anumuCCHisto = new TH1D("anumuCCHisto", "#bar{#nu}_{#mu} CC; #bar{#nu}_{#mu} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT",histNbins,histMin,histMax);
-	TH1D* nueCCHisto   = new TH1D("nueCCHisto", "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC / 79 t / 6 #times 10^{20} POT",histNbins,histMin,histMax);
-	TH1D* anueCCHisto  = new TH1D("anueCCHisto", "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT",histNbins,histMin,histMax);
+	TH1D* numuCCHisto  = new TH1D("numuCCHisto", "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC / 79 t / 6 #times 10^{20} POT / 25 MeV",histNbins,histMin,histMax);
+	TH1D* anumuCCHisto = new TH1D("anumuCCHisto", "#bar{#nu}_{#mu} CC; #bar{#nu}_{#mu} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 25 MeV",histNbins,histMin,histMax);
+	TH1D* nueCCHisto   = new TH1D("nueCCHisto", "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC / 79 t / 6 #times 10^{20} POT / 25 MeV",histNbins,histMin,histMax);
+	TH1D* anueCCHisto  = new TH1D("anueCCHisto", "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 25 MeV",histNbins,histMin,histMax);
 
 	// Gsimple 
-	TH1D* numuCCHisto_gsimp  = new TH1D("numuCCHisto_gsimp", "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC / 79 t / 6 #times 10^{20} POT",histNbins,histMin,histMax);
-	TH1D* anumuCCHisto_gsimp = new TH1D("anumuCCHisto_gsimp", "#bar{#nu}_{#mu} CC; #bar{#nu}_{#mu} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT",histNbins,histMin,histMax);
-	TH1D* nueCCHisto_gsimp   = new TH1D("nueCCHisto_gsimp", "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC / 79 t / 6 #times 10^{20} POT",histNbins,histMin,histMax);
-	TH1D* anueCCHisto_gsimp  = new TH1D("anueCCHisto_gsimp", "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT",histNbins,histMin,histMax);
+	TH1D* numuCCHisto_gsimp  = new TH1D("numuCCHisto_gsimp", "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC / 79 t / 6 #times 10^{20} POT / 25 MeV",histNbins,histMin,histMax);
+	TH1D* anumuCCHisto_gsimp = new TH1D("anumuCCHisto_gsimp", "#bar{#nu}_{#mu} CC; #bar{#nu}_{#mu} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 25 MeV",histNbins,histMin,histMax);
+	TH1D* nueCCHisto_gsimp   = new TH1D("nueCCHisto_gsimp", "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC / 79 t / 6 #times 10^{20} POT / 25 MeV",histNbins,histMin,histMax);
+	TH1D* anueCCHisto_gsimp  = new TH1D("anueCCHisto_gsimp", "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 25 MeV",histNbins,histMin,histMax);
 	
 	// ------------------------------------------------------------------------------------------------------------
 	// Make a plot of flux x genie spline
@@ -211,8 +213,7 @@ void plot_event_rates(const char* horn) {
 	anumuCCHisto_gsimp->Rebin(rebin);
 
 	// create plots folder if it does not exist
-	gSystem->Exec("if [ ! -d \"plots\" ]; then echo \"\nPlots folder does not exist... creating\"; mkdir plots; fi"); 
-	gSystem->Exec("if [ ! -d \"plots/CV_Flux\" ]; then echo \"\n CV_Flux folder does not exist... creating\"; mkdir plots/CV_Flux; fi"); 
+	gSystem->Exec("if [ ! -d \"plots/Event_Rates\" ]; then echo \"\n Event_Rates folder does not exist... creating\"; mkdir -p plots/Event_Rates; fi"); 
 
 	//Nue
 	TCanvas* c_nue = new TCanvas();
@@ -224,9 +225,9 @@ void plot_event_rates(const char* horn) {
 	Draw_Nu_Mode(c_nue, horn); // Draw FHC Mode/RHC Mode Text
 	leg_gsimp->AddEntry(nueCCHisto, "dk2nu","l");
 	leg_gsimp->AddEntry(nueCCHisto_gsimp, "flugg","l");
-	if (!strcmp(horn,"fhc"))leg_gsimp->Draw();
+	if (!strcmp(horn,"fhc")) leg_gsimp->Draw();
 	gStyle->SetTitleH(0.07);
-	c_nue->Print(Form("plots/CV_Flux/Event_Rate_Prediction_%s_%s.pdf", horn, "nue"));
+	c_nue->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "nue"));
 	leg_gsimp->Clear();
 	
 	// Nuebar
@@ -239,9 +240,9 @@ void plot_event_rates(const char* horn) {
 	Draw_Nu_Mode(c_nuebar, horn); // Draw FHC Mode/RHC Mode Text
 	leg_gsimp->AddEntry(anueCCHisto, "dk2nu","l");
 	leg_gsimp->AddEntry(anueCCHisto_gsimp, "flugg","l");
-	leg_gsimp->Draw();
+	if (!strcmp(horn,"fhc")) leg_gsimp->Draw();
 	gStyle->SetTitleH(0.07);
-	c_nuebar->Print(Form("plots/CV_Flux/Event_Rate_Prediction_%s_%s.pdf", horn, "nuebar"));
+	c_nuebar->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "nuebar"));
 	leg_gsimp->Clear();
 	
 	// Numu
@@ -254,9 +255,9 @@ void plot_event_rates(const char* horn) {
 	Draw_Nu_Mode(c_numu, horn); // Draw FHC Mode/RHC Mode Text
 	leg_gsimp->AddEntry(numuCCHisto, "dk2nu","l");
 	leg_gsimp->AddEntry(numuCCHisto_gsimp, "flugg","l");
-	if (!strcmp(horn,"fhc"))leg_gsimp->Draw();
+	if (!strcmp(horn,"fhc")) leg_gsimp->Draw();
 	gStyle->SetTitleH(0.07);
-	c_numu->Print(Form("plots/CV_Flux/Event_Rate_Prediction_%s_%s.pdf", horn, "numu"));
+	c_numu->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "numu"));
 	leg_gsimp->Clear();
 	
 	// Numubar
@@ -269,23 +270,25 @@ void plot_event_rates(const char* horn) {
 	Draw_Nu_Mode(c_numubar, horn); // Draw FHC Mode/RHC Mode Text
 	leg_gsimp->AddEntry(anumuCCHisto, "dk2nu","l");
 	leg_gsimp->AddEntry(anumuCCHisto_gsimp, "flugg","l");
-	if (!strcmp(horn,"fhc"))leg_gsimp->Draw();
+	if (!strcmp(horn,"fhc")) leg_gsimp->Draw();
 	gStyle->SetTitleH(0.07);
-	c_numubar->Print(Form("plots/CV_Flux/Event_Rate_Prediction_%s_%s.pdf", horn, "numubar"));
+	c_numubar->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "numubar"));
 	leg_gsimp->Clear();
 	
 	// All
 	TCanvas* c_all = new TCanvas();
 	gPad->SetLeftMargin(0.15);
 	gPad->SetBottomMargin(0.12);
-	numuCCHisto->SetTitle(";#nu Energy [GeV]; #nu CC / 79 t / 6 #times 10^{20} POT");
+	numuCCHisto->SetTitle(";#nu Energy [GeV]; #nu CC / 79 t / 6 #times 10^{20} POT / 25 MeV");
 	numuCCHisto->Draw("hist,same");
 	anumuCCHisto->Draw("hist,same");
 	nueCCHisto->Draw("hist,same");
 	anueCCHisto->Draw("hist,same");
 	Draw_Nu_Mode(c_all, horn); // Draw FHC Mode/RHC Mode Text
 	leg->Draw();
-	c_all->Print(Form("plots/CV_Flux/Event_Rate_Prediction_%s_all.pdf", horn));
+	c_all->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_all.pdf", horn));
+	gPad->SetLogy();
+	c_all->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_all_logy.pdf", horn));
 
 	// gSystem->Exit(0);
 
