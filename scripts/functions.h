@@ -870,7 +870,7 @@ void CalcFractionalError(TH2D* cov4d, TH1D* hCV, TH1D* &hFracError4d ){
 		double cii = cov4d->GetBinContent(i, i); // Get diag
 
 		if (hCV->GetBinContent(i) == 0) hFracError4d->SetBinContent(i, 0); // catch dividing by zero
-		else hFracError4d->SetBinContent(i, sqrt(cii) / hCV->GetBinContent(i));
+		else hFracError4d->SetBinContent(i, sqrt(cii) / hCV->GetBinContent(i) );
 
 	}
 	hFracError4d->SetTitle("Covariance Matrix Fractional Error; Bin index; Fractional Error");

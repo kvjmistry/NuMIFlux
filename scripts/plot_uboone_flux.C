@@ -475,7 +475,7 @@ void plot_uboone_flux(const char* horn,  const char* mode) { // (input, numu/nue
 	
 	c_uw_v_w->Print(Form("plots/CV_Flux/CV_Flux_unweighted_vs_ppfx_uneven_bins_%s_%s.pdf",horn, mode));
 	
-	c_cov->Print(Form("plots/Hadron_Production/Covariance_Marix_%s.pdf", mode));
+	c_cov->Print(Form("plots/Hadron_Production/Covariance_Marix_%s_%s.pdf", horn, mode));
 	
 	c_corr4d->Print(Form("plots/Hadron_Production/Correlation_Marix_%s_%s.pdf",horn,  mode));
 	

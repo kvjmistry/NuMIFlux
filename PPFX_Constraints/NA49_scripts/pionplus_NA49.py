@@ -39,15 +39,23 @@ f.ls()
 
 h_pionplus_long_trans = f.Get("pionplus_NA49")
 
-c4 = TCanvas("c1","c1",1500,1100)
+c4 = TCanvas()
 
 h_pionplus_long_trans.SetTitle("#pi^{+}")
-h_pionplus_long_trans.GetXaxis().SetTitle("x_{F} ")
-h_pionplus_long_trans.GetXaxis().SetTitleFont(12)
+h_pionplus_long_trans.GetXaxis().SetTitle("x_{F}")
+# h_pionplus_long_trans.GetXaxis().SetTitleFont(12)
 h_pionplus_long_trans.GetYaxis().SetTitle("p_{T} [GeV/c]")
-h_pionplus_long_trans.GetYaxis().SetTitleFont(12)
+# h_pionplus_long_trans.GetYaxis().SetTitleFont(12)
 h_pionplus_long_trans.GetXaxis().SetRangeUser(-0.15,1)
 h_pionplus_long_trans.GetYaxis().SetRangeUser(0,3.5)
+h_pionplus_long_trans.GetXaxis().SetLabelSize(0.05)
+h_pionplus_long_trans.GetXaxis().SetTitleSize(0.05)
+h_pionplus_long_trans.GetYaxis().SetLabelSize(0.05)
+h_pionplus_long_trans.GetYaxis().SetTitleSize(0.05)
+c4.SetLeftMargin(0.15)
+c4.SetBottomMargin(0.12)
+c4.SetRightMargin(0.14)
+gStyle.SetTitleH(0.07)
 h_pionplus_long_trans.Draw("colz")
 
 # FOR each row, for each column, fill TLine( 1,2,3,4)
@@ -141,7 +149,7 @@ leg.SetLineWidth(4);
 leg.Draw();
 
 
-text = TLatex(.40, .825, "NA49 Coverage");
+text = TLatex(.41, .825, "NA49 Coverage");
 text.SetTextColor(ROOT.kBlack);
 text.SetNDC();
 text.SetTextSize(1.4/30.);

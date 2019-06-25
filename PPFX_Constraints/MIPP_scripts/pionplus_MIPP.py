@@ -38,15 +38,23 @@ f.ls()
 
 h_pionplus_long_trans = f.Get("pionplus_MIPP")
 
-cpionplus_long_trans = TCanvas("c1","c1",1500,1200)
+cpionplus_long_trans = TCanvas()
 
 h_pionplus_long_trans.SetTitle("#pi^{+}")
 h_pionplus_long_trans.GetXaxis().SetTitle("p_{Z} [GeV/c]")
-h_pionplus_long_trans.GetXaxis().SetTitleFont(12)
+# h_pionplus_long_trans.GetXaxis().SetTitleFont(12)
 h_pionplus_long_trans.GetYaxis().SetTitle("p_{T} [GeV/c]")
-h_pionplus_long_trans.GetYaxis().SetTitleFont(12)
+# h_pionplus_long_trans.GetYaxis().SetTitleFont(12)
 h_pionplus_long_trans.GetXaxis().SetRangeUser(0,130)
 h_pionplus_long_trans.GetYaxis().SetRangeUser(0,5)
+h_pionplus_long_trans.GetXaxis().SetLabelSize(0.05)
+h_pionplus_long_trans.GetXaxis().SetTitleSize(0.05)
+h_pionplus_long_trans.GetYaxis().SetLabelSize(0.05)
+h_pionplus_long_trans.GetYaxis().SetTitleSize(0.05)
+cpionplus_long_trans.SetLeftMargin(0.15)
+cpionplus_long_trans.SetBottomMargin(0.12)
+cpionplus_long_trans.SetRightMargin(0.14)
+gStyle.SetTitleH(0.07)
 h_pionplus_long_trans.Draw("colz")
 
 # Seun's K/pi measurements (MIPP, thick target, so with tptype particle) [FERMILAB-THESIS-2007-61]

@@ -53,6 +53,12 @@ void DrawSpecifiers(TH1D* &hist, TLegend* legend, std::string param, const char*
 	// ----------------------
 
 	hist->SetLineWidth(1);
+	hist->GetXaxis()->SetLabelSize(0.05);
+	hist->GetXaxis()->SetTitleSize(0.05);
+	hist->GetYaxis()->SetLabelSize(0.05);
+	hist->GetYaxis()->SetTitleSize(0.05);
+	gPad->SetLeftMargin(0.15);
+	gPad->SetBottomMargin(0.12);
 
 	if (param == "CV"){
 	hist->SetLineColor(kBlack);
@@ -212,6 +218,8 @@ void DivideHists(TH1D* hCV, TH1D* hUniv, TH1D* &h_1D){
 void plot_beamline_flux(const char* mode){
 	gStyle->SetOptStat(0); // say no to stats box
 
+	const char * horn = "fhc";
+
 	std::vector<std::string> params = { // A vector with the variations NEW ONES with no threshold
 		"CV",                
 		"Horn_p2kA",         "Horn_m2kA",
@@ -228,6 +236,9 @@ void plot_beamline_flux(const char* mode){
 		"Decay_pipe_Bfield",
 		"Old_Horn"
 		};
+	
+	if (!strcmp(mode,"nue") || !strcmp(mode,"numu")) gStyle->SetTitleH(0.1);
+	else gStyle->SetTitleH(0.07);
 
 
 
@@ -298,6 +309,7 @@ void plot_beamline_flux(const char* mode){
 	h_unwrap->SetTitle(Form("%s;Bin index; #nu / 6 #times 10^{20} POT / GeV / deg / cm^{2}", mode_title ));
 	c_beamline->cd();
 	DrawSpecifiers(h_unwrap, lFlux, "CV","hist,same");
+	Draw_Nu_Mode(c_beamline, horn); // Draw FHC Mode/RHC Mode Text
 
 	//1D
 	c_beamline_1D->cd();
@@ -307,6 +319,7 @@ void plot_beamline_flux(const char* mode){
 	h_1D.at(0)->GetXaxis()->SetRangeUser(0, 6);
 	h_1D.at(0)->SetTitle(Form("%s;Energy [GeV];#nu / 6 #times 10^{20} POT / 50 MeV / cm^{2}", mode_title));
 	DrawSpecifiers(h_1D.at(0), lFlux_1D, "CV","his,same");
+	Draw_Nu_Mode(c_beamline_1D, horn); // Draw FHC Mode/RHC Mode Text
 	h_1D_clone = (TH1D*) h_1D.at(0)->Clone("h_1D_clone");
 
 
@@ -372,11 +385,14 @@ void plot_beamline_flux(const char* mode){
 	TLine* flat = new TLine(0, 1, 42, 1);
 	flat->SetLineStyle(7);
 	flat->Draw();
+	Draw_Nu_Mode(c_beamline_ratio, horn); // Draw FHC Mode/RHC Mode Text
 
 
 
 	c_beamline_ratio_1D->cd();
 	lFlux_ratio_1D->Draw();
+	Draw_Nu_Mode(c_beamline_ratio_1D, horn); // Draw FHC Mode/RHC Mode Text
+
 
 	c_beamline_1D->cd();
 	lFlux_1D->Draw();
@@ -389,9 +405,9 @@ void plot_beamline_flux(const char* mode){
 	// create plots folder if it does not exist
 	gSystem->Exec("if [ ! -d \"plots/beamline\" ]; then echo \"\nBeamline folder does not exist... creating\"; mkdir -p plots/beamline; fi"); 
 	c_beamline->Print(Form("plots/beamline/%s_Beamline_2D_unwrapped_Flux.pdf",mode));
-	c_beamline_1D->Print(Form("plots/beamline/%s_Beamline_1D_unwrapped_Flux.pdf",mode));
+	c_beamline_1D->Print(Form("plots/beamline/%s_Beamline_1D_Flux.pdf",mode));
 
 	c_beamline_ratio->Print(Form("plots/beamline/%s_Beamline_2D_unwrapped_Flux_ratio.pdf",mode));
-	c_beamline_ratio_1D->Print(Form("plots/beamline/%s_Beamline_1D_unwrapped_Flux_ratio.pdf",mode));
+	c_beamline_ratio_1D->Print(Form("plots/beamline/%s_Beamline_1D_Flux_ratio.pdf",mode));
 
 } // End

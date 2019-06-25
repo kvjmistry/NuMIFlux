@@ -32,15 +32,23 @@ f.ls()
 
 h_Kminus_long_trans = f.Get("Kminus_MIPP")
 
-c4 = TCanvas("c1","c1",1500,1200)
+c4 = TCanvas()
 
 h_Kminus_long_trans.SetTitle("K^{-}")
 h_Kminus_long_trans.GetXaxis().SetTitle("p_{Z} [GeV/c]")
-h_Kminus_long_trans.GetXaxis().SetTitleFont(12)
+# h_Kminus_long_trans.GetXaxis().SetTitleFont(12)
 h_Kminus_long_trans.GetYaxis().SetTitle("p_{T} [GeV/c]")
-h_Kminus_long_trans.GetYaxis().SetTitleFont(12)
+# h_Kminus_long_trans.GetYaxis().SetTitleFont(12)
 h_Kminus_long_trans.GetXaxis().SetRangeUser(0,110)
 h_Kminus_long_trans.GetYaxis().SetRangeUser(0, 6)
+h_Kminus_long_trans.GetXaxis().SetLabelSize(0.05)
+h_Kminus_long_trans.GetXaxis().SetTitleSize(0.05)
+h_Kminus_long_trans.GetYaxis().SetLabelSize(0.05)
+h_Kminus_long_trans.GetYaxis().SetTitleSize(0.05)
+c4.SetLeftMargin(0.15)
+c4.SetBottomMargin(0.12)
+c4.SetRightMargin(0.14)
+gStyle.SetTitleH(0.07)
 h_Kminus_long_trans.Draw("colz")
 
 # Seun's K/pi measurements (MIPP, thick target, so with tptype particle) [FERMILAB-THESIS-2007-61]

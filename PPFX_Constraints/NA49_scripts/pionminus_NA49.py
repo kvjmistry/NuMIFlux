@@ -31,16 +31,24 @@ f.ls()
 
 h_pionminus_long_trans = f.Get("pionminus_NA49")
 
-c4 = TCanvas("c1","c1",1500,1100)
+c4 = TCanvas()
 
 h_pionminus_long_trans.SetTitle("#pi^{-}")
 h_pionminus_long_trans.GetXaxis().SetTitle("x_{F} ")
-h_pionminus_long_trans.GetXaxis().SetTitleFont(12)
+# h_pionminus_long_trans.GetXaxis().SetTitleFont(12)
 h_pionminus_long_trans.GetYaxis().SetTitle("p_{T} [GeV/c]")
-h_pionminus_long_trans.GetYaxis().SetTitleFont(12)
+# h_pionminus_long_trans.GetYaxis().SetTitleFont(12)
 h_pionminus_long_trans.GetXaxis().SetRangeUser(-0.15,1)
 h_pionminus_long_trans.GetYaxis().SetRangeUser(0,3.5)
 h_pionminus_long_trans.Draw("colz")
+h_pionminus_long_trans.SetLabelSize(0.05)
+h_pionminus_long_trans.SetTitleSize(0.05)
+h_pionminus_long_trans.SetLabelSize(0.05)
+h_pionminus_long_trans.SetTitleSize(0.05)
+c4.SetLeftMargin(0.15)
+c4.SetBottomMargin(0.12)
+c4.SetRightMargin(0.14)
+gStyle.SetTitleH(0.07)
 
 # FOR each row, for each column, fill TLine( 1,2,3,4)
 #file_reader = csv.reader('NA49_pion_coverage.csv', 'rb', delimiter=' ,')
@@ -133,7 +141,7 @@ leg.SetLineWidth(4);
 leg.Draw();
 
 
-text = TLatex(.40, .825, "NA49 Coverage");
+text = TLatex(.41, .825, "NA49 Coverage");
 text.SetTextColor(ROOT.kBlack);
 text.SetNDC();
 text.SetTextSize(1.4/30.);

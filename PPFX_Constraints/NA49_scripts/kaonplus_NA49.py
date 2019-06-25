@@ -30,16 +30,24 @@ f.ls()
 
 h_Kplus_long_trans = f.Get("Kplus_NA49")
 
-c4 = TCanvas("c1","c1",1500,1100)
+c4 = TCanvas()
 
 h_Kplus_long_trans.SetTitle("K^{+}")
 h_Kplus_long_trans.GetXaxis().SetTitle("x_{F} ")
-h_Kplus_long_trans.GetXaxis().SetTitleFont(12)
+# h_Kplus_long_trans.GetXaxis().SetTitleFont(12)
 h_Kplus_long_trans.GetYaxis().SetTitle("p_{T} [GeV/c]")
-h_Kplus_long_trans.GetYaxis().SetTitleFont(12)
+# h_Kplus_long_trans.GetYaxis().SetTitleFont(12)
 h_Kplus_long_trans.GetXaxis().SetRangeUser(-0.04,1)
 h_Kplus_long_trans.GetYaxis().SetRangeUser(0,3.5)
+h_Kplus_long_trans.GetXaxis().SetLabelSize(0.05)
+h_Kplus_long_trans.GetXaxis().SetTitleSize(0.05)
+h_Kplus_long_trans.GetYaxis().SetLabelSize(0.05)
+h_Kplus_long_trans.GetYaxis().SetTitleSize(0.05)
 h_Kplus_long_trans.Draw("colz")
+c4.SetLeftMargin(0.15)
+c4.SetBottomMargin(0.12)
+c4.SetRightMargin(0.14)
+gStyle.SetTitleH(0.07)
 
 # Gemma Tinti's (MINOS thesis) Kplus / Kminus measurements (NA49, thin target, @158 GeV,  so with tgptype particle) [FERMILAB-THESIS-2010-44]
 
@@ -61,13 +69,13 @@ for line in lineVector:
     line.SetLineWidth(3)
     line.Draw()
 
-leg = TLegend(.39, .75 , .43 , .79)
+leg = TLegend(.40, .75 , .44 , .79)
 leg.SetFillStyle(0);
 leg.SetLineWidth(4);
 leg.Draw();
 
 
-text = TLatex(.15, .755  , "NA49 Coverage");
+text = TLatex(.17, .755  , "NA49 Coverage");
 text.SetTextColor(ROOT.kBlack);
 text.SetNDC();
 text.SetTextSize(1.4/30.);
