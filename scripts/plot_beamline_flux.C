@@ -302,6 +302,10 @@ void plot_beamline_flux(const char* mode){
 	boolhist  = GetHist(f, h_1D.at(0), Form("%s/Detsmear/%s_CV_AV_TPC_5MeV_bin", mode, mode)); if (boolhist == false) gSystem->Exit(0); // CV 1D Histogram
 	POT = GetPOT(f);
 
+	double flux_cv  = h_1D.at(0)->Integral(0,  h_1D.at(0)->GetNbinsX()+1); // Get the CV Flux
+	std::vector<double> beamline_flux(params.size());
+	beamline_flux.at(0) = flux_cv * (6.0e20)/ (POT*1.0e4);
+
 	// 2D
 	// Get POT and Unwrap histogram
 	UnwrapTH2D( h_2D, h_unwrap, POT );
@@ -329,6 +333,8 @@ void plot_beamline_flux(const char* mode){
 		boolfile  = GetFile(f , Form("/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run%i.root",i)); if (boolfile == false) continue;
 		boolhist  = GetHist(f, h_2D, Form("%s/Detsmear/%s_CV_AV_TPC_2D", mode, mode)); if (boolhist == false) gSystem->Exit(0);
 		boolhist  = GetHist(f, h_1D.at(i), Form("%s/Detsmear/%s_CV_AV_TPC_5MeV_bin", mode, mode)); if (boolhist == false) gSystem->Exit(0);
+
+		beamline_flux.at(i) = h_1D.at(i)->Integral(0,  h_1D.at(i)->GetNbinsX()+1) * (6.0e20)/ (POT*1.0e4); // Get the beamline Flux
 
 		// Get POT and Unwrap histogram
 		std::cout << params[i] << " ";
@@ -399,6 +405,58 @@ void plot_beamline_flux(const char* mode){
 	gPad->SetLogy();
 	gPad->Update();
 
+	// Now print the percentages for the flux
+	std::cout << std::setw(10);
+	std::cout << "----------------------------------"  <<  std::endl;
+	std::cout << "\nFlux Percentages" << std::endl;
+	std::cout << std::setw(10) <<"\nCV:\t" << beamline_flux.at(0) << "\n" << std::endl;
+	for (unsigned int i = 1; i < params.size(); i++){
+		std::cout << std::setprecision(3) << std::setw(15) << params.at(i)<< ":\t" << std::setw(10) << beamline_flux.at(i) << "\tPercentage\t" << 100 * beamline_flux.at(i) / beamline_flux.at(0) - 100<< "\%" << std::endl;
+	}
+	std::cout << "----------------------------------" << std::endl;
+	
+	std::vector<std::string> params_tidy = { // A vector with the variations NEW ONES with no threshold tidied up for plot
+		"CV",                
+		"Horn +2kA",         "Horn -2kA",
+		"Horn1 x +3mm",      "Horm1 x m3mm",
+		"Horn1 y +3mm",      "Horn1 y m3mm",
+		"Beam spot -2mm",    "Beam spot +2mm",
+		"Horn2 x +3mm",      "Horm2 x -3mm",
+		"Horn2 y +3mm",      "Horn2 y -3mm",
+		"Horns 0mm water",   "Horns 2mm water",
+		"Beam shift x +1mm", "Beam shift x -1mm",
+		"Beam shift y +1mm", "Beam shift y -1mm",
+		"Target z +7mm",     "Target z -7mm",
+		"Horn1 refined descr.",
+		"Decay pipe B field",
+		"Old Horn"
+		};
+	// Now make a plot of the percentage changes from the CV for Integrated Flux
+	TH1D *hBeamline_flux= new TH1D("Beamline",Form("%s Beamline Integrated Flux", mode_title), params.size(), 0, params.size());
+	for (unsigned int i = 1; i < params.size(); i++){
+		hBeamline_flux->Fill(params_tidy[i].c_str(), 100 * beamline_flux.at(i) / beamline_flux.at(0) - 100);
+
+	}
+	TCanvas* c_beamline_flux = new TCanvas();
+	gStyle->SetTitleH(0.04);
+	hBeamline_flux->SetLineColor(kViolet-6);
+	hBeamline_flux->SetLineWidth(3);
+	hBeamline_flux->GetYaxis()->SetTitle("Percentage Change From CV %");
+	hBeamline_flux->LabelsOption("v");
+	gPad->SetBottomMargin(0.33);
+
+	hBeamline_flux->GetXaxis()->SetLabelSize(0.05);
+	hBeamline_flux->GetXaxis()->SetTitleSize(0.05);
+	hBeamline_flux->GetYaxis()->SetLabelSize(0.05);
+	hBeamline_flux->GetYaxis()->SetTitleSize(0.05);
+	hBeamline_flux->SetMarkerSize(1.8);
+	gPad->SetLeftMargin(0.15);
+
+	hBeamline_flux->Draw("hist");
+	c_beamline_flux ->SetGrid();
+	Draw_Nu_Mode(c_beamline_flux, horn); // Draw FHC Mode/RHC Mode Text
+
+
 	// ++++++++++++++++++++++++++++++++++
 	// Save the plots as pdfs in the plots folder
 	// ++++++++++++++++++++++++++++++++++
@@ -409,5 +467,7 @@ void plot_beamline_flux(const char* mode){
 
 	c_beamline_ratio->Print(Form("plots/beamline/%s_Beamline_2D_unwrapped_Flux_ratio.pdf",mode));
 	c_beamline_ratio_1D->Print(Form("plots/beamline/%s_Beamline_1D_Flux_ratio.pdf",mode));
+
+	c_beamline_flux->Print(Form("plots/beamline/%s_Beamline_Integrated_Flux_Change.pdf",mode));
 
 } // End
