@@ -1,42 +1,48 @@
 NuMI Flux Validation
 ====================
-Scripts for NuMI flux testing and validation.
+Scripts for NuMI flux and validation.
 
-This is a set of scripts initially written bt Andy Mastbaum, I am just developing
-with it. 
+This is a set of scripts initially written by Andy Mastbaum, Joseph Zennamo and Zarko Pavolvic that has built upon. 
 
 Flux Histograms
 ---------------
 To plot flux histograms, run create an art ROOT file with PPFX weights:
 
-    lar -c fcl/fluxreader_source_nova.fcl <input files>
-    lar -c fcl/numippfx_test_one.fcl <output of previous step>
+    lar -c fcl/FluxReader/fluxreader_uboone.fcl <input files>
+    lar -c fcl/FluxReader/ppfx_uboone.fcl <output of previous step>
 
-Then build this code and run:
+Then build this code, in the main directory, run:
 
     make
-    bin/makehist <art ROOT files>
+    
+This will compile the src/makehist.cpp into an executable file which can then be run with the command:
+    
+    bin/makehist <art ROOT file> <detector>
 
-This produces a ROOT file `output.root` with histograms for the central value
-and multisim universes.
+where `<detector>` can be either `uboone` or `nova`.
+
+If you want to run over many files then specify the path to the files and use a `*`
+wildcard. 
+
+After running, a ROOT file `output.root` with histograms for the central value
+and multisim universes is produced.
 
 
 ## Validation Scripts:  
-Most of the `plot_comparison` scripts have not been kept up to date at this present time. 
-This means that they may not work out of the box and would need some modifications.
+This development area was initially designed for ppfx validation with the nova config. 
+The nova config has not been kept up-to-date with the histogram format in `output.root`.
+To get the scripts in the scripts/nova directory to work, path and file names will need
+to be updated.
 
-To produce the covariance matrix, correlation matrix and flux diagrams for microboone,
-run this script. This script has mostly been kept up to date, but may need some minor changes
-in the future.
-`root -l 'plot_uboone_flux.C("output.root","numu")'`
+A bash script has been setup `scripts/run_all.sh` to run all the plotting scripts in one go. 
+These are run in root batch mode and so will be faster than just running each individual script
+which takes a lot of time opening the root canvases. All the resulting plots will be creating into
+a plots folder that will be created. 
 
-I plan on moving the `Fluxystematics.C` and `FluxSyst_functions.h` files to another repository since these
-are what were used for the nue flux sytematics and so dont really have a place anymore in this repo.
+To run the script, simply do `source run_all.sh` when in the scripts directory.
 
-`checkfiles.C` was a script that was made to open root files and see if they are zombie. This was made due to the nova beamline files being broken and so I am not sure this is needed anymore.
-
-`flugg_comparison.C`is a simple script that counts the number of kaons in a file. This was to try an explain the differences in decay at rest species in flugg and dk2nu. Since I believe there is actually a difference between the two, this script serves no purpose, but I will keep it here for now anyway.
-
+The input file paths have been hardcoded. If a user wants to update these paths, they will, as it stands,
+need to edit the paths in each of the scripts, shouldnt be too much effort I hope! 
 
 
 
