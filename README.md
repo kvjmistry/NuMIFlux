@@ -45,6 +45,13 @@ The input file paths have been hardcoded. If a user wants to update these paths,
 need to edit the paths in each of the scripts, shouldnt be too much effort I hope! 
 
 
+PPFX Constraints
+-----------------
+This folder contains the old NuMIFlux scripts that was written by Marco Det Tutto. This
+was modified by Yvette Chow to investigate the phase space that is constrained by 
+the NA49 and MIPP experiments. I have since modified these scripts to take a `dk2nu` file
+as input instead of a `flugg` input.  
+
 
 Credits
 -------
