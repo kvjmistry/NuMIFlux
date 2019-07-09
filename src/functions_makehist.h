@@ -294,8 +294,10 @@ void Initialise(std::string detector_type, Detector &Detector_){
 
 }
 //___________________________________________________________________________
-int calcEnuWgt(auto const& mcflux, const TVector3& xyz, double &enu, double& wgt_xy, double kRDET){
+int calcEnuWgt(auto const& mcflux, const TVector3& xyz, double& enu, double& wgt_xy, double kRDET) {
 	// Neutrino Energy and Weight at arbitrary point
+	// Based on:
+	// NuMI-NOTE-BEAM-0109 (MINOS DocDB # 109)
 	// Arguments:
 	//    dk2nu    :: contains current decay information
 	//    xyz      :: 3-vector of position to evaluate
@@ -307,38 +309,56 @@ int calcEnuWgt(auto const& mcflux, const TVector3& xyz, double &enu, double& wgt
 	// Assumptions:
 	//    Energies given in GeV
 	//    Particle codes have been translated from GEANT into PDG codes
-	const double kPIMASS = 0.13957;
-	const double kKMASS  = 0.49368;
-	const double kK0MASS = 0.49767;
-	const double kMUMASS = 0.105658389;
-	const double kOMEGAMASS = 1.67245;
-
+	// for now ... these masses _should_ come from TDatabasePDG
+	// but use these hard-coded values to "exactly" reproduce old code
+	//
+	// old mass values are v01_07_* and before
+	// new mass values (v01_08_* and after) are Geant4 v4.10.3 values
+	//
+#ifdef HISTORIC_MASS
+	const double kPIMASS      = 0.13957;
+	const double kKMASS       = 0.49368;
+	const double kK0MASS      = 0.49767;
+	const double kMUMASS      = 0.105658389;
+	const double kOMEGAMASS   = 1.67245;
+#else
+	const double kPIMASS      = 0.1395701;     // 0.13957;
+	const double kKMASS       = 0.493677;      // 0.49368;
+	const double kK0MASS      = 0.497614;      // 0.49767;
+	const double kMUMASS      = 0.1056583715;  // 0.105658389;
+	const double kOMEGAMASS   = 1.67245;       // 1.67245;
+#endif
+	
+	// from CLHEP/Units/PhysicalConstants.h
+	// used by Geant as CLHEP::neutron_mass_c2
+	const double kNEUTRONMASS = 0.93956536;
 	const int kpdg_nue       =   12;  // extended Geant 53
 	const int kpdg_nuebar    =  -12;  // extended Geant 52
 	const int kpdg_numu      =   14;  // extended Geant 56
 	const int kpdg_numubar   =  -14;  // extended Geant 55
-
-	const int kpdg_muplus     =   -13;  // Geant  5
-	const int kpdg_muminus    =    13;  // Geant  6
-	const int kpdg_pionplus   =   211;  // Geant  8
-	const int kpdg_pionminus  =  -211;  // Geant  9
-	const int kpdg_k0long     =   130;  // Geant 10  ( K0=311, K0S=310 )
-	const int kpdg_k0short    =   310;  // Geant 16
-	const int kpdg_k0mix      =   311;  
-	const int kpdg_kaonplus   =   321;  // Geant 11
-	const int kpdg_kaonminus  =  -321;  // Geant 12
-	const int kpdg_omegaminus =  3334;  // Geant 24
-	const int kpdg_omegaplus  = -3334;  // Geant 32
-
+	const int kpdg_muplus      =   -13;  // Geant  5
+	const int kpdg_muminus     =    13;  // Geant  6
+	const int kpdg_pionplus    =   211;  // Geant  8
+	const int kpdg_pionminus   =  -211;  // Geant  9
+	const int kpdg_k0long      =   130;  // Geant 10  ( K0=311, K0S=310 )
+	const int kpdg_k0short     =   310;  // Geant 16
+	const int kpdg_k0mix       =   311;
+	const int kpdg_kaonplus    =   321;  // Geant 11
+	const int kpdg_kaonminus   =  -321;  // Geant 12
+	const int kpdg_omegaminus  =  3334;  // Geant 24
+	const int kpdg_omegaplus   = -3334;  // Geant 32
+	const int kpdg_neutron     =  2112;
+	const int kpdg_antineutron = -2112;
+	
 	// const double kRDET = 100.0;   // set to flux per 100 cm radius
-
+	
 	double xpos = xyz.X();
 	double ypos = xyz.Y();
 	double zpos = xyz.Z();
-
+	
 	enu    = 0.0;  // don't know what the final value is
 	wgt_xy = 0.0;  // but set these in case we return early due to error
-
+	
 	// in principle we should get these from the particle DB
 	// but for consistency testing use the hardcoded values
 	double parent_mass = kPIMASS;
@@ -364,71 +384,81 @@ int calcEnuWgt(auto const& mcflux, const TVector3& xyz, double &enu, double& wgt
 		case kpdg_omegaplus:
 			parent_mass = kOMEGAMASS;
 			break;
+		case kpdg_neutron:
+		case kpdg_antineutron:
+			parent_mass = kNEUTRONMASS;
+			break;
 		default:
-		std::cerr << "bsim::calcEnuWgt unknown particle type " << mcflux.fptype << std::endl << std::flush;
-		assert(0);
-		return 1;
+			std::cerr << "bsim::calcEnuWgt unknown particle type " << mcflux.fptype << std::endl << std::flush;
+			enu    = 0.0;
+			wgt_xy = 0.0;
+			return 1;
 	}
 
-	double parentp2 = (mcflux.fpdpx*mcflux.fpdpx +
-			  mcflux.fpdpy*mcflux.fpdpy +
-			  mcflux.fpdpz*mcflux.fpdpz );
-	double parent_energy = TMath::Sqrt( parentp2 +
-					parent_mass*parent_mass);
+	double parentp2 = ( mcflux.fpdpx*mcflux.fpdpx +
+						mcflux.fpdpy*mcflux.fpdpy +
+						mcflux.fpdpz*mcflux.fpdpz );
+	double parent_energy = TMath::Sqrt( parentp2 + parent_mass * parent_mass);
 	double parentp = TMath::Sqrt( parentp2 );
-
+	
 	double gamma     = parent_energy / parent_mass;
 	double gamma_sqr = gamma * gamma;
 	double beta_mag  = TMath::Sqrt( ( gamma_sqr - 1.0 )/gamma_sqr );
-
+	
 	// Get the neutrino energy in the parent decay CM
 	double enuzr = mcflux.fnecm;
+	
 	// Get angle from parent line of flight to chosen point in beam frame
 	double rad = TMath::Sqrt( (xpos-mcflux.fvx)*(xpos-mcflux.fvx) +
-				(ypos-mcflux.fvy)*(ypos-mcflux.fvy) +
-				(zpos-mcflux.fvz)*(zpos-mcflux.fvz) );
-
+							  (ypos-mcflux.fvy)*(ypos-mcflux.fvy) +
+							  (zpos-mcflux.fvz)*(zpos-mcflux.fvz) );
 	double emrat = 1.0;
 	double costh_pardet = -999.;
 	// double theta_pardet = -999.;
-
+	
 	// boost correction, but only if parent hasn't stopped
 	if ( parentp > 0. ) {
-		
 		costh_pardet = ( mcflux.fpdpx*(xpos-mcflux.fvx) +
-				mcflux.fpdpy*(ypos-mcflux.fvy) +
-				mcflux.fpdpz*(zpos-mcflux.fvz) ) 
-				/ ( parentp * rad);
-		
+						mcflux.fpdpy*(ypos-mcflux.fvy) +
+						mcflux.fpdpz*(zpos-mcflux.fvz) )
+						/ ( parentp * rad);
 		if ( costh_pardet >  1.0 ) costh_pardet =  1.0;
 		if ( costh_pardet < -1.0 ) costh_pardet = -1.0;
 		// theta_pardet = TMath::ACos(costh_pardet);
-
+		
 		// Weighted neutrino energy in beam, approx, good for small theta
 		emrat = 1.0 / ( gamma * ( 1.0 - beta_mag * costh_pardet ));
 	}
-
+	
 	enu = emrat * enuzr;  // the energy ... normally
-
+	
 	// Get solid angle/4pi for detector element
 	// small angle approximation, fixed by Alex Radovic
-	//SAA//  double sangdet = ( kRDET*kRDET / 
-	//SAA//                   ( (zpos-fDk2Nu->decay.vz)*(zpos-fDk2Nu->decay.vz) ) ) / 4.0;
+	//SAA//  double sangdet = ( kRDET*kRDET /
+	//SAA//                   ( (zpos-mcflux.fvz)*(zpos-mcflux.fvz) ) ) / 4.0;
 	double sanddetcomp = TMath::Sqrt( ( (xpos-mcflux.fvx)*(xpos-mcflux.fvx) ) +
-					( (ypos-mcflux.fvy)*(ypos-mcflux.fvy) ) +
-					( (zpos-mcflux.fvz)*(zpos-mcflux.fvz) )   );
+									  ( (ypos-mcflux.fvy)*(ypos-mcflux.fvy) ) +
+									  ( (zpos-mcflux.fvz)*(zpos-mcflux.fvz) ) );
 	double sangdet = (1.0-TMath::Cos(TMath::ATan( kRDET / sanddetcomp )))/2.0;
-
+	
 	// Weight for solid angle and lorentz boost
 	wgt_xy = sangdet * ( emrat * emrat );  // ! the weight ... normally
-
 	
-	// Done for all except polarized muon decay
-	// in which case need to modify weight 
+	// Done for all except polarized muon decay in which case need to modify weight
 	// (must be done in double precision)
-	if ( mcflux.fptype == kpdg_muplus || mcflux.fptype == kpdg_muminus) {
+	
+	// BUT do this only for case of muon decay, not muon capture
+	// until beamline simulation code gets updated these generally show up as
+	// mcflux.fndecay == 0, but certainly not dkp_mup_nusep or dkp_mum_nusep
+	
+	// so was:
+	// if ( mcflux.fptype  == kpdg_muplus      ||
+	//      mcflux.fptype  == kpdg_muminus        ) {
+	
+	// now:
+	if ( mcflux.fndecay == bsim::dkp_mup_nusep || mcflux.fndecay == bsim::dkp_mum_nusep ) {
 		double beta[3], p_dcm_nu[4], p_nu[3], p_pcm_mp[3], partial;
-
+		
 		// Boost neu neutrino to mu decay CM
 		beta[0] = mcflux.fpdpx / parent_energy;
 		beta[1] = mcflux.fpdpy / parent_energy;
@@ -437,81 +467,95 @@ int calcEnuWgt(auto const& mcflux, const TVector3& xyz, double &enu, double& wgt
 		p_nu[1] = (ypos-mcflux.fvy)*enu/rad;
 		p_nu[2] = (zpos-mcflux.fvz)*enu/rad;
 		
-		partial = gamma * 
-		(beta[0]*p_nu[0] + beta[1]*p_nu[1] + beta[2]*p_nu[2] );
-		
+		partial = gamma * (beta[0]*p_nu[0] + beta[1]*p_nu[1] + beta[2]*p_nu[2] );
 		partial = enu - partial/(gamma+1.0);
+		
 		// the following calculation is numerically imprecise
-		// especially p_dcm_nu[2] leads to taking the difference of numbers 
+		// especially p_dcm_nu[2] leads to taking the difference of numbers
 		//  of order ~10's and getting results of order ~0.02's
 		// for g3numi we're starting with floats (ie. good to ~1 part in 10^7)
 		p_dcm_nu[0] = p_nu[0] - beta[0]*gamma*partial;
 		p_dcm_nu[1] = p_nu[1] - beta[1]*gamma*partial;
 		p_dcm_nu[2] = p_nu[2] - beta[2]*gamma*partial;
 		p_dcm_nu[3] = TMath::Sqrt( p_dcm_nu[0]*p_dcm_nu[0] +
-					p_dcm_nu[1]*p_dcm_nu[1] +
-					p_dcm_nu[2]*p_dcm_nu[2] );
-
+								p_dcm_nu[1]*p_dcm_nu[1] +
+								p_dcm_nu[2]*p_dcm_nu[2] );
+		
 		// Boost parent of mu to mu production CM
 		double particle_energy = mcflux.fppenergy;
-	
 		gamma = particle_energy/parent_mass;
-	
 		beta[0] = mcflux.fppdxdz * mcflux.fpppz / particle_energy;
 		beta[1] = mcflux.fppdydz * mcflux.fpppz / particle_energy;
 		beta[2] =                    mcflux.fpppz / particle_energy;
-
-		partial = gamma * ( beta[0]*mcflux.fmuparpx + 
-				beta[1]*mcflux.fmuparpy + 
-				beta[2]*mcflux.fmuparpz );
+		partial = gamma * ( beta[0]*mcflux.fmuparpx +
+							beta[1]*mcflux.fmuparpy +
+							beta[2]*mcflux.fmuparpz );
 		partial = mcflux.fmupare - partial/(gamma+1.0);
-	  
 		p_pcm_mp[0] = mcflux.fmuparpx - beta[0]*gamma*partial;
 		p_pcm_mp[1] = mcflux.fmuparpy - beta[1]*gamma*partial;
 		p_pcm_mp[2] = mcflux.fmuparpz - beta[2]*gamma*partial;
 		double p_pcm = TMath::Sqrt ( p_pcm_mp[0]*p_pcm_mp[0] +
-					p_pcm_mp[1]*p_pcm_mp[1] +
-					p_pcm_mp[2]*p_pcm_mp[2] );
-
+									p_pcm_mp[1]*p_pcm_mp[1] +
+									p_pcm_mp[2]*p_pcm_mp[2] );
 		const double eps = 1.0e-30;  // ? what value to use
 		
 		if ( p_pcm < eps || p_dcm_nu[3] < eps ) {
 			return 3; // mu missing parent info?
-	  	
 		}
-		
+
 		// Calc new decay angle w.r.t. (anti)spin direction
 		double costh = ( p_dcm_nu[0]*p_pcm_mp[0] +
-				p_dcm_nu[1]*p_pcm_mp[1] +
-				p_dcm_nu[2]*p_pcm_mp[2] ) /
-				( p_dcm_nu[3]*p_pcm );
-	
+						p_dcm_nu[1]*p_pcm_mp[1] +
+						p_dcm_nu[2]*p_pcm_mp[2] ) /
+					( p_dcm_nu[3]*p_pcm );
+		
+		// protect against small excursions
 		if ( costh >  1.0 ) costh =  1.0;
 		if ( costh < -1.0 ) costh = -1.0;
+		
 		// Calc relative weight due to angle difference
 		double wgt_ratio = 0.0;
-		double xnu = 0.0;
 		switch ( mcflux.fntype ) {
+			// Nue/nuebar
 			case kpdg_nue:
 			case kpdg_nuebar:
 				wgt_ratio = 1.0 - costh;
 				break;
+			
+			// Numu/numubar
 			case kpdg_numu:
 			case kpdg_numubar:
 			{
-				xnu = 2.0 * enuzr / kMUMASS;
+				double xnu = 2.0 * enuzr / kMUMASS;
 				wgt_ratio = ( (3.0-2.0*xnu )  - (1.0-2.0*xnu)*costh ) / (3.0-2.0*xnu);
-				if (xnu > 1) wgt_ratio = 0; // cut out unphysical numu decays
+				
+				if ( wgt_ratio < 0.0 ) {
+					std::cerr << "bsim::calcEnuWgt encountered serious problem: "
+							<< " wgt_ratio " << wgt_ratio
+							<< " enu " << enu << " costh " << costh << " xnu " << xnu
+							<< " enuzr=mcflux.fnecm " << enuzr << " kMUMASS " << kMUMASS
+							<< " norig " << mcflux.fnorig
+							<< " ndecay " << mcflux.fndecay
+							<< " ntype " << mcflux.fntype
+							<< " ptype " << mcflux.fptype
+							<< std::endl;
+					enu    = 0;
+					wgt_xy = 0;
+					return 4; // bad, bad, bad calculation
+				}
 				break;
 			}
+			
 			default:
-			return 2; // bad neutrino type
+				enu    = 0.0;
+				wgt_xy = 0.0;
+				return 2; // bad neutrino type for muon decay
 		}
-
+		
 		wgt_xy = wgt_xy * wgt_ratio;
 	
 	} // ptype is muon
-
+	
 	return 0;
 }
 //___________________________________________________________________________

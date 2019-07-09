@@ -66,9 +66,13 @@ void plot_gsimple_flux(const char* horn, const char* mode) {
 	if (!strcmp(horn,"fhc")) {
 		boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root");
 		if (boolfile == false) gSystem->Exit(0);
+		boolfile  = GetFile(f_gsimple , "/uboone/data/users/kmistry/work/PPFX/uboone/NuMIFlux_update_morebins.root"); 
+		if (boolfile == false) gSystem->Exit(0);
 	}
 	else {
 		boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/RHC/output_uboone_run0.root");
+		if (boolfile == false) gSystem->Exit(0);
+		boolfile  = GetFile(f_gsimple , "/uboone/app/users/kmistry/Flux/NuMIFlux/files/NuMIFlux_anti_morebins.root"); 
 		if (boolfile == false) gSystem->Exit(0);
 	}
 	
@@ -78,7 +82,7 @@ void plot_gsimple_flux(const char* horn, const char* mode) {
 	Normalise(h_dk2nu_flux);
 
 	// Get Gsimple files	
-	boolfile  = GetFile(f_gsimple , "/uboone/data/users/kmistry/work/PPFX/uboone/NuMIFlux_update_morebins.root"); if (boolfile == false) gSystem->Exit(0);
+	
 	boolhist = GetHist(f_gsimple, h_g_simp, g_simp_names); if (boolhist == false) gSystem->Exit(0);
 	h_g_simp->Rebin(rebin);
 	Normalise(h_g_simp);
@@ -104,7 +108,7 @@ void plot_gsimple_flux(const char* horn, const char* mode) {
 	h_dk2nu_flux->Draw("hist");
 
 	h_g_simp->SetLineWidth(2);
-	if (!strcmp(horn,"fhc")) h_g_simp->Draw("hist, same"); // Only Draw for FHC mode 
+	h_g_simp->Draw("hist, same"); // Only Draw for FHC mode 
 
 	hppfx->SetLineColor(kGreen+1);
 	hppfx->SetLineWidth(2);
@@ -119,7 +123,7 @@ void plot_gsimple_flux(const char* horn, const char* mode) {
 	lFlux->SetTextFont(62); 
 	
 	lFlux->AddEntry(h_dk2nu_flux, "dk2nu","l");
-	if (!strcmp(horn,"fhc")) lFlux->AddEntry(h_g_simp, "flugg","l");
+	lFlux->AddEntry(h_g_simp, "flugg","l");
 	lFlux->AddEntry(hppfx, "dk2nu PPFX Corrected","l");;
 	lFlux->Draw();
 	Draw_Nu_Mode(c1, horn); // Draw FHC Mode/RHC Mode Text

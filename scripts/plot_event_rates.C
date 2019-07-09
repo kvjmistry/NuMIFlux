@@ -79,10 +79,15 @@ void plot_event_rates(const char* horn) {
 	if (!strcmp(horn,"fhc")) {
 		boolfile  = GetFile(f ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root");
 		if (boolfile == false) gSystem->Exit(0);
+		boolfile  = GetFile(f_gsimp , "/uboone/data/users/kmistry/work/PPFX/uboone/NuMIFlux_update_morebins.root");
+		if (boolfile == false) gSystem->Exit(0);
 	}
 	else {
 		boolfile  = GetFile(f ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/RHC/output_uboone_run0.root");
 		if (boolfile == false) gSystem->Exit(0);
+		boolfile  = GetFile(f_gsimp , "/uboone/app/users/kmistry/Flux/NuMIFlux/files/NuMIFlux_anti_morebins.root"); 
+		if (boolfile == false) gSystem->Exit(0);
+		
 	}
 	
 	// Get the POT
@@ -97,7 +102,6 @@ void plot_event_rates(const char* horn) {
 
 	// Get Gsimple histograms	
 	TH1D *h_nue_gsimp, *h_nuebar_gsimp, *h_numu_gsimp, *h_numubar_gsimp;
-	boolfile  = GetFile(f_gsimp , "/uboone/data/users/kmistry/work/PPFX/uboone/NuMIFlux_update_morebins.root"); if (boolfile == false) gSystem->Exit(0);
 	boolhist = GetHist(f_gsimp, h_nue_gsimp,     "nueFluxHisto");   if (boolhist == false) gSystem->Exit(0);
 	boolhist = GetHist(f_gsimp, h_nuebar_gsimp,  "anueFluxHisto");  if (boolhist == false) gSystem->Exit(0);
 	boolhist = GetHist(f_gsimp, h_numu_gsimp,    "numuFluxHisto");  if (boolhist == false) gSystem->Exit(0);
@@ -221,11 +225,11 @@ void plot_event_rates(const char* horn) {
 	DrawSpecifiers(c_nue, nueCCHisto_gsimp, "nue");
 	nueCCHisto_gsimp->SetLineColor(kGreen+1);
 	nueCCHisto->Draw("hist");
-	if (!strcmp(horn,"fhc")) nueCCHisto_gsimp->Draw("hist,same");
+	nueCCHisto_gsimp->Draw("hist,same");
 	Draw_Nu_Mode(c_nue, horn); // Draw FHC Mode/RHC Mode Text
 	leg_gsimp->AddEntry(nueCCHisto, "dk2nu","l");
 	leg_gsimp->AddEntry(nueCCHisto_gsimp, "flugg","l");
-	if (!strcmp(horn,"fhc")) leg_gsimp->Draw();
+	leg_gsimp->Draw();
 	gStyle->SetTitleH(0.07);
 	c_nue->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "nue"));
 	leg_gsimp->Clear();
@@ -236,11 +240,11 @@ void plot_event_rates(const char* horn) {
 	DrawSpecifiers(c_nuebar, anueCCHisto_gsimp, "nuebar");
 	anueCCHisto_gsimp->SetLineColor(kGreen+1);
 	anueCCHisto->Draw("hist");
-	if (!strcmp(horn,"fhc")) anueCCHisto_gsimp->Draw("hist,same");
+	anueCCHisto_gsimp->Draw("hist,same");
 	Draw_Nu_Mode(c_nuebar, horn); // Draw FHC Mode/RHC Mode Text
 	leg_gsimp->AddEntry(anueCCHisto, "dk2nu","l");
 	leg_gsimp->AddEntry(anueCCHisto_gsimp, "flugg","l");
-	if (!strcmp(horn,"fhc")) leg_gsimp->Draw();
+	leg_gsimp->Draw();
 	gStyle->SetTitleH(0.07);
 	c_nuebar->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "nuebar"));
 	leg_gsimp->Clear();
@@ -251,11 +255,11 @@ void plot_event_rates(const char* horn) {
 	DrawSpecifiers(c_numu, numuCCHisto_gsimp, "numu");
 	numuCCHisto_gsimp->SetLineColor(kGreen+1);
 	numuCCHisto->Draw("hist");
-	if (!strcmp(horn,"fhc")) numuCCHisto_gsimp->Draw("hist,same");
+	numuCCHisto_gsimp->Draw("hist,same");
 	Draw_Nu_Mode(c_numu, horn); // Draw FHC Mode/RHC Mode Text
 	leg_gsimp->AddEntry(numuCCHisto, "dk2nu","l");
 	leg_gsimp->AddEntry(numuCCHisto_gsimp, "flugg","l");
-	if (!strcmp(horn,"fhc")) leg_gsimp->Draw();
+	leg_gsimp->Draw();
 	gStyle->SetTitleH(0.07);
 	c_numu->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "numu"));
 	leg_gsimp->Clear();
@@ -266,11 +270,11 @@ void plot_event_rates(const char* horn) {
 	DrawSpecifiers(c_numubar, anumuCCHisto_gsimp, "numubar");
 	anumuCCHisto_gsimp->SetLineColor(kGreen+1);
 	anumuCCHisto->Draw("hist");
-	if (!strcmp(horn,"fhc")) anumuCCHisto_gsimp->Draw("hist,same");
+	anumuCCHisto_gsimp->Draw("hist,same");
 	Draw_Nu_Mode(c_numubar, horn); // Draw FHC Mode/RHC Mode Text
 	leg_gsimp->AddEntry(anumuCCHisto, "dk2nu","l");
 	leg_gsimp->AddEntry(anumuCCHisto_gsimp, "flugg","l");
-	if (!strcmp(horn,"fhc")) leg_gsimp->Draw();
+	leg_gsimp->Draw();
 	gStyle->SetTitleH(0.07);
 	c_numubar->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "numubar"));
 	leg_gsimp->Clear();
