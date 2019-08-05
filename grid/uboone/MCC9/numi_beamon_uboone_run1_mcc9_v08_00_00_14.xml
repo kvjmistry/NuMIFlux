@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+
+<!-- Production Project -->
+<!DOCTYPE project [
+<!ENTITY release "v08_00_00_14">
+<!ENTITY file_type "data">
+<!ENTITY run_type "physics">
+<!ENTITY user "kmistry">
+<!ENTITY name "numi_beamon_uboone_mcc9_run1_morestats">
+]>
+
+
+<job>
+
+<project name="&name;">
+
+  <!-- Project size -->
+  <numevents>40000</numevents>
+
+  <!-- Operating System -->
+  <os>SL6</os>
+
+  <!-- Batch resources -->
+  <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
+
+  <!-- Larsoft information -->
+  <larsoft>
+    <tag>&release;</tag>
+    <qual>e17:prof</qual>
+    <local>/pnfs/uboone/resilient/users/kmistry/tars/uboonecode_mcc9_v08_00_00_14.tar</local>
+  </larsoft>
+
+  <check>1</check>
+  <!-- <copy>1</copy> -->
+  
+  <!-- Project stages -->
+
+  <stage name="reco1reco2">
+    <fcl>reco_uboone_data_mcc9_8_driver_stage1.fcl</fcl>
+    <fcl>reco_uboone_data_mcc9_8_driver_stage2_beamOn_numi.fcl</fcl>
+    <datafiletypes>root,pndr</datafiletypes>
+    <outdir>/pnfs/uboone/scratch/users/&user;/MCC9/&name;/reco1_reco2</outdir>
+    <logdir>/pnfs/uboone/scratch/users/&user;/MCC9/&name;/reco1_reco2</logdir>
+    <workdir>/pnfs/uboone/scratch/users/&user;/MCC9/&name;/work/reco1_reco2</workdir>
+    <bookdir>/uboone/data/users/&user;/book/MCC9/&name;/reco1_reco2</bookdir>
+    <inputdef>kmistry_BeamOn_prod_numi_swizzle_inclusive_v3_Set0_800files</inputdef>
+    <defname>kmistry_BeamOn_prod_numi_swizzle_inclusive_v3_30kevents_reco2</defname>
+    <maxfilesperjob>1</maxfilesperjob>
+    <numjobs>19</numjobs>
+    <datatier>reconstructed</datatier>
+    <memory>6000</memory>
+    <jobsub>--expected-lifetime=24h -e IFDH_CP_UNLINK_ON_ERROR=1 </jobsub>
+    <jobsub_start>  --expected-lifetime=short</jobsub_start>
+  </stage>
+
+  <!-- file type -->
+  <filetype>&file_type;</filetype>
+
+  <!-- run type -->
+  <runtype>&run_type;</runtype>
+
+</project>
+
+</job>
