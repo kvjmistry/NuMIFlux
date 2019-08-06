@@ -2,7 +2,7 @@
 
 <!-- Production Project -->
 <!DOCTYPE project [
-<!ENTITY release "v08_00_00_17">
+<!ENTITY release "v08_00_00_19">
 <!ENTITY file_type "mc">
 <!ENTITY run_type "physics">
 <!ENTITY user "kmistry">
@@ -15,19 +15,19 @@
 <project name="&name;">
 
   <!-- Project size -->
-  <numevents>10000</numevents>
+  <numevents>100000</numevents>
 
   <!-- Operating System -->
   <os>SL6</os>
 
   <!-- Batch resources -->
-  <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
+  <resource>DEDICATED,OPPORTUNISTIC</resource>
 
   <!-- Larsoft information -->
   <larsoft>
     <tag>&release;</tag>
     <qual>e17:prof</qual>
-    <local>/pnfs/uboone/resilient/users/kmistry/tars/uboonecode_mcc9_v08_00_00_17.tar</local>
+    <local>/pnfs/uboone/resilient/users/kmistry/tars/uboonecode_mcc9_v08_00_00_19.tar</local>
   </larsoft>
 
   <!-- <check>1</check> -->
@@ -41,10 +41,10 @@
     <logdir>/pnfs/uboone/scratch/users/&user;/MCC9/&name;/analyse</logdir>
     <workdir>/pnfs/uboone/scratch/users/&user;/MCC9/&name;/work/analyse</workdir>
     <bookdir>/uboone/data/users/&user;/book/MCC9/&name;/analyse</bookdir>
-    <maxfilesperjob>10</maxfilesperjob>
+    <maxfilesperjob>20</maxfilesperjob>
     <numjobs>13</numjobs>
     <datatier>reconstructed</datatier>
-    <memory>4000</memory>
+    <memory>2000</memory>
     <schema>root</schema>
     <inputlist>/uboone/data/users/kmistry/book/MCC9/reco2/files.list</inputlist>
     <jobsub>--expected-lifetime=3h -e IFDH_CP_UNLINK_ON_ERROR=1 </jobsub>

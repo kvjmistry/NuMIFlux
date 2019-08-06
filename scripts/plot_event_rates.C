@@ -37,7 +37,7 @@ void DrawSpecifiers(TCanvas* c, TH1D* &h, const char* mode){
 	}
 	
 	IncreaseLabelSize(h);
-	h->GetXaxis()->SetRangeUser(0,7);
+	h->GetXaxis()->SetRangeUser(0,5);
 }
 
 // ----------------------------------------------------------------------------
@@ -47,9 +47,9 @@ void plot_event_rates(const char* horn) {
 
 	// Pre declare variables
 	TString Gethist_TPC, Gethist_TPC_dk2nu;
-	TFile *f, *f_gsimp;
+	TFile *f, *f_gsimp, *f_genie;
 	bool boolfile, boolhist;
-	double rebin{5}; // number to rebin the histograms by
+	double rebin{10}; // number to rebin the histograms by
 
 	// double Ntarget = 4.76e31/56.41e6* 256.35*233*1036.8; //TPC active!!! Marco
 	double Ntarget = (1.3836*6.022e23*40*256.35*233*1036.8) / 39.95; //TPC active!!! Colton
@@ -58,21 +58,26 @@ void plot_event_rates(const char* horn) {
 	double histMin = 0;
 	double histMax = 20;
 	int histNbins = 4000;
+	
 	TGraph *genieXsecNumuCC;
 	TGraph *genieXsecNumubarCC;
 	TGraph *genieXsecNueCC;
 	TGraph *genieXsecNuebarCC;
-	TH1D* numuCCHisto  = new TH1D("numuCCHisto", "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC / 79 t / 6 #times 10^{20} POT / 25 MeV",histNbins,histMin,histMax);
-	TH1D* anumuCCHisto = new TH1D("anumuCCHisto", "#bar{#nu}_{#mu} CC; #bar{#nu}_{#mu} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 25 MeV",histNbins,histMin,histMax);
-	TH1D* nueCCHisto   = new TH1D("nueCCHisto", "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC / 79 t / 6 #times 10^{20} POT / 25 MeV",histNbins,histMin,histMax);
-	TH1D* anueCCHisto  = new TH1D("anueCCHisto", "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 25 MeV",histNbins,histMin,histMax);
+	
+	TH1D* numuCCHisto  = new TH1D("numuCCHisto", "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
+	TH1D* anumuCCHisto = new TH1D("anumuCCHisto", "#bar{#nu}_{#mu} CC; #bar{#nu}_{#mu} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
+	TH1D* nueCCHisto   = new TH1D("nueCCHisto", "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
+	TH1D* anueCCHisto  = new TH1D("anueCCHisto", "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
 
 	// Gsimple 
-	TH1D* numuCCHisto_gsimp  = new TH1D("numuCCHisto_gsimp", "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC / 79 t / 6 #times 10^{20} POT / 25 MeV",histNbins,histMin,histMax);
-	TH1D* anumuCCHisto_gsimp = new TH1D("anumuCCHisto_gsimp", "#bar{#nu}_{#mu} CC; #bar{#nu}_{#mu} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 25 MeV",histNbins,histMin,histMax);
-	TH1D* nueCCHisto_gsimp   = new TH1D("nueCCHisto_gsimp", "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC / 79 t / 6 #times 10^{20} POT / 25 MeV",histNbins,histMin,histMax);
-	TH1D* anueCCHisto_gsimp  = new TH1D("anueCCHisto_gsimp", "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 25 MeV",histNbins,histMin,histMax);
+	TH1D* numuCCHisto_gsimp  = new TH1D("numuCCHisto_gsimp", "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
+	TH1D* anumuCCHisto_gsimp = new TH1D("anumuCCHisto_gsimp", "#bar{#nu}_{#mu} CC; #bar{#nu}_{#mu} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
+	TH1D* nueCCHisto_gsimp   = new TH1D("nueCCHisto_gsimp", "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
+	TH1D* anueCCHisto_gsimp  = new TH1D("anueCCHisto_gsimp", "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
 	
+	TH1D *h_nue_genie, *h_nuebar_genie, *h_numu_genie, *h_numubar_genie;
+
+
 	// ------------------------------------------------------------------------------------------------------------
 	// Make a plot of flux x genie spline
 	// ------------------------------------------------------------------------------------------------------------
@@ -89,9 +94,14 @@ void plot_event_rates(const char* horn) {
 		if (boolfile == false) gSystem->Exit(0);
 		
 	}
+
+	// Get the event rate distribution generated through GENIE
+	boolfile  = GetFile(f_genie ,"../files/NuMI_EventRate.root");
+	if (boolfile == false) gSystem->Exit(0);
 	
 	// Get the POT
-	double fPOT = GetPOT(f);
+	double fPOT       = GetPOT(f);
+	double fPOT_genie = GetPOT(f_genie, "NuMIEventRates/pottree", "pot");
 
 	// Get Histograms
 	TH1D *h_nue, *h_nuebar, *h_numu, *h_numubar;
@@ -107,8 +117,20 @@ void plot_event_rates(const char* horn) {
 	boolhist = GetHist(f_gsimp, h_numu_gsimp,    "numuFluxHisto");  if (boolhist == false) gSystem->Exit(0);
 	boolhist = GetHist(f_gsimp, h_numubar_gsimp, "anumuFluxHisto"); if (boolhist == false) gSystem->Exit(0);
 	
+	// Get the GENIE histograms
+	boolhist = GetHist(f_genie, h_nue_genie,     "NuMIEventRates/Nue_dir/Nue_Energy");           if (boolhist == false) gSystem->Exit(0);
+	boolhist = GetHist(f_genie, h_nuebar_genie,  "NuMIEventRates/Nue_bar_dir/Nue_bar_Energy");   if (boolhist == false) gSystem->Exit(0);
+	boolhist = GetHist(f_genie, h_numu_genie,    "NuMIEventRates/NuMu_dir/NuMu_Energy");         if (boolhist == false) gSystem->Exit(0);
+	boolhist = GetHist(f_genie, h_numubar_genie, "NuMIEventRates/NuMu_bar_dir/NuMu_bar_Energy"); if (boolhist == false) gSystem->Exit(0);
+
+
 	// Normalise
 	// Normalise(hist);
+
+	h_nue_genie->Scale( 1.0/3.14159*  (6.0e20)/ (fPOT_genie) );
+	h_nuebar_genie->Scale( 1.0/3.14159*  (6.0e20)/ (fPOT_genie) );
+	h_numu_genie->Scale( 1.0/3.14159*  (6.0e20)/ (fPOT_genie) );
+	h_numubar_genie->Scale( 1.0/3.14159*  (6.0e20)/ (fPOT_genie) );
 
 	// Scale
 	h_nue->Scale((6.0e20)/ (fPOT*1.0e4) );
@@ -223,12 +245,19 @@ void plot_event_rates(const char* horn) {
 	TCanvas* c_nue = new TCanvas();
 	DrawSpecifiers(c_nue, nueCCHisto, "nue");
 	DrawSpecifiers(c_nue, nueCCHisto_gsimp, "nue");
+	DrawSpecifiers(c_nue, h_nue_genie, "nue");
+	
+	h_nue_genie->SetLineColor(40);
 	nueCCHisto_gsimp->SetLineColor(kGreen+1);
-	nueCCHisto->Draw("hist");
-	nueCCHisto_gsimp->Draw("hist,same");
+	
+	nueCCHisto->Draw("his");
+	nueCCHisto_gsimp->Draw("his,same");
+	if (!strcmp(horn,"fhc")) h_nue_genie->Draw("his,same");
+
 	Draw_Nu_Mode(c_nue, horn); // Draw FHC Mode/RHC Mode Text
 	leg_gsimp->AddEntry(nueCCHisto, "dk2nu","l");
 	leg_gsimp->AddEntry(nueCCHisto_gsimp, "flugg","l");
+	if (!strcmp(horn,"fhc")) leg_gsimp->AddEntry(h_nue_genie, "genie","l");
 	leg_gsimp->Draw();
 	gStyle->SetTitleH(0.07);
 	c_nue->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "nue"));
@@ -238,12 +267,19 @@ void plot_event_rates(const char* horn) {
 	TCanvas* c_nuebar = new TCanvas();
 	DrawSpecifiers(c_nuebar, anueCCHisto, "nuebar");
 	DrawSpecifiers(c_nuebar, anueCCHisto_gsimp, "nuebar");
+	DrawSpecifiers(c_nuebar, h_nuebar_genie, "nuebar");
+	
+	h_nuebar_genie->SetLineColor(40);
 	anueCCHisto_gsimp->SetLineColor(kGreen+1);
-	anueCCHisto->Draw("hist");
-	anueCCHisto_gsimp->Draw("hist,same");
+	
+	anueCCHisto->Draw("his");
+	anueCCHisto_gsimp->Draw("his,same");
+	if (!strcmp(horn,"fhc")) h_nuebar_genie->Draw("his,same");
+	
 	Draw_Nu_Mode(c_nuebar, horn); // Draw FHC Mode/RHC Mode Text
 	leg_gsimp->AddEntry(anueCCHisto, "dk2nu","l");
 	leg_gsimp->AddEntry(anueCCHisto_gsimp, "flugg","l");
+	if (!strcmp(horn,"fhc")) leg_gsimp->AddEntry(h_nuebar_genie, "genie","l");
 	leg_gsimp->Draw();
 	gStyle->SetTitleH(0.07);
 	c_nuebar->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "nuebar"));
@@ -253,12 +289,19 @@ void plot_event_rates(const char* horn) {
 	TCanvas* c_numu = new TCanvas();
 	DrawSpecifiers(c_numu, numuCCHisto, "numu");
 	DrawSpecifiers(c_numu, numuCCHisto_gsimp, "numu");
+	DrawSpecifiers(c_numu, h_numu_genie, "numu");
+	
+	h_numu_genie->SetLineColor(40);
 	numuCCHisto_gsimp->SetLineColor(kGreen+1);
-	numuCCHisto->Draw("hist");
-	numuCCHisto_gsimp->Draw("hist,same");
+	
+	numuCCHisto->Draw("his");
+	numuCCHisto_gsimp->Draw("his,same");
+	if (!strcmp(horn,"fhc")) h_numu_genie->Draw("his,same");
+	
 	Draw_Nu_Mode(c_numu, horn); // Draw FHC Mode/RHC Mode Text
 	leg_gsimp->AddEntry(numuCCHisto, "dk2nu","l");
 	leg_gsimp->AddEntry(numuCCHisto_gsimp, "flugg","l");
+	if (!strcmp(horn,"fhc")) leg_gsimp->AddEntry(h_numu_genie, "genie","l");
 	leg_gsimp->Draw();
 	gStyle->SetTitleH(0.07);
 	c_numu->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "numu"));
@@ -268,12 +311,19 @@ void plot_event_rates(const char* horn) {
 	TCanvas* c_numubar = new TCanvas();
 	DrawSpecifiers(c_numubar, anumuCCHisto, "numubar");
 	DrawSpecifiers(c_numubar, anumuCCHisto_gsimp, "numubar");
+	DrawSpecifiers(c_numubar, h_numubar_genie, "numubar");
+
+	h_numubar_genie->SetLineColor(40);
 	anumuCCHisto_gsimp->SetLineColor(kGreen+1);
-	anumuCCHisto->Draw("hist");
-	anumuCCHisto_gsimp->Draw("hist,same");
+	
+	anumuCCHisto->Draw("his");
+	anumuCCHisto_gsimp->Draw("his,same");
+	if (!strcmp(horn,"fhc")) h_numubar_genie->Draw("his,same");
+	
 	Draw_Nu_Mode(c_numubar, horn); // Draw FHC Mode/RHC Mode Text
 	leg_gsimp->AddEntry(anumuCCHisto, "dk2nu","l");
 	leg_gsimp->AddEntry(anumuCCHisto_gsimp, "flugg","l");
+	if (!strcmp(horn,"fhc")) leg_gsimp->AddEntry(h_numubar_genie, "genie","l");
 	leg_gsimp->Draw();
 	gStyle->SetTitleH(0.07);
 	c_numubar->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "numubar"));

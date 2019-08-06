@@ -234,12 +234,43 @@ double GetPOT(TFile* f){
 
 	double fPOT{0};
 	TPOT->SetBranchAddress("POT", &fPOT); // Get the POT
-	TPOT->GetEntry(0);
-	double total_entries = TPOT->GetEntries(); // if using hadd, this will not be 1 equal to 1 anymore
-	fPOT*=total_entries;
-	std::cout << "TOTAL POT READ IN:\t" << fPOT << std::endl;
 	
-    return fPOT;
+	double total_entries = TPOT->GetEntries(); // if using hadd, this will not be 1 equal to 1 anymore
+
+	double POT = 0;
+
+	// Loop over the entries and add to the total pot
+	for (int k = 0; k < total_entries; k++){
+		TPOT->GetEntry(k);
+		POT += fPOT;
+	}
+	
+	std::cout << "TOTAL POT READ IN:\t" << POT << std::endl;
+	
+    return POT;
+}
+// ------------------------------------------------------------------------------------------------------------
+// Overload to override the POT branch name
+double GetPOT(TFile* f, TString POT_name, TString var_name){
+    TTree* TPOT = (TTree*) f->Get(POT_name);
+	if (TPOT == NULL) std::cout << "Error cant get POT info" << std::endl;
+
+	double fPOT{0};
+	TPOT->SetBranchAddress(var_name, &fPOT); // Get the POT
+	
+	double total_entries = TPOT->GetEntries(); // if using hadd, this will not be 1 equal to 1 anymore
+
+	double POT = 0;
+
+	// Loop over the entries and add to the total pot
+	for (int k = 0; k < total_entries; k++){
+		TPOT->GetEntry(k);
+		POT += fPOT;
+	}
+	
+	std::cout << "TOTAL POT READ IN:\t" << POT << std::endl;
+	
+    return POT;
 }
 // ------------------------------------------------------------------------------------------------------------
 // Overloaded to supress the POT message
