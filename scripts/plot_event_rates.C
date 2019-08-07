@@ -127,10 +127,13 @@ void plot_event_rates(const char* horn) {
 	// Normalise
 	// Normalise(hist);
 
-	h_nue_genie->Scale( 1.0/3.14159*  (6.0e20)/ (fPOT_genie) );
-	h_nuebar_genie->Scale( 1.0/3.14159*  (6.0e20)/ (fPOT_genie) );
-	h_numu_genie->Scale( 1.0/3.14159*  (6.0e20)/ (fPOT_genie) );
-	h_numubar_genie->Scale( 1.0/3.14159*  (6.0e20)/ (fPOT_genie) );
+	// Scale the genie histograms
+	// WARNING : INSERTED AN EXTRA FACTOR OF PI TO IMPROVE AGREEMENT SOLVE!!!!
+	std::cout << "\033[1;31mWARNING : INSERTED AN EXTRA FACTOR OF PI IN GENIE HIST TO IMPROVE AGREEMENT --  SOLVE!!!!\033[0m" << std::endl;
+	h_nue_genie->Scale( 1.0/3.14159 *  (6.0e20)/ (fPOT_genie) );
+	h_nuebar_genie->Scale( 1.0/3.14159 *  (6.0e20)/ (fPOT_genie) );
+	h_numu_genie->Scale( 1.0/3.14159 *  (6.0e20)/ (fPOT_genie) );
+	h_numubar_genie->Scale( 1.0/3.14159 *  (6.0e20)/ (fPOT_genie) );
 
 	// Scale
 	h_nue->Scale((6.0e20)/ (fPOT*1.0e4) );
@@ -241,7 +244,7 @@ void plot_event_rates(const char* horn) {
 	// create plots folder if it does not exist
 	gSystem->Exec("if [ ! -d \"plots/Event_Rates\" ]; then echo \"\n Event_Rates folder does not exist... creating\"; mkdir -p plots/Event_Rates; fi"); 
 
-	//Nue
+	// -----------------------------  Nue --------------------------------------
 	TCanvas* c_nue = new TCanvas();
 	DrawSpecifiers(c_nue, nueCCHisto, "nue");
 	DrawSpecifiers(c_nue, nueCCHisto_gsimp, "nue");
@@ -250,9 +253,10 @@ void plot_event_rates(const char* horn) {
 	h_nue_genie->SetLineColor(40);
 	nueCCHisto_gsimp->SetLineColor(kGreen+1);
 	
-	nueCCHisto->Draw("his");
-	nueCCHisto_gsimp->Draw("his,same");
 	if (!strcmp(horn,"fhc")) h_nue_genie->Draw("his,same");
+	nueCCHisto->Draw("his, same");
+	nueCCHisto_gsimp->Draw("his,same");
+	
 
 	Draw_Nu_Mode(c_nue, horn); // Draw FHC Mode/RHC Mode Text
 	leg_gsimp->AddEntry(nueCCHisto, "dk2nu","l");
@@ -263,7 +267,7 @@ void plot_event_rates(const char* horn) {
 	c_nue->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "nue"));
 	leg_gsimp->Clear();
 	
-	// Nuebar
+	// --------------------------- Nuebar --------------------------------------
 	TCanvas* c_nuebar = new TCanvas();
 	DrawSpecifiers(c_nuebar, anueCCHisto, "nuebar");
 	DrawSpecifiers(c_nuebar, anueCCHisto_gsimp, "nuebar");
@@ -272,9 +276,9 @@ void plot_event_rates(const char* horn) {
 	h_nuebar_genie->SetLineColor(40);
 	anueCCHisto_gsimp->SetLineColor(kGreen+1);
 	
-	anueCCHisto->Draw("his");
-	anueCCHisto_gsimp->Draw("his,same");
 	if (!strcmp(horn,"fhc")) h_nuebar_genie->Draw("his,same");
+	anueCCHisto->Draw("his, same");
+	anueCCHisto_gsimp->Draw("his,same");
 	
 	Draw_Nu_Mode(c_nuebar, horn); // Draw FHC Mode/RHC Mode Text
 	leg_gsimp->AddEntry(anueCCHisto, "dk2nu","l");
@@ -285,7 +289,7 @@ void plot_event_rates(const char* horn) {
 	c_nuebar->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "nuebar"));
 	leg_gsimp->Clear();
 	
-	// Numu
+	// ----------------------------  Numu --------------------------------------
 	TCanvas* c_numu = new TCanvas();
 	DrawSpecifiers(c_numu, numuCCHisto, "numu");
 	DrawSpecifiers(c_numu, numuCCHisto_gsimp, "numu");
@@ -294,9 +298,9 @@ void plot_event_rates(const char* horn) {
 	h_numu_genie->SetLineColor(40);
 	numuCCHisto_gsimp->SetLineColor(kGreen+1);
 	
-	numuCCHisto->Draw("his");
-	numuCCHisto_gsimp->Draw("his,same");
 	if (!strcmp(horn,"fhc")) h_numu_genie->Draw("his,same");
+	numuCCHisto->Draw("his, same");
+	numuCCHisto_gsimp->Draw("his,same");
 	
 	Draw_Nu_Mode(c_numu, horn); // Draw FHC Mode/RHC Mode Text
 	leg_gsimp->AddEntry(numuCCHisto, "dk2nu","l");
@@ -307,7 +311,7 @@ void plot_event_rates(const char* horn) {
 	c_numu->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "numu"));
 	leg_gsimp->Clear();
 	
-	// Numubar
+	// ---------------------------  Numubar ------------------------------------
 	TCanvas* c_numubar = new TCanvas();
 	DrawSpecifiers(c_numubar, anumuCCHisto, "numubar");
 	DrawSpecifiers(c_numubar, anumuCCHisto_gsimp, "numubar");
@@ -316,9 +320,9 @@ void plot_event_rates(const char* horn) {
 	h_numubar_genie->SetLineColor(40);
 	anumuCCHisto_gsimp->SetLineColor(kGreen+1);
 	
-	anumuCCHisto->Draw("his");
-	anumuCCHisto_gsimp->Draw("his,same");
 	if (!strcmp(horn,"fhc")) h_numubar_genie->Draw("his,same");
+	anumuCCHisto->Draw("his, same");
+	anumuCCHisto_gsimp->Draw("his,same");
 	
 	Draw_Nu_Mode(c_numubar, horn); // Draw FHC Mode/RHC Mode Text
 	leg_gsimp->AddEntry(anumuCCHisto, "dk2nu","l");
@@ -329,7 +333,7 @@ void plot_event_rates(const char* horn) {
 	c_numubar->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "numubar"));
 	leg_gsimp->Clear();
 	
-	// All
+	// -----------------------------  ALL --------------------------------------
 	TCanvas* c_all = new TCanvas();
 	gPad->SetLeftMargin(0.15);
 	gPad->SetBottomMargin(0.12);
