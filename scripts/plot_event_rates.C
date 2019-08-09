@@ -52,8 +52,14 @@ void plot_event_rates(const char* horn) {
 	double rebin{10}; // number to rebin the histograms by
 
 	// double Ntarget = 4.76e31/56.41e6* 256.35*233*1036.8; //TPC active!!! Marco
-	double Ntarget = (1.3836*6.022e23*40*256.35*233*1036.8) / 39.95; //TPC active!!! Colton
-	// std::cout << "N_Targ:\t" << Ntarget << std::endl;
+	// double Ntarget = (1.3836*6.022e23*40*256.35*233*1036.8) / 39.95; //TPC active!!! Colton
+	double Ntarget = (1.3954*6.022e23*40*256.35*233*1036.8) / 39.95; //TPC active with MC lar density -- Krishan
+	std::cout << "N_Targ:\t" << Ntarget << std::endl;
+
+
+	// std::cout << ((1.3836*6.022e23*40*256.35*233*1036.8) / 39.95)/(4.76e31/56.41e6* 256.35*233*1036.8)<< std::endl;
+
+	
 
 	double histMin = 0;
 	double histMax = 20;
@@ -82,7 +88,8 @@ void plot_event_rates(const char* horn) {
 	// Make a plot of flux x genie spline
 	// ------------------------------------------------------------------------------------------------------------
 	if (!strcmp(horn,"fhc")) {
-		boolfile  = GetFile(f ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root");
+		// boolfile  = GetFile(f ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root");
+		boolfile  = GetFile(f ,"/uboone/data/users/kmistry/work/PPFX/uboone/test/output_run0_lowstats.root");
 		if (boolfile == false) gSystem->Exit(0);
 		boolfile  = GetFile(f_gsimp , "/uboone/data/users/kmistry/work/PPFX/uboone/NuMIFlux_update_morebins.root");
 		if (boolfile == false) gSystem->Exit(0);
@@ -127,20 +134,18 @@ void plot_event_rates(const char* horn) {
 	// Normalise
 	// Normalise(hist);
 
-	// Scale the genie histograms
-	// WARNING : INSERTED AN EXTRA FACTOR OF PI TO IMPROVE AGREEMENT SOLVE!!!!
-	std::cout << "\033[1;31mWARNING : INSERTED AN EXTRA FACTOR OF PI IN GENIE HIST TO IMPROVE AGREEMENT --  SOLVE!!!!\033[0m" << std::endl;
-	h_nue_genie->Scale( 1.0/3.14159 *  (6.0e20)/ (fPOT_genie) );
-	h_nuebar_genie->Scale( 1.0/3.14159 *  (6.0e20)/ (fPOT_genie) );
-	h_numu_genie->Scale( 1.0/3.14159 *  (6.0e20)/ (fPOT_genie) );
-	h_numubar_genie->Scale( 1.0/3.14159 *  (6.0e20)/ (fPOT_genie) );
-
 	// Scale
 	h_nue->Scale((6.0e20)/ (fPOT*1.0e4) );
 	h_nuebar->Scale((6.0e20)/ (fPOT*1.0e4) );
 	h_numu->Scale((6.0e20)/ (fPOT*1.0e4) );
 	h_numubar->Scale((6.0e20)/ (fPOT*1.0e4) );
 
+	// Scale the genie histograms
+	h_nue_genie->Scale( 0.75* (6.0e20)/ (fPOT_genie) );
+	h_nuebar_genie->Scale( 0.75* (6.0e20)/ (fPOT_genie) );
+	h_numu_genie->Scale( 0.75* (6.0e20)/ (fPOT_genie) );
+	h_numubar_genie->Scale( 0.75* (6.0e20)/ (fPOT_genie) );
+	
 	const char* genieXsecPath = gSystem->ExpandPathName("$(GENIEXSECPATH)");
 	if ( !genieXsecPath ) {
 		std::cout << "$(GENIEXSECPATH) not defined." << std::endl;
@@ -241,6 +246,16 @@ void plot_event_rates(const char* horn) {
 	numuCCHisto_gsimp->Rebin(rebin);
 	anumuCCHisto_gsimp->Rebin(rebin);
 
+	std::cout <<nueCCHisto->Integral(0, -1) / h_nue_genie->Integral(0, -1)<< std::endl;
+
+	// Area normalise to check the shape 
+	// h_nue_genie->Scale( nueCCHisto->Integral(10, -1) / h_nue_genie->Integral(10, -1) );
+	// h_nuebar_genie->Scale( anueCCHisto->Integral(10, -1) / h_nuebar_genie->Integral(10, -1) );
+	// h_numu_genie->Scale( numuCCHisto->Integral(10, -1) / h_numu_genie->Integral(10, -1) );
+	// h_numubar_genie->Scale( anumuCCHisto->Integral(10, -1) / h_numubar_genie->Integral(10, -1) );
+
+	
+
 	// create plots folder if it does not exist
 	gSystem->Exec("if [ ! -d \"plots/Event_Rates\" ]; then echo \"\n Event_Rates folder does not exist... creating\"; mkdir -p plots/Event_Rates; fi"); 
 
@@ -252,10 +267,11 @@ void plot_event_rates(const char* horn) {
 	
 	h_nue_genie->SetLineColor(40);
 	nueCCHisto_gsimp->SetLineColor(kGreen+1);
+	nueCCHisto->GetYaxis()->SetRangeUser(0,270);
 	
-	if (!strcmp(horn,"fhc")) h_nue_genie->Draw("his,same");
 	nueCCHisto->Draw("his, same");
 	nueCCHisto_gsimp->Draw("his,same");
+	if (!strcmp(horn,"fhc")) h_nue_genie->Draw("his,same");
 	
 
 	Draw_Nu_Mode(c_nue, horn); // Draw FHC Mode/RHC Mode Text
@@ -267,6 +283,7 @@ void plot_event_rates(const char* horn) {
 	c_nue->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "nue"));
 	leg_gsimp->Clear();
 	
+	
 	// --------------------------- Nuebar --------------------------------------
 	TCanvas* c_nuebar = new TCanvas();
 	DrawSpecifiers(c_nuebar, anueCCHisto, "nuebar");
@@ -275,10 +292,11 @@ void plot_event_rates(const char* horn) {
 	
 	h_nuebar_genie->SetLineColor(40);
 	anueCCHisto_gsimp->SetLineColor(kGreen+1);
+	anueCCHisto->GetYaxis()->SetRangeUser(0,80);
 	
-	if (!strcmp(horn,"fhc")) h_nuebar_genie->Draw("his,same");
 	anueCCHisto->Draw("his, same");
 	anueCCHisto_gsimp->Draw("his,same");
+	if (!strcmp(horn,"fhc")) h_nuebar_genie->Draw("his,same");
 	
 	Draw_Nu_Mode(c_nuebar, horn); // Draw FHC Mode/RHC Mode Text
 	leg_gsimp->AddEntry(anueCCHisto, "dk2nu","l");
@@ -297,10 +315,11 @@ void plot_event_rates(const char* horn) {
 	
 	h_numu_genie->SetLineColor(40);
 	numuCCHisto_gsimp->SetLineColor(kGreen+1);
+	numuCCHisto->GetYaxis()->SetRangeUser(0,4000);
 	
-	if (!strcmp(horn,"fhc")) h_numu_genie->Draw("his,same");
 	numuCCHisto->Draw("his, same");
 	numuCCHisto_gsimp->Draw("his,same");
+	if (!strcmp(horn,"fhc")) h_numu_genie->Draw("his,same");
 	
 	Draw_Nu_Mode(c_numu, horn); // Draw FHC Mode/RHC Mode Text
 	leg_gsimp->AddEntry(numuCCHisto, "dk2nu","l");
@@ -319,10 +338,11 @@ void plot_event_rates(const char* horn) {
 
 	h_numubar_genie->SetLineColor(40);
 	anumuCCHisto_gsimp->SetLineColor(kGreen+1);
+	anumuCCHisto->GetYaxis()->SetRangeUser(0,800);
 	
-	if (!strcmp(horn,"fhc")) h_numubar_genie->Draw("his,same");
 	anumuCCHisto->Draw("his, same");
 	anumuCCHisto_gsimp->Draw("his,same");
+	if (!strcmp(horn,"fhc")) h_numubar_genie->Draw("his,same");
 	
 	Draw_Nu_Mode(c_numubar, horn); // Draw FHC Mode/RHC Mode Text
 	leg_gsimp->AddEntry(anumuCCHisto, "dk2nu","l");

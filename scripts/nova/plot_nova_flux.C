@@ -6,7 +6,7 @@ where nue, nuebar, numu and numubar are the available options.
 
 */
 
-#include "plot_comp_functions.h"
+#include "../functions.h"
 
 
 void plot_nova_flux(const char* mode) { 
@@ -20,7 +20,8 @@ void plot_nova_flux(const char* mode) {
 
     // File in 
 	// boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/PPFX/nova/Norm_investigation/test/output.root"); if (boolfile == false) gSystem->Exit(0);
-    boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/PPFX/nova/Norm_investigation/test/output_v4.root"); if (boolfile == false) gSystem->Exit(0);
+    // boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/PPFX/nova/Norm_investigation/test/output_v4.root"); if (boolfile == false) gSystem->Exit(0);
+    boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/PPFX/uboone/test/output_old.root"); if (boolfile == false) gSystem->Exit(0);
     boolfile  = GetFile(f_nova,"/uboone/app/users/kmistry/PPFX/numi-validation/nova_flux/FHC_Flux_NOvA_ND_2017.root"); if (boolfile == false) gSystem->Exit(0);
 
     double fPOT = GetPOT(f);

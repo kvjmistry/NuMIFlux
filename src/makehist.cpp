@@ -499,6 +499,9 @@ int main(int argc, char** argv) {
 	// ++++++++++++++++++++++++++++++++
 
 	TFile* output = new TFile("output.root", "RECREATE");
+
+	POTTree->SetDirectory(output);
+
 	TDirectory* savdir = gDirectory;
 
 	std::cout << "flavour.size:\t" <<flav.size()<<std::endl;

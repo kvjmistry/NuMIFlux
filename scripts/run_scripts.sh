@@ -1,5 +1,5 @@
 # To run this script do source run_scripts.sh <mode> <horn_mode>
-# where <horn_mode> = fhc/rhc and <mode> = all/parent/gsimple/beamline
+# where <horn_mode> = fhc/rhc and <mode> = all/parent/gsimple/beamline/eventrate
 mode=$1
 horn=$2
 
@@ -31,5 +31,5 @@ elif [ $mode == "eventrate" ]
 then 
 	root -l -q -b 'plot_event_rates.C("'$horn'")'
 else 
-	echo "Error in running the script, run by run_scripts.sh <mode> <horn_mode> where <horn_mode> = fhc/rhc and <mode> = all/parent/gsimple/beamline"
+	echo "Error in running the script, run by run_scripts.sh <mode> <horn_mode> where <horn_mode> = fhc/rhc and <mode> = all/parent/gsimple/beamline/eventrate"
 fi

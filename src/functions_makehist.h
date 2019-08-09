@@ -114,7 +114,8 @@ class Detector {
 			std::pair<float, float>  xRange_,
 			std::pair<float, float>  yRange_,
 			std::pair<float, float>  zRange_,
-			TVector3 Trans_Det2Beam_,
+			TVector3 Trans_Targ2Det_beam_,
+			TVector3 Trans_Targ2Det_det_,
 			TVector3 Rot_row_x_,
 			TVector3 Rot_row_y_,
 			TVector3 Rot_row_z_, 
@@ -126,7 +127,8 @@ class Detector {
 				xRange = xRange_;
 				yRange = yRange_;
 				zRange = zRange_;
-				Trans_Det2Beam = Trans_Det2Beam_;
+				Trans_Targ2Det_beam = Trans_Targ2Det_beam_;
+				Trans_Targ2Det_det  = Trans_Targ2Det_det_;
 				Rot_row_x = Rot_row_x_;
 				Rot_row_y = Rot_row_y_;
 				Rot_row_z = Rot_row_z_;
@@ -135,7 +137,6 @@ class Detector {
 				Win_pt2 = Win_pt2_;
 				bins.resize(5);
 				bins = bins_;
-			
 			};
 		
 		std::string detector_name;
@@ -145,8 +146,14 @@ class Detector {
 		std::pair<float, float>  yRange;
 		std::pair<float, float>  zRange;
 
-		// Translation vector from beam origin to detector origin [cm]
-		TVector3 Trans_Det2Beam;
+		// Translation vector from target to detector in beam coords [cm]
+		TVector3 Trans_Targ2Det_beam;
+
+		// Translation vector from target to detector in det coords [cm]
+		TVector3 Trans_Targ2Det_det;
+
+		// bool to decide whether to use the translation in beam or detector coords
+		// bool useBeam = true; 
 
 		// Rotation matrix from beam to detector
 		TVector3 Rot_row_x; // Row x of rotation matrix
@@ -172,8 +179,11 @@ void Initialise(std::string detector_type, Detector &Detector_){
 	std::pair<float, float>  yRange;
 	std::pair<float, float>  zRange;
 
-	// Translation vector from det origin to beam origin in det coords [cm]
-	TVector3 Trans_Det2Beam;
+	// Translation vector from target to detector in beam coords [cm]
+	TVector3 Trans_Targ2Det_beam;
+
+	// Translation vector from target to detector in det coords [cm]
+	TVector3 Trans_Targ2Det_det;
 
 	// Rotation matrix from beam to detector
 	TVector3 Rot_row_x; // Row x of rotation matrix
@@ -198,8 +208,8 @@ void Initialise(std::string detector_type, Detector &Detector_){
 		zRange.first  =      0;
 		zRange.second = 1036.8;
 
-		// Trans_Det2Beam = { -31387.58422, -3316.402543, -60100.2414}; //cm
-		Trans_Det2Beam = { 5502, 7259, 67270}; //cm in beam coords
+		Trans_Targ2Det_det = { -31387.58422, -3316.402543, -60100.2414}; //cm -- detector coords
+		Trans_Targ2Det_beam = { 5502, 7259, 67270}; //cm -- in beam coords
 
 		// Rotation matrix using the 0,0,0 position for MicroBooNE (beam to det input)
 		Rot_row_x = { 0.92103853804025681562, 0.022713504803924120662, 0.38880857519374290021  };
@@ -236,9 +246,10 @@ void Initialise(std::string detector_type, Detector &Detector_){
 		zRange.first  =   25;
 		zRange.second = 1150;
 
-		// Trans_Det2Beam = {226.9447, 6100.1882, -99113.1313}; //cm
-		Trans_Det2Beam = {1171.74545 ,       -331.51325 ,      99293.47347}; // new test with beam coords
-		// Trans_Det2Beam = { 1150.170113 ,     -280.0752339 ,      100099.1001}; // new test with beam coords from genie page
+		Trans_Targ2Det_det = {226.9447, 6100.1882, -99113.1313}; //cm -- detector coords
+		Trans_Targ2Det_beam = {1171.74545 ,       -331.51325 ,      99293.47347}; // beam coords
+		// Trans_Targ2Det_beam = {1150.170113 ,      -280.0752339 ,    100099.1001}; // beam coords -- with updated attempt
+		// Trans_Targ2Det_beam = { 1150.170113 ,     -280.0752339 ,      100099.1001}; // new test with beam coords from genie page
 
 
 		// Rotation matrix using the 0,0,0 position for NOvA (beam to det input)
@@ -283,14 +294,16 @@ void Initialise(std::string detector_type, Detector &Detector_){
 		" [ " << Rot_row_y.X() << " " << Rot_row_y.Y() << " " << Rot_row_y.Z() << " ] " << "\n" <<
 		" [ " << Rot_row_z.X() << " " << Rot_row_z.Y() << " " << Rot_row_z.Z() << " ] " << "\n\n" <<
 		"Translation from target to detector in beam coords [cm] = \n" <<
-		" [ " << Trans_Det2Beam.X() << ", " << Trans_Det2Beam.Y() << ", " << Trans_Det2Beam.Z() << " ] " << "\n\n" <<
+		" [ " << Trans_Targ2Det_beam.X() << ", " << Trans_Targ2Det_beam.Y() << ", " << Trans_Targ2Det_beam.Z() << " ] " << "\n\n" <<
+		"Translation from target to detector in detector coords [cm] = \n" <<
+		" [ " << Trans_Targ2Det_det.X() << ", " << Trans_Targ2Det_det.Y() << ", " << Trans_Targ2Det_det.Z() << " ] " << "\n\n" <<
 		"Window (in det coords) [cm] = \n" << 
 		" [ " << Win_Base.X() << " " << Win_Base.Y() << " " << Win_Base.Z() << " ] " << "\n" <<
 		" [ " << Win_pt1.X()  << " " << Win_pt1.Y()  << " " << Win_pt1.Z()  << " ] " << "\n" <<
 		" [ " << Win_pt2.X()  << " " << Win_pt2.Y()  << " " << Win_pt2.Z()  << " ] " << "\n" <<
 		std::endl; 
 
-	Detector_ = Detector(detector_type, xRange, yRange, zRange, Trans_Det2Beam, Rot_row_x, Rot_row_y, Rot_row_z, Win_Base, Win_pt1, Win_pt2, bins );
+	Detector_ = Detector(detector_type, xRange, yRange, zRange, Trans_Targ2Det_beam, Trans_Targ2Det_det, Rot_row_x, Rot_row_y, Rot_row_z, Win_Base, Win_pt1, Win_pt2, bins );
 
 }
 //___________________________________________________________________________
@@ -594,9 +607,9 @@ TVector3 FromDetToBeam( const TVector3 det, bool rotate_only, Detector Detector_
 		std::cout << std::endl;
 	}
 
-	if (rotate_only) beam = R * det;              // Only rotate the vector
-	// else beam = R * (det - Detector_.Trans_Det2Beam);
-	else beam = R * det + Detector_.Trans_Det2Beam; // for when translation is given in beam coords
+	if (rotate_only) beam = R * det;                         // Only rotate the vector
+	// else beam = R * (det - Detector_.Trans_Targ2Det_det); // for when transaltion is given in det coords
+	else beam = R * det + Detector_.Trans_Targ2Det_beam;     // for when translation is given in beam coords
 
 	return beam;
 }
@@ -640,7 +653,7 @@ double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalg
 	int retries{0};
 	double weight = 0;
 	// bool debug = true;
-	bool debug = false;
+	bool debug = true;
 	
 	R.RotateAxes(Detector_.Rot_row_x, Detector_.Rot_row_y, Detector_.Rot_row_z); // R is now det to beam
 	TRotation R_Beam_2_Det = R.Invert();
@@ -681,7 +694,7 @@ double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalg
 		NuRay_Dir = R_Beam_2_Det * NuRay_Dir;
 
 		// Now convert xbeam to detector coordinates too
-		x3beam_det = R_Beam_2_Det * (x3beam - Detector_.Trans_Det2Beam);
+		x3beam_det = R_Beam_2_Det * (x3beam - Detector_.Trans_Targ2Det_beam);
 
 		// debug, mom *1k to improve readability
 		if (debug) std::cout << "retry no:\t" << retries << std::endl;
