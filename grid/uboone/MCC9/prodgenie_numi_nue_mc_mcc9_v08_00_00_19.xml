@@ -23,6 +23,9 @@
   <!-- Batch resources -->
   <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
 
+  <!--fcl directory -->
+  <fcldir>/pnfs/uboone/persistent/users/kmistry/MCC9/</fcldir>
+
   <!-- Larsoft information -->
   <larsoft>
     <tag>&release;</tag>
@@ -36,7 +39,7 @@
   <!-- Project stages -->
 
   <stage name="gen">
-    <fcl>prodgenie_numi_intrinsic_nue_uboone_fhc.fcl</fcl>
+    <fcl>prodgenie_numi_intrinsic_nue_uboone_fhc_v2.fcl</fcl>
     <!-- <fcl>wirecell_g4_uboone.fcl</fcl> -->
     <!-- <fcl>wirecell_detsim_numi_uboone.fcl</fcl> -->
     <!-- <fcl>reco_uboone_mcc9_8_driver_stage1.fcl</fcl> -->

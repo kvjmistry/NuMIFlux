@@ -247,8 +247,8 @@ void Initialise(std::string detector_type, Detector &Detector_){
 		zRange.second = 1150;
 
 		Trans_Targ2Det_det = {226.9447, 6100.1882, -99113.1313}; //cm -- detector coords
-		Trans_Targ2Det_beam = {1171.74545 ,       -331.51325 ,      99293.47347}; // beam coords
-		// Trans_Targ2Det_beam = {1150.170113 ,      -280.0752339 ,    100099.1001}; // beam coords -- with updated attempt
+		// Trans_Targ2Det_beam = {1171.74545 ,       -331.51325 ,      99293.47347}; // beam coords
+		Trans_Targ2Det_beam = {1150.170113 ,      -280.0752339 ,    100099.1001}; // beam coords -- with updated attempt
 		// Trans_Targ2Det_beam = { 1150.170113 ,     -280.0752339 ,      100099.1001}; // new test with beam coords from genie page
 
 
@@ -670,6 +670,7 @@ double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalg
 	// Now see if this neutrino vector is going to intersect with the detector
 	// If it doesn't then recalculate
 	while(true){
+		retries++;
 		
 		// Extra precautions to make sure we are definately overwriting -- can remove
 		x3beam.SetXYZ(0,0,0);
@@ -680,10 +681,10 @@ double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalg
 
 		if (debug)std::cout <<"r uniform:\t" << random << std::endl;
 
-		retries++;
 		// Pick a new point on the window in beam coords
 		x3beam = fWin_Base_beam + (random * fFluxWindowDir1) + (random * fFluxWindowDir2);
 
+		// Get the weight
 		calcEnuWgt(mcflux, x3beam, enu, weight, KRDET);
 
 		// Get the nu ray direction in beam coords
@@ -737,7 +738,7 @@ double Recalc_Intersection_wgt(geoalgo::GeoAlgo const _geo_algo_instance, geoalg
 		if (retries > 200) {
 			// If there are more than 1000 attempts and still no intersection then give up!
 			// uboone has cases where they never intersect -- could be due to window not big enough to catch them? For now supress these
-			if (Detector_.detector_name == "nova") std::cout << "Recalculation failed due to > 1000 tries and no interception" << std::endl;
+			if (Detector_.detector_name == "nova") std::cout << "Recalculation failed due to > 200 tries and no interception" << std::endl;
 			return 0.0; // throw the event away
 		} 
 

@@ -47,7 +47,7 @@ void plot_event_rates(const char* horn) {
 
 	// Pre declare variables
 	TString Gethist_TPC, Gethist_TPC_dk2nu;
-	TFile *f, *f_gsimp, *f_genie;
+	TFile *f, *f_gsimp, *f_genie, *f_genie_nue;
 	bool boolfile, boolhist;
 	double rebin{10}; // number to rebin the histograms by
 
@@ -73,7 +73,7 @@ void plot_event_rates(const char* horn) {
 	TH1D* numuCCHisto  = new TH1D("numuCCHisto", "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
 	TH1D* anumuCCHisto = new TH1D("anumuCCHisto", "#bar{#nu}_{#mu} CC; #bar{#nu}_{#mu} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
 	TH1D* nueCCHisto   = new TH1D("nueCCHisto", "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
-	TH1D* anueCCHisto  = new TH1D("anueCCHisto", "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
+	TH1D* anueCCHisto  = new TH1D("anueCCHisto", "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{e} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
 
 	// Gsimple 
 	TH1D* numuCCHisto_gsimp  = new TH1D("numuCCHisto_gsimp", "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
@@ -106,9 +106,14 @@ void plot_event_rates(const char* horn) {
 	boolfile  = GetFile(f_genie ,"../files/NuMI_EventRate.root");
 	if (boolfile == false) gSystem->Exit(0);
 	
+		// Get the event rate distribution generated through GENIE -- sample with nue enhanced for stats
+	boolfile  = GetFile(f_genie_nue ,"../files/NuMI_EventRate_nue.root");
+	if (boolfile == false) gSystem->Exit(0);
+
 	// Get the POT
 	double fPOT       = GetPOT(f);
 	double fPOT_genie = GetPOT(f_genie, "NuMIEventRates/pottree", "pot");
+	double fPOT_genie_nue = GetPOT(f_genie_nue, "NuMIEventRates/pottree", "pot");
 
 	// Get Histograms
 	TH1D *h_nue, *h_nuebar, *h_numu, *h_numubar;
@@ -126,7 +131,7 @@ void plot_event_rates(const char* horn) {
 	
 	// Get the GENIE histograms
 	boolhist = GetHist(f_genie, h_nue_genie,     "NuMIEventRates/Nue_dir/Nue_Energy");           if (boolhist == false) gSystem->Exit(0);
-	boolhist = GetHist(f_genie, h_nuebar_genie,  "NuMIEventRates/Nue_bar_dir/Nue_bar_Energy");   if (boolhist == false) gSystem->Exit(0);
+	boolhist = GetHist(f_genie_nue, h_nuebar_genie,  "NuMIEventRates/Nue_bar_dir/Nue_bar_Energy");   if (boolhist == false) gSystem->Exit(0);
 	boolhist = GetHist(f_genie, h_numu_genie,    "NuMIEventRates/NuMu_dir/NuMu_Energy");         if (boolhist == false) gSystem->Exit(0);
 	boolhist = GetHist(f_genie, h_numubar_genie, "NuMIEventRates/NuMu_bar_dir/NuMu_bar_Energy"); if (boolhist == false) gSystem->Exit(0);
 
@@ -141,10 +146,10 @@ void plot_event_rates(const char* horn) {
 	h_numubar->Scale((6.0e20)/ (fPOT*1.0e4) );
 
 	// Scale the genie histograms
-	h_nue_genie->Scale( 0.75* (6.0e20)/ (fPOT_genie) );
-	h_nuebar_genie->Scale( 0.75* (6.0e20)/ (fPOT_genie) );
-	h_numu_genie->Scale( 0.75* (6.0e20)/ (fPOT_genie) );
-	h_numubar_genie->Scale( 0.75* (6.0e20)/ (fPOT_genie) );
+	h_nue_genie->Scale(  (6.0e20)/ (fPOT_genie) );
+	h_nuebar_genie->Scale(  (6.0e20)/ (fPOT_genie_nue) );
+	h_numu_genie->Scale(  (6.0e20)/ (fPOT_genie) );
+	h_numubar_genie->Scale(  (6.0e20)/ (fPOT_genie) );
 	
 	const char* genieXsecPath = gSystem->ExpandPathName("$(GENIEXSECPATH)");
 	if ( !genieXsecPath ) {
@@ -219,6 +224,7 @@ void plot_event_rates(const char* horn) {
 
 		}
 	} // end if ( genieXsecPath )
+	
 	TLegend* leg = new TLegend(0.75, 0.65, 0.95, 0.9);
 	leg->SetNColumns(1);
 	leg->SetBorderSize(0);
