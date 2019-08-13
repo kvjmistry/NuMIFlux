@@ -12,7 +12,7 @@ sure this file is included in the same directory.
 
 #include "functions.h"
 
-
+// ----------------------------------------------------------------------------
 void DrawSpecifiers(TCanvas* c, TH1D* &h, const char* mode){
 	c->cd();
 
@@ -39,7 +39,28 @@ void DrawSpecifiers(TCanvas* c, TH1D* &h, const char* mode){
 	IncreaseLabelSize(h);
 	h->GetXaxis()->SetRangeUser(0,5);
 }
+// ----------------------------------------------------------------------------
+constexpr double RELATIVE_TOLERANCE = 1e-5;
 
+double bin_average_total_xsec(TH1D* flux_hist, TGraph *xsec_spline, int bin_number) {
+	double E_min = flux_hist->GetBinLowEdge( bin_number );
+	double E_max = flux_hist->GetBinLowEdge( bin_number + 1 );
+
+	// Make sure that the TF1 that we define is valid up to the maximum energy
+	// used in either the spline or the flux histogram
+	double spline_max_energy = xsec_spline->GetX()[ xsec_spline->GetN() - 1 ];
+	double flux_max_energy   = flux_hist->GetBinLowEdge( flux_hist->GetNbinsX() + 1 );
+	double max_energy        = std::max( spline_max_energy, flux_max_energy );
+
+	// Function to use for numerical integration. Element x[0] is the
+	// neutrino energy
+	TF1 temp_func("temp_func", [&](double* x, double*)
+	{ double total_xsec = xsec_spline->Eval( x[0] ); return total_xsec; },
+	0., max_energy, 0);
+
+	double integ = temp_func.Integral(E_min, E_max, RELATIVE_TOLERANCE);
+	return integ / (E_max - E_min);
+}
 // ----------------------------------------------------------------------------
 // Main
 void plot_event_rates(const char* horn) {
@@ -47,7 +68,7 @@ void plot_event_rates(const char* horn) {
 
 	// Pre declare variables
 	TString Gethist_TPC, Gethist_TPC_dk2nu;
-	TFile *f, *f_gsimp, *f_genie, *f_genie_nue;
+	TFile *f, *f_gsimp, *f_genie, *f_genie_nue, *f_gevgen_numu, *f_gevgen_numubar;
 	bool boolfile, boolhist;
 	double rebin{10}; // number to rebin the histograms by
 
@@ -81,6 +102,10 @@ void plot_event_rates(const char* horn) {
 	TH1D* nueCCHisto_gsimp   = new TH1D("nueCCHisto_gsimp", "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
 	TH1D* anueCCHisto_gsimp  = new TH1D("anueCCHisto_gsimp", "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
 	
+	// Gevgen
+	TH1D* numuCCHisto_gevgen  = new TH1D("numuCCHisto_gevgen",  "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC", 400,histMin,histMax);
+	TH1D* anumuCCHisto_gevgen = new TH1D("anumuCCHisto_gevgen", "#bar{#nu}_{#mu} CC; #bar{#nu}_{#mu} Energy [GeV]; #bar{#nu}_{#mu} CC", 400, histMin,histMax);
+
 	TH1D *h_nue_genie, *h_nuebar_genie, *h_numu_genie, *h_numubar_genie;
 
 
@@ -88,8 +113,8 @@ void plot_event_rates(const char* horn) {
 	// Make a plot of flux x genie spline
 	// ------------------------------------------------------------------------------------------------------------
 	if (!strcmp(horn,"fhc")) {
-		// boolfile  = GetFile(f ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root");
-		boolfile  = GetFile(f ,"/uboone/data/users/kmistry/work/PPFX/uboone/test/output_run0_lowstats.root");
+		boolfile  = GetFile(f ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root");
+		// boolfile  = GetFile(f ,"/uboone/data/users/kmistry/work/PPFX/uboone/test/output_run0_lowstats.root");
 		if (boolfile == false) gSystem->Exit(0);
 		boolfile  = GetFile(f_gsimp , "/uboone/data/users/kmistry/work/PPFX/uboone/NuMIFlux_update_morebins.root");
 		if (boolfile == false) gSystem->Exit(0);
@@ -106,9 +131,40 @@ void plot_event_rates(const char* horn) {
 	boolfile  = GetFile(f_genie ,"../files/NuMI_EventRate.root");
 	if (boolfile == false) gSystem->Exit(0);
 	
-		// Get the event rate distribution generated through GENIE -- sample with nue enhanced for stats
+	// Get the event rate distribution generated through GENIE -- sample with nue enhanced for stats
 	boolfile  = GetFile(f_genie_nue ,"../files/NuMI_EventRate_nue.root");
 	if (boolfile == false) gSystem->Exit(0);
+	
+	// Get the event rate distribution generated through gevgen for numu
+	boolfile  = GetFile(f_gevgen_numu ,"/uboone/data/users/kmistry/work/PPFX/uboone/genie/my_events.gst_numu.root");
+	if (boolfile == false) gSystem->Exit(0);
+
+	// Get the event rate distribution generated through gevgen for numubar
+	boolfile  = GetFile(f_gevgen_numubar ,"/uboone/data/users/kmistry/work/PPFX/uboone/genie/my_events.gst_numubar.root");
+	if (boolfile == false) gSystem->Exit(0);
+
+	// Now get the associated TTree
+	bool booltree;
+	TTree *gevgen_tree_numu, *gevgen_tree_numubar;
+	booltree = GetTree(f_gevgen_numu, gevgen_tree_numu, "gst");
+	booltree = GetTree(f_gevgen_numubar, gevgen_tree_numubar, "gst");
+	if (booltree == false) gSystem->Exit(0);
+
+	
+	double E_numu, E_numubar;
+	gevgen_tree_numu   ->SetBranchAddress("Ev", &E_numu);
+	gevgen_tree_numubar->SetBranchAddress("Ev", &E_numubar);
+
+	for ( int l = 0; l < gevgen_tree_numu->GetEntries(); l++) {
+		gevgen_tree_numu->GetEntry(l);
+		numuCCHisto_gevgen->Fill(E_numu);
+	}
+	
+	for ( int l = 0; l < gevgen_tree_numubar->GetEntries(); l++) {
+		gevgen_tree_numubar->GetEntry(l);
+		anumuCCHisto_gevgen->Fill(E_numubar);
+	}
+
 
 	// Get the POT
 	double fPOT       = GetPOT(f);
@@ -186,7 +242,8 @@ void plot_event_rates(const char* horn) {
 
 			// Numu
 			value = h_numu->GetBinContent(i);
-			value *= genieXsecNumuCC->Eval(h_numu->GetBinCenter(i)); // Eval implies linear interpolation
+			// value *= genieXsecNumuCC->Eval(h_numu->GetBinCenter(i)); // Eval implies linear interpolation
+			value *= bin_average_total_xsec(h_numu, genieXsecNumuCC, i);
 			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
 			numuCCHisto->SetBinContent(i, value);
 
@@ -255,10 +312,13 @@ void plot_event_rates(const char* horn) {
 	std::cout <<nueCCHisto->Integral(0, -1) / h_nue_genie->Integral(0, -1)<< std::endl;
 
 	// Area normalise to check the shape 
-	// h_nue_genie->Scale( nueCCHisto->Integral(10, -1) / h_nue_genie->Integral(10, -1) );
-	// h_nuebar_genie->Scale( anueCCHisto->Integral(10, -1) / h_nuebar_genie->Integral(10, -1) );
-	// h_numu_genie->Scale( numuCCHisto->Integral(10, -1) / h_numu_genie->Integral(10, -1) );
-	// h_numubar_genie->Scale( anumuCCHisto->Integral(10, -1) / h_numubar_genie->Integral(10, -1) );
+	h_nue_genie   ->Scale( nueCCHisto->Integral(0, -1) / h_nue_genie->Integral(0, -1) );
+	h_nuebar_genie->Scale( anueCCHisto->Integral(0, 30) / h_nuebar_genie->Integral(0, 30) );
+	h_numu_genie   ->Scale( numuCCHisto->Integral(0, -1) / h_numu_genie->Integral(0, h_numu_genie->GetNbinsX()-5) );
+	h_numubar_genie->Scale( anumuCCHisto->Integral(0, -1) / h_numubar_genie->Integral(0, -1) );
+
+	numuCCHisto_gevgen ->Scale( numuCCHisto->Integral(0, -1)  / numuCCHisto_gevgen ->Integral(0,-1) );
+	anumuCCHisto_gevgen->Scale( anumuCCHisto->Integral(0, -1) / anumuCCHisto_gevgen->Integral(0,-1) );
 
 	
 
@@ -273,7 +333,7 @@ void plot_event_rates(const char* horn) {
 	
 	h_nue_genie->SetLineColor(40);
 	nueCCHisto_gsimp->SetLineColor(kGreen+1);
-	nueCCHisto->GetYaxis()->SetRangeUser(0,270);
+	nueCCHisto->GetYaxis()->SetRangeUser(0,200);
 	
 	nueCCHisto->Draw("his, same");
 	nueCCHisto_gsimp->Draw("his,same");
@@ -298,7 +358,7 @@ void plot_event_rates(const char* horn) {
 	
 	h_nuebar_genie->SetLineColor(40);
 	anueCCHisto_gsimp->SetLineColor(kGreen+1);
-	anueCCHisto->GetYaxis()->SetRangeUser(0,80);
+	anueCCHisto->GetYaxis()->SetRangeUser(0,30);
 	
 	anueCCHisto->Draw("his, same");
 	anueCCHisto_gsimp->Draw("his,same");
@@ -318,19 +378,24 @@ void plot_event_rates(const char* horn) {
 	DrawSpecifiers(c_numu, numuCCHisto, "numu");
 	DrawSpecifiers(c_numu, numuCCHisto_gsimp, "numu");
 	DrawSpecifiers(c_numu, h_numu_genie, "numu");
+	DrawSpecifiers(c_numu, numuCCHisto_gevgen, "numu"); // Gevgen
 	
+	numuCCHisto_gevgen->SetLineColor(41);
 	h_numu_genie->SetLineColor(40);
 	numuCCHisto_gsimp->SetLineColor(kGreen+1);
-	numuCCHisto->GetYaxis()->SetRangeUser(0,4000);
+	numuCCHisto->GetYaxis()->SetRangeUser(0,2000);
 	
+	if (!strcmp(horn,"fhc")) numuCCHisto_gevgen->Draw("his,same");
 	numuCCHisto->Draw("his, same");
 	numuCCHisto_gsimp->Draw("his,same");
 	if (!strcmp(horn,"fhc")) h_numu_genie->Draw("his,same");
+	
 	
 	Draw_Nu_Mode(c_numu, horn); // Draw FHC Mode/RHC Mode Text
 	leg_gsimp->AddEntry(numuCCHisto, "dk2nu","l");
 	leg_gsimp->AddEntry(numuCCHisto_gsimp, "flugg","l");
 	if (!strcmp(horn,"fhc")) leg_gsimp->AddEntry(h_numu_genie, "genie","l");
+	if (!strcmp(horn,"fhc")) leg_gsimp->AddEntry(numuCCHisto_gevgen, "gevgen","l");
 	leg_gsimp->Draw();
 	gStyle->SetTitleH(0.07);
 	c_numu->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "numu"));
@@ -341,11 +406,14 @@ void plot_event_rates(const char* horn) {
 	DrawSpecifiers(c_numubar, anumuCCHisto, "numubar");
 	DrawSpecifiers(c_numubar, anumuCCHisto_gsimp, "numubar");
 	DrawSpecifiers(c_numubar, h_numubar_genie, "numubar");
+	DrawSpecifiers(c_numubar, anumuCCHisto_gevgen, "numubar"); // Gevgen
 
+	anumuCCHisto_gevgen->SetLineColor(41);
 	h_numubar_genie->SetLineColor(40);
 	anumuCCHisto_gsimp->SetLineColor(kGreen+1);
-	anumuCCHisto->GetYaxis()->SetRangeUser(0,800);
+	anumuCCHisto->GetYaxis()->SetRangeUser(0,400);
 	
+	if (!strcmp(horn,"fhc")) anumuCCHisto_gevgen->Draw("his,same");
 	anumuCCHisto->Draw("his, same");
 	anumuCCHisto_gsimp->Draw("his,same");
 	if (!strcmp(horn,"fhc")) h_numubar_genie->Draw("his,same");
@@ -354,6 +422,7 @@ void plot_event_rates(const char* horn) {
 	leg_gsimp->AddEntry(anumuCCHisto, "dk2nu","l");
 	leg_gsimp->AddEntry(anumuCCHisto_gsimp, "flugg","l");
 	if (!strcmp(horn,"fhc")) leg_gsimp->AddEntry(h_numubar_genie, "genie","l");
+	if (!strcmp(horn,"fhc")) leg_gsimp->AddEntry(anumuCCHisto_gevgen, "gevgen","l");
 	leg_gsimp->Draw();
 	gStyle->SetTitleH(0.07);
 	c_numubar->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "numubar"));
