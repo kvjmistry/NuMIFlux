@@ -68,7 +68,7 @@ void plot_event_rates(const char* horn) {
 
 	// Pre declare variables
 	TString Gethist_TPC, Gethist_TPC_dk2nu;
-	TFile *f, *f_gsimp, *f_genie, *f_genie_nue, *f_gevgen_numu, *f_gevgen_numubar;
+	TFile *f, *f_gsimp, *f_genie, *f_genie_nue, *f_gevgen_numu, *f_gevgen_numubar, *f_gevgen_nue, *f_gevgen_nuebar;
 	bool boolfile, boolhist;
 	double rebin{10}; // number to rebin the histograms by
 
@@ -105,6 +105,8 @@ void plot_event_rates(const char* horn) {
 	// Gevgen
 	TH1D* numuCCHisto_gevgen  = new TH1D("numuCCHisto_gevgen",  "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC", 400,histMin,histMax);
 	TH1D* anumuCCHisto_gevgen = new TH1D("anumuCCHisto_gevgen", "#bar{#nu}_{#mu} CC; #bar{#nu}_{#mu} Energy [GeV]; #bar{#nu}_{#mu} CC", 400, histMin,histMax);
+	TH1D* nueCCHisto_gevgen  = new TH1D("nueCCHisto_gevgen",  "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC", 400,histMin,histMax);
+	TH1D* anueCCHisto_gevgen = new TH1D("anueCCHisto_gevgen", "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{e} CC", 400, histMin,histMax);
 
 	TH1D *h_nue_genie, *h_nuebar_genie, *h_numu_genie, *h_numubar_genie;
 
@@ -143,17 +145,29 @@ void plot_event_rates(const char* horn) {
 	boolfile  = GetFile(f_gevgen_numubar ,"/uboone/data/users/kmistry/work/PPFX/uboone/genie/my_events.gst_numubar.root");
 	if (boolfile == false) gSystem->Exit(0);
 
+	// Get the event rate distribution generated through gevgen for nue
+	boolfile  = GetFile(f_gevgen_nue ,"/uboone/data/users/kmistry/work/PPFX/uboone/genie/my_events.gst_nue.root");
+	if (boolfile == false) gSystem->Exit(0);
+
+	// Get the event rate distribution generated through gevgen for nuebar
+	boolfile  = GetFile(f_gevgen_nuebar ,"/uboone/data/users/kmistry/work/PPFX/uboone/genie/my_events.gst_nuebar.root");
+	if (boolfile == false) gSystem->Exit(0);
+
 	// Now get the associated TTree
 	bool booltree;
-	TTree *gevgen_tree_numu, *gevgen_tree_numubar;
+	TTree *gevgen_tree_numu, *gevgen_tree_numubar, *gevgen_tree_nue, *gevgen_tree_nuebar;
 	booltree = GetTree(f_gevgen_numu, gevgen_tree_numu, "gst");
 	booltree = GetTree(f_gevgen_numubar, gevgen_tree_numubar, "gst");
+	booltree = GetTree(f_gevgen_nue, gevgen_tree_nue, "gst");
+	booltree = GetTree(f_gevgen_nuebar, gevgen_tree_nuebar, "gst");
 	if (booltree == false) gSystem->Exit(0);
 
 	
-	double E_numu, E_numubar;
+	double E_numu, E_numubar, E_nue, E_nuebar;
 	gevgen_tree_numu   ->SetBranchAddress("Ev", &E_numu);
 	gevgen_tree_numubar->SetBranchAddress("Ev", &E_numubar);
+	gevgen_tree_nue    ->SetBranchAddress("Ev", &E_nue);
+	gevgen_tree_nuebar ->SetBranchAddress("Ev", &E_nuebar);
 
 	for ( int l = 0; l < gevgen_tree_numu->GetEntries(); l++) {
 		gevgen_tree_numu->GetEntry(l);
@@ -163,6 +177,16 @@ void plot_event_rates(const char* horn) {
 	for ( int l = 0; l < gevgen_tree_numubar->GetEntries(); l++) {
 		gevgen_tree_numubar->GetEntry(l);
 		anumuCCHisto_gevgen->Fill(E_numubar);
+	}
+
+	for ( int l = 0; l < gevgen_tree_nue->GetEntries(); l++) {
+		gevgen_tree_nue->GetEntry(l);
+		nueCCHisto_gevgen->Fill(E_nue);
+	}
+	
+	for ( int l = 0; l < gevgen_tree_nuebar->GetEntries(); l++) {
+		gevgen_tree_nuebar->GetEntry(l);
+		anueCCHisto_gevgen->Fill(E_nuebar);
 	}
 
 
@@ -223,10 +247,12 @@ void plot_event_rates(const char* horn) {
 		genieXsecNuebarCC  = (TGraph *) genieXsecFile->Get("nu_e_bar_Ar40/tot_cc");
 		genieXsecFile->Close();
 
-		// TSpline3* genieXsecSplineNumuCC = new TSpline3("genieXsecSplineNumuCC", genieXsecNumuCC, "", 0,6);
+		TSpline3* genieXsecSplineNumuCC = new TSpline3("genieXsecSplineNumuCC", genieXsecNumuCC, "", 0,20);
 
 		double value;
 		for(int i=1; i<histNbins+1; i++) {
+
+			// std::cout << i<< "  "<< h_numu->GetBinContent(i) << "  " << h_numu->GetBinCenter(i) << "   " << h_numu->GetBinContent(i+10)  << "  "<< h_numu->GetBinCenter(i+10)<< std::endl;
 			
 			// Nue
 			value = h_nue->GetBinContent(i);
@@ -242,14 +268,16 @@ void plot_event_rates(const char* horn) {
 
 			// Numu
 			value = h_numu->GetBinContent(i);
-			// value *= genieXsecNumuCC->Eval(h_numu->GetBinCenter(i)); // Eval implies linear interpolation
-			value *= bin_average_total_xsec(h_numu, genieXsecNumuCC, i);
+			value *= genieXsecNumuCC->Eval(h_numu->GetBinCenter(i+8)); // Eval implies linear interpolation
+			// value *= bin_average_total_xsec(h_numu, genieXsecNumuCC, i);
+			// value *= genieXsecSplineNumuCC->Eval(h_numu->GetBinCenter(i));
+			// value *= genieXsecSplineNumuCC->Eval(h_numu->GetBinLowEdge(i+10));
 			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
 			numuCCHisto->SetBinContent(i, value);
 
 			// Numubar
 			value = h_numubar->GetBinContent(i);
-			value *= genieXsecNumubarCC->Eval(h_numubar->GetBinCenter(i)); // Eval implies linear interpolation
+			value *= genieXsecNumubarCC->Eval(h_numubar->GetBinCenter(i+25)); // Eval implies linear interpolation
 			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
 			anumuCCHisto->SetBinContent(i, value);
 
@@ -317,8 +345,10 @@ void plot_event_rates(const char* horn) {
 	h_numu_genie   ->Scale( numuCCHisto->Integral(0, -1) / h_numu_genie->Integral(0, h_numu_genie->GetNbinsX()-5) );
 	h_numubar_genie->Scale( anumuCCHisto->Integral(0, -1) / h_numubar_genie->Integral(0, -1) );
 
-	numuCCHisto_gevgen ->Scale( numuCCHisto->Integral(0, -1)  / numuCCHisto_gevgen ->Integral(0,-1) );
-	anumuCCHisto_gevgen->Scale( anumuCCHisto->Integral(0, -1) / anumuCCHisto_gevgen->Integral(0,-1) );
+	numuCCHisto_gevgen ->Scale( numuCCHisto ->Integral(0, -1)  / numuCCHisto_gevgen ->Integral(0,-1) );
+	anumuCCHisto_gevgen->Scale( anumuCCHisto->Integral(0, -1)  / anumuCCHisto_gevgen->Integral(0,-1) );
+	nueCCHisto_gevgen  ->Scale( nueCCHisto  ->Integral(0, -1)  / nueCCHisto_gevgen  ->Integral(0,-1) );
+	anueCCHisto_gevgen ->Scale( anueCCHisto ->Integral(0, -1)  / anueCCHisto_gevgen ->Integral(0,-1) );
 
 	
 
@@ -330,11 +360,14 @@ void plot_event_rates(const char* horn) {
 	DrawSpecifiers(c_nue, nueCCHisto, "nue");
 	DrawSpecifiers(c_nue, nueCCHisto_gsimp, "nue");
 	DrawSpecifiers(c_nue, h_nue_genie, "nue");
+	DrawSpecifiers(c_nue, nueCCHisto_gevgen, "nue"); // Gevgen
 	
+	nueCCHisto_gevgen->SetLineColor(41);
 	h_nue_genie->SetLineColor(40);
 	nueCCHisto_gsimp->SetLineColor(kGreen+1);
 	nueCCHisto->GetYaxis()->SetRangeUser(0,200);
 	
+	if (!strcmp(horn,"fhc")) nueCCHisto_gevgen->Draw("his,same");
 	nueCCHisto->Draw("his, same");
 	nueCCHisto_gsimp->Draw("his,same");
 	if (!strcmp(horn,"fhc")) h_nue_genie->Draw("his,same");
@@ -344,6 +377,7 @@ void plot_event_rates(const char* horn) {
 	leg_gsimp->AddEntry(nueCCHisto, "dk2nu","l");
 	leg_gsimp->AddEntry(nueCCHisto_gsimp, "flugg","l");
 	if (!strcmp(horn,"fhc")) leg_gsimp->AddEntry(h_nue_genie, "genie","l");
+	if (!strcmp(horn,"fhc")) leg_gsimp->AddEntry(nueCCHisto_gevgen, "gevgen","l");
 	leg_gsimp->Draw();
 	gStyle->SetTitleH(0.07);
 	c_nue->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "nue"));
@@ -355,11 +389,14 @@ void plot_event_rates(const char* horn) {
 	DrawSpecifiers(c_nuebar, anueCCHisto, "nuebar");
 	DrawSpecifiers(c_nuebar, anueCCHisto_gsimp, "nuebar");
 	DrawSpecifiers(c_nuebar, h_nuebar_genie, "nuebar");
+	DrawSpecifiers(c_nuebar, anueCCHisto_gevgen, "nuebar"); // Gevgen
 	
+	anueCCHisto_gevgen->SetLineColor(41);
 	h_nuebar_genie->SetLineColor(40);
 	anueCCHisto_gsimp->SetLineColor(kGreen+1);
 	anueCCHisto->GetYaxis()->SetRangeUser(0,30);
 	
+	if (!strcmp(horn,"fhc")) anueCCHisto_gevgen->Draw("his,same");
 	anueCCHisto->Draw("his, same");
 	anueCCHisto_gsimp->Draw("his,same");
 	if (!strcmp(horn,"fhc")) h_nuebar_genie->Draw("his,same");
@@ -368,6 +405,7 @@ void plot_event_rates(const char* horn) {
 	leg_gsimp->AddEntry(anueCCHisto, "dk2nu","l");
 	leg_gsimp->AddEntry(anueCCHisto_gsimp, "flugg","l");
 	if (!strcmp(horn,"fhc")) leg_gsimp->AddEntry(h_nuebar_genie, "genie","l");
+	if (!strcmp(horn,"fhc")) leg_gsimp->AddEntry(anueCCHisto_gevgen, "gevgen","l");
 	leg_gsimp->Draw();
 	gStyle->SetTitleH(0.07);
 	c_nuebar->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "nuebar"));
