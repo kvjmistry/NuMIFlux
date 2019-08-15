@@ -103,10 +103,10 @@ void plot_event_rates(const char* horn) {
 	TH1D* anueCCHisto_gsimp  = new TH1D("anueCCHisto_gsimp", "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
 	
 	// Gevgen
-	TH1D* numuCCHisto_gevgen  = new TH1D("numuCCHisto_gevgen",  "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC", 400,histMin,histMax);
-	TH1D* anumuCCHisto_gevgen = new TH1D("anumuCCHisto_gevgen", "#bar{#nu}_{#mu} CC; #bar{#nu}_{#mu} Energy [GeV]; #bar{#nu}_{#mu} CC", 400, histMin,histMax);
-	TH1D* nueCCHisto_gevgen  = new TH1D("nueCCHisto_gevgen",  "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC", 400,histMin,histMax);
-	TH1D* anueCCHisto_gevgen = new TH1D("anueCCHisto_gevgen", "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{e} CC", 400, histMin,histMax);
+	TH1D* numuCCHisto_gevgen  = new TH1D("numuCCHisto_gevgen",  "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC", 4000,histMin,histMax);
+	TH1D* anumuCCHisto_gevgen = new TH1D("anumuCCHisto_gevgen", "#bar{#nu}_{#mu} CC; #bar{#nu}_{#mu} Energy [GeV]; #bar{#nu}_{#mu} CC", 4000, histMin,histMax);
+	TH1D* nueCCHisto_gevgen   = new TH1D("nueCCHisto_gevgen",  "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC", 4000,histMin,histMax);
+	TH1D* anueCCHisto_gevgen  = new TH1D("anueCCHisto_gevgen", "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{e} CC", 4000, histMin,histMax);
 
 	TH1D *h_nue_genie, *h_nuebar_genie, *h_numu_genie, *h_numubar_genie;
 
@@ -164,29 +164,35 @@ void plot_event_rates(const char* horn) {
 
 	
 	double E_numu, E_numubar, E_nue, E_nuebar;
+	bool CC_numu, CC_numubar, CC_nue, CC_nuebar;
 	gevgen_tree_numu   ->SetBranchAddress("Ev", &E_numu);
 	gevgen_tree_numubar->SetBranchAddress("Ev", &E_numubar);
 	gevgen_tree_nue    ->SetBranchAddress("Ev", &E_nue);
 	gevgen_tree_nuebar ->SetBranchAddress("Ev", &E_nuebar);
+	
+	gevgen_tree_numu   ->SetBranchAddress("cc", &CC_numu);
+	gevgen_tree_numubar->SetBranchAddress("cc", &CC_numubar);
+	gevgen_tree_nue    ->SetBranchAddress("cc", &CC_nue);
+	gevgen_tree_nuebar ->SetBranchAddress("cc", &CC_nuebar);
 
 	for ( int l = 0; l < gevgen_tree_numu->GetEntries(); l++) {
 		gevgen_tree_numu->GetEntry(l);
-		numuCCHisto_gevgen->Fill(E_numu);
+		if (CC_numu == 1) numuCCHisto_gevgen->Fill(E_numu);
 	}
 	
 	for ( int l = 0; l < gevgen_tree_numubar->GetEntries(); l++) {
 		gevgen_tree_numubar->GetEntry(l);
-		anumuCCHisto_gevgen->Fill(E_numubar);
+		if (CC_numubar == 1) anumuCCHisto_gevgen->Fill(E_numubar);
 	}
 
 	for ( int l = 0; l < gevgen_tree_nue->GetEntries(); l++) {
 		gevgen_tree_nue->GetEntry(l);
-		nueCCHisto_gevgen->Fill(E_nue);
+		if (CC_nue == 1) nueCCHisto_gevgen->Fill(E_nue);
 	}
 	
 	for ( int l = 0; l < gevgen_tree_nuebar->GetEntries(); l++) {
 		gevgen_tree_nuebar->GetEntry(l);
-		anueCCHisto_gevgen->Fill(E_nuebar);
+		if (CC_nuebar == 1) anueCCHisto_gevgen->Fill(E_nuebar);
 	}
 
 
@@ -268,7 +274,7 @@ void plot_event_rates(const char* horn) {
 
 			// Numu
 			value = h_numu->GetBinContent(i);
-			value *= genieXsecNumuCC->Eval(h_numu->GetBinCenter(i+8)); // Eval implies linear interpolation
+			value *= genieXsecNumuCC->Eval(h_numu->GetBinCenter(i)); // Eval implies linear interpolation
 			// value *= bin_average_total_xsec(h_numu, genieXsecNumuCC, i);
 			// value *= genieXsecSplineNumuCC->Eval(h_numu->GetBinCenter(i));
 			// value *= genieXsecSplineNumuCC->Eval(h_numu->GetBinLowEdge(i+10));
@@ -277,7 +283,7 @@ void plot_event_rates(const char* horn) {
 
 			// Numubar
 			value = h_numubar->GetBinContent(i);
-			value *= genieXsecNumubarCC->Eval(h_numubar->GetBinCenter(i+25)); // Eval implies linear interpolation
+			value *= genieXsecNumubarCC->Eval(h_numubar->GetBinCenter(i)); // Eval implies linear interpolation
 			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
 			anumuCCHisto->SetBinContent(i, value);
 
@@ -328,21 +334,25 @@ void plot_event_rates(const char* horn) {
 	leg_gsimp->SetTextSize(0.04);
 
 	// Rebin
-	nueCCHisto->Rebin(rebin);
-	anueCCHisto->Rebin(rebin);
-	numuCCHisto->Rebin(rebin);
-	anumuCCHisto->Rebin(rebin);
-	nueCCHisto_gsimp->Rebin(rebin);
-	anueCCHisto_gsimp->Rebin(rebin);
-	numuCCHisto_gsimp->Rebin(rebin);
+	nueCCHisto        ->Rebin(rebin);
+	anueCCHisto       ->Rebin(rebin);
+	numuCCHisto       ->Rebin(rebin);
+	anumuCCHisto      ->Rebin(rebin);
+	nueCCHisto_gsimp  ->Rebin(rebin);
+	anueCCHisto_gsimp ->Rebin(rebin);
+	numuCCHisto_gsimp ->Rebin(rebin);
 	anumuCCHisto_gsimp->Rebin(rebin);
+	nueCCHisto_gevgen  ->Rebin(rebin);
+	anueCCHisto_gevgen ->Rebin(rebin);
+	numuCCHisto_gevgen ->Rebin(rebin);
+	anumuCCHisto_gevgen->Rebin(rebin);
 
 	std::cout <<nueCCHisto->Integral(0, -1) / h_nue_genie->Integral(0, -1)<< std::endl;
 
 	// Area normalise to check the shape 
-	h_nue_genie   ->Scale( nueCCHisto->Integral(0, -1) / h_nue_genie->Integral(0, -1) );
-	h_nuebar_genie->Scale( anueCCHisto->Integral(0, 30) / h_nuebar_genie->Integral(0, 30) );
-	h_numu_genie   ->Scale( numuCCHisto->Integral(0, -1) / h_numu_genie->Integral(0, h_numu_genie->GetNbinsX()-5) );
+	h_nue_genie    ->Scale( nueCCHisto  ->Integral(0, -1) / h_nue_genie    ->Integral(0, -1) );
+	h_nuebar_genie ->Scale( anueCCHisto ->Integral(0, 30) / h_nuebar_genie ->Integral(0, 30) );
+	h_numu_genie   ->Scale( numuCCHisto ->Integral(0, -1) / h_numu_genie   ->Integral(0, h_numu_genie->GetNbinsX()-5) );
 	h_numubar_genie->Scale( anumuCCHisto->Integral(0, -1) / h_numubar_genie->Integral(0, -1) );
 
 	numuCCHisto_gevgen ->Scale( numuCCHisto ->Integral(0, -1)  / numuCCHisto_gevgen ->Integral(0,-1) );
