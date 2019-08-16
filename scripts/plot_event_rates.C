@@ -1,8 +1,9 @@
 /*
-This script will plot the flux at microboone for the flux made using flugg/gsimple files
-and compare this with the dk2nu and ppfx predictions.
+This script will plot the event rate predictions at microboone using flugg/gsimple files
+and compare this with the dk2nu prediction. Also added comparisons with genie generation
+of events and gevgen which generates events on argon 40 whilst taking a flux histo.  
 
-To run this script run the command root -l 'plot_gsimple_flux.C("fhc", "nue")' 
+To run this script run the command root -l 'plot_event_rates.C("fhc", "nue")' 
 where fhc/rhc, nue/nuebar/numu/numubar are the available options.
 
 This file depends on the functions.h script so make
@@ -13,7 +14,7 @@ sure this file is included in the same directory.
 #include "functions.h"
 
 // ----------------------------------------------------------------------------
-void DrawSpecifiers(TCanvas* c, TH1D* &h, const char* mode){
+void DrawSpecifiers(TCanvas* c, TH1D* &h, const char* mode, bool all){
 	c->cd();
 
 	// Plottings
@@ -24,16 +25,18 @@ void DrawSpecifiers(TCanvas* c, TH1D* &h, const char* mode){
 	if (!strcmp(mode, "nue")){
 		h->SetLineColor(kRed+1);
 		h->SetLineWidth(2);
-		h->SetLineStyle(2);
+		if (all) h->SetLineStyle(2);
 	}
 	if (!strcmp(mode, "numubar")){
-		h->SetLineColor(kBlue+1);
+		if (all) h->SetLineColor(kBlue+1);
+		else h->SetLineColor(kRed+1);
 		h->SetLineWidth(2);
 	}
 	if (!strcmp(mode, "nuebar")){
-		h->SetLineColor(kBlue+1);
+		if (all) h->SetLineColor(kBlue+1);
+		else h->SetLineColor(kRed+1);
 		h->SetLineWidth(2);
-		h->SetLineStyle(2);
+		if (all) h->SetLineStyle(2);
 	}
 	
 	IncreaseLabelSize(h);
@@ -42,6 +45,7 @@ void DrawSpecifiers(TCanvas* c, TH1D* &h, const char* mode){
 // ----------------------------------------------------------------------------
 constexpr double RELATIVE_TOLERANCE = 1e-5;
 
+// Function to get the average bin energy to multiply the spline by -- not currently used. 
 double bin_average_total_xsec(TH1D* flux_hist, TGraph *xsec_spline, int bin_number) {
 	double E_min = flux_hist->GetBinLowEdge( bin_number );
 	double E_max = flux_hist->GetBinLowEdge( bin_number + 1 );
@@ -75,38 +79,33 @@ void plot_event_rates(const char* horn) {
 	// double Ntarget = 4.76e31/56.41e6* 256.35*233*1036.8; //TPC active!!! Marco
 	// double Ntarget = (1.3836*6.022e23*40*256.35*233*1036.8) / 39.95; //TPC active!!! Colton
 	double Ntarget = (1.3954*6.022e23*40*256.35*233*1036.8) / 39.95; //TPC active with MC lar density -- Krishan
-	std::cout << "N_Targ:\t" << Ntarget << std::endl;
-
-
-	// std::cout << ((1.3836*6.022e23*40*256.35*233*1036.8) / 39.95)/(4.76e31/56.41e6* 256.35*233*1036.8)<< std::endl;
-
-	
+	// std::cout << "N_Targ:\t" << Ntarget << std::endl;
 
 	double histMin = 0;
 	double histMax = 20;
-	int histNbins = 4000;
+	int histNbins  = 4000;
 	
 	TGraph *genieXsecNumuCC;
 	TGraph *genieXsecNumubarCC;
 	TGraph *genieXsecNueCC;
 	TGraph *genieXsecNuebarCC;
 	
-	TH1D* numuCCHisto  = new TH1D("numuCCHisto", "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
+	TH1D* numuCCHisto  = new TH1D("numuCCHisto",  "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",                  histNbins,histMin,histMax);
 	TH1D* anumuCCHisto = new TH1D("anumuCCHisto", "#bar{#nu}_{#mu} CC; #bar{#nu}_{#mu} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
-	TH1D* nueCCHisto   = new TH1D("nueCCHisto", "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
-	TH1D* anueCCHisto  = new TH1D("anueCCHisto", "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{e} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
+	TH1D* nueCCHisto   = new TH1D("nueCCHisto",   "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",                        histNbins,histMin,histMax);
+	TH1D* anueCCHisto  = new TH1D("anueCCHisto",  "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{e} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",      histNbins,histMin,histMax);
 
 	// Gsimple 
-	TH1D* numuCCHisto_gsimp  = new TH1D("numuCCHisto_gsimp", "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
+	TH1D* numuCCHisto_gsimp  = new TH1D("numuCCHisto_gsimp",  "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",                  histNbins,histMin,histMax);
 	TH1D* anumuCCHisto_gsimp = new TH1D("anumuCCHisto_gsimp", "#bar{#nu}_{#mu} CC; #bar{#nu}_{#mu} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
-	TH1D* nueCCHisto_gsimp   = new TH1D("nueCCHisto_gsimp", "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
-	TH1D* anueCCHisto_gsimp  = new TH1D("anueCCHisto_gsimp", "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
+	TH1D* nueCCHisto_gsimp   = new TH1D("nueCCHisto_gsimp",   "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",                        histNbins,histMin,histMax);
+	TH1D* anueCCHisto_gsimp  = new TH1D("anueCCHisto_gsimp",  "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",    histNbins,histMin,histMax);
 	
 	// Gevgen
-	TH1D* numuCCHisto_gevgen  = new TH1D("numuCCHisto_gevgen",  "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC", 4000,histMin,histMax);
+	TH1D* numuCCHisto_gevgen  = new TH1D("numuCCHisto_gevgen",  "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC",                   4000,histMin,histMax);
 	TH1D* anumuCCHisto_gevgen = new TH1D("anumuCCHisto_gevgen", "#bar{#nu}_{#mu} CC; #bar{#nu}_{#mu} Energy [GeV]; #bar{#nu}_{#mu} CC", 4000, histMin,histMax);
-	TH1D* nueCCHisto_gevgen   = new TH1D("nueCCHisto_gevgen",  "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC", 4000,histMin,histMax);
-	TH1D* anueCCHisto_gevgen  = new TH1D("anueCCHisto_gevgen", "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{e} CC", 4000, histMin,histMax);
+	TH1D* nueCCHisto_gevgen   = new TH1D("nueCCHisto_gevgen",   "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC",                         4000,histMin,histMax);
+	TH1D* anueCCHisto_gevgen  = new TH1D("anueCCHisto_gevgen",  "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{e} CC",       4000, histMin,histMax);
 
 	TH1D *h_nue_genie, *h_nuebar_genie, *h_numu_genie, *h_numubar_genie;
 
@@ -162,7 +161,7 @@ void plot_event_rates(const char* horn) {
 	booltree = GetTree(f_gevgen_nuebar, gevgen_tree_nuebar, "gst");
 	if (booltree == false) gSystem->Exit(0);
 
-	
+	// Get the relavent variables in the gevgen tree
 	double E_numu, E_numubar, E_nue, E_nuebar;
 	bool CC_numu, CC_numubar, CC_nue, CC_nuebar;
 	gevgen_tree_numu   ->SetBranchAddress("Ev", &E_numu);
@@ -177,7 +176,7 @@ void plot_event_rates(const char* horn) {
 
 	for ( int l = 0; l < gevgen_tree_numu->GetEntries(); l++) {
 		gevgen_tree_numu->GetEntry(l);
-		if (CC_numu == 1) numuCCHisto_gevgen->Fill(E_numu);
+		if (CC_numu == 1) numuCCHisto_gevgen->Fill(E_numu); // Only want CC interactions
 	}
 	
 	for ( int l = 0; l < gevgen_tree_numubar->GetEntries(); l++) {
@@ -221,22 +220,19 @@ void plot_event_rates(const char* horn) {
 	boolhist = GetHist(f_genie, h_numu_genie,    "NuMIEventRates/NuMu_dir/NuMu_Energy");         if (boolhist == false) gSystem->Exit(0);
 	boolhist = GetHist(f_genie, h_numubar_genie, "NuMIEventRates/NuMu_bar_dir/NuMu_bar_Energy"); if (boolhist == false) gSystem->Exit(0);
 
-
-	// Normalise
-	// Normalise(hist);
-
 	// Scale
-	h_nue->Scale((6.0e20)/ (fPOT*1.0e4) );
-	h_nuebar->Scale((6.0e20)/ (fPOT*1.0e4) );
-	h_numu->Scale((6.0e20)/ (fPOT*1.0e4) );
-	h_numubar->Scale((6.0e20)/ (fPOT*1.0e4) );
+	h_nue    ->Scale((6.0e20) / (fPOT*1.0e4) );
+	h_nuebar ->Scale((6.0e20) / (fPOT*1.0e4) );
+	h_numu   ->Scale((6.0e20) / (fPOT*1.0e4) );
+	h_numubar->Scale((6.0e20) / (fPOT*1.0e4) );
 
 	// Scale the genie histograms
-	h_nue_genie->Scale(  (6.0e20)/ (fPOT_genie) );
-	h_nuebar_genie->Scale(  (6.0e20)/ (fPOT_genie_nue) );
-	h_numu_genie->Scale(  (6.0e20)/ (fPOT_genie) );
-	h_numubar_genie->Scale(  (6.0e20)/ (fPOT_genie) );
+	h_nue_genie    ->Scale(  (6.0e20) / (fPOT_genie) );
+	h_nuebar_genie ->Scale(  (6.0e20) / (fPOT_genie_nue) );
+	h_numu_genie   ->Scale(  (6.0e20) / (fPOT_genie) );
+	h_numubar_genie->Scale(  (6.0e20) / (fPOT_genie) );
 	
+	// Check if the genie path has been setup for retrieving the splines
 	const char* genieXsecPath = gSystem->ExpandPathName("$(GENIEXSECPATH)");
 	if ( !genieXsecPath ) {
 		std::cout << "$(GENIEXSECPATH) not defined." << std::endl;
@@ -253,7 +249,7 @@ void plot_event_rates(const char* horn) {
 		genieXsecNuebarCC  = (TGraph *) genieXsecFile->Get("nu_e_bar_Ar40/tot_cc");
 		genieXsecFile->Close();
 
-		TSpline3* genieXsecSplineNumuCC = new TSpline3("genieXsecSplineNumuCC", genieXsecNumuCC, "", 0,20);
+		// TSpline3* genieXsecSplineNumuCC = new TSpline3("genieXsecSplineNumuCC", genieXsecNumuCC, "", 0,20);
 
 		double value;
 		for(int i=1; i<histNbins+1; i++) {
@@ -321,10 +317,10 @@ void plot_event_rates(const char* horn) {
 	leg->SetBorderSize(0);
 	leg->SetFillStyle(0);
 	leg->SetTextFont(62);
-	leg->AddEntry(numuCCHisto, "#nu_{#mu}","l");
+	leg->AddEntry(numuCCHisto,  "#nu_{#mu}","l");
 	leg->AddEntry(anumuCCHisto, "#bar{#nu_{#mu}}","l");
-	leg->AddEntry(nueCCHisto, "#nu_{e} ","l");
-	leg->AddEntry(anueCCHisto, "#bar{#nu_{e}} ","l");
+	leg->AddEntry(nueCCHisto,   "#nu_{e} ","l");
+	leg->AddEntry(anueCCHisto,  "#bar{#nu_{e}} ","l");
 
 	TLegend* leg_gsimp = new TLegend(0.75, 0.65, 0.95, 0.9);
 	leg_gsimp->SetNColumns(1);
@@ -334,27 +330,27 @@ void plot_event_rates(const char* horn) {
 	leg_gsimp->SetTextSize(0.04);
 
 	// Rebin
-	nueCCHisto        ->Rebin(rebin);
-	anueCCHisto       ->Rebin(rebin);
-	numuCCHisto       ->Rebin(rebin);
-	anumuCCHisto      ->Rebin(rebin);
-	nueCCHisto_gsimp  ->Rebin(rebin);
-	anueCCHisto_gsimp ->Rebin(rebin);
-	numuCCHisto_gsimp ->Rebin(rebin);
-	anumuCCHisto_gsimp->Rebin(rebin);
+	nueCCHisto         ->Rebin(rebin);
+	anueCCHisto        ->Rebin(rebin);
+	numuCCHisto        ->Rebin(rebin);
+	anumuCCHisto       ->Rebin(rebin);
+	nueCCHisto_gsimp   ->Rebin(rebin);
+	anueCCHisto_gsimp  ->Rebin(rebin);
+	numuCCHisto_gsimp  ->Rebin(rebin);
+	anumuCCHisto_gsimp ->Rebin(rebin);
 	nueCCHisto_gevgen  ->Rebin(rebin);
 	anueCCHisto_gevgen ->Rebin(rebin);
 	numuCCHisto_gevgen ->Rebin(rebin);
 	anumuCCHisto_gevgen->Rebin(rebin);
 
-	std::cout <<nueCCHisto->Integral(0, -1) / h_nue_genie->Integral(0, -1)<< std::endl;
 
 	// Area normalise to check the shape 
-	h_nue_genie    ->Scale( nueCCHisto  ->Integral(0, -1) / h_nue_genie    ->Integral(0, -1) );
-	h_nuebar_genie ->Scale( anueCCHisto ->Integral(0, 30) / h_nuebar_genie ->Integral(0, 30) );
-	h_numu_genie   ->Scale( numuCCHisto ->Integral(0, -1) / h_numu_genie   ->Integral(0, h_numu_genie->GetNbinsX()-5) );
-	h_numubar_genie->Scale( anumuCCHisto->Integral(0, -1) / h_numubar_genie->Integral(0, -1) );
+	// h_nue_genie    ->Scale( nueCCHisto  ->Integral(0, -1) / h_nue_genie    ->Integral(0, -1) );
+	// h_nuebar_genie ->Scale( anueCCHisto ->Integral(0, 30) / h_nuebar_genie ->Integral(0, 30) );
+	// h_numu_genie   ->Scale( numuCCHisto ->Integral(0, -1) / h_numu_genie   ->Integral(0, h_numu_genie->GetNbinsX()-5) );
+	// h_numubar_genie->Scale( anumuCCHisto->Integral(0, -1) / h_numubar_genie->Integral(0, -1) );
 
+	// Gevgen has no POT info, so must area normalise
 	numuCCHisto_gevgen ->Scale( numuCCHisto ->Integral(0, -1)  / numuCCHisto_gevgen ->Integral(0,-1) );
 	anumuCCHisto_gevgen->Scale( anumuCCHisto->Integral(0, -1)  / anumuCCHisto_gevgen->Integral(0,-1) );
 	nueCCHisto_gevgen  ->Scale( nueCCHisto  ->Integral(0, -1)  / nueCCHisto_gevgen  ->Integral(0,-1) );
@@ -367,10 +363,10 @@ void plot_event_rates(const char* horn) {
 
 	// -----------------------------  Nue --------------------------------------
 	TCanvas* c_nue = new TCanvas();
-	DrawSpecifiers(c_nue, nueCCHisto, "nue");
-	DrawSpecifiers(c_nue, nueCCHisto_gsimp, "nue");
-	DrawSpecifiers(c_nue, h_nue_genie, "nue");
-	DrawSpecifiers(c_nue, nueCCHisto_gevgen, "nue"); // Gevgen
+	DrawSpecifiers(c_nue, nueCCHisto, "nue", false);
+	DrawSpecifiers(c_nue, nueCCHisto_gsimp, "nue", false);
+	DrawSpecifiers(c_nue, h_nue_genie, "nue", false);
+	DrawSpecifiers(c_nue, nueCCHisto_gevgen, "nue", false); // Gevgen
 	
 	nueCCHisto_gevgen->SetLineColor(41);
 	h_nue_genie->SetLineColor(40);
@@ -396,10 +392,10 @@ void plot_event_rates(const char* horn) {
 	
 	// --------------------------- Nuebar --------------------------------------
 	TCanvas* c_nuebar = new TCanvas();
-	DrawSpecifiers(c_nuebar, anueCCHisto, "nuebar");
-	DrawSpecifiers(c_nuebar, anueCCHisto_gsimp, "nuebar");
-	DrawSpecifiers(c_nuebar, h_nuebar_genie, "nuebar");
-	DrawSpecifiers(c_nuebar, anueCCHisto_gevgen, "nuebar"); // Gevgen
+	DrawSpecifiers(c_nuebar, anueCCHisto, "nuebar", false);
+	DrawSpecifiers(c_nuebar, anueCCHisto_gsimp, "nuebar", false);
+	DrawSpecifiers(c_nuebar, h_nuebar_genie, "nuebar", false);
+	DrawSpecifiers(c_nuebar, anueCCHisto_gevgen, "nuebar", false); // Gevgen
 	
 	anueCCHisto_gevgen->SetLineColor(41);
 	h_nuebar_genie->SetLineColor(40);
@@ -423,10 +419,10 @@ void plot_event_rates(const char* horn) {
 	
 	// ----------------------------  Numu --------------------------------------
 	TCanvas* c_numu = new TCanvas();
-	DrawSpecifiers(c_numu, numuCCHisto, "numu");
-	DrawSpecifiers(c_numu, numuCCHisto_gsimp, "numu");
-	DrawSpecifiers(c_numu, h_numu_genie, "numu");
-	DrawSpecifiers(c_numu, numuCCHisto_gevgen, "numu"); // Gevgen
+	DrawSpecifiers(c_numu, numuCCHisto, "numu", false);
+	DrawSpecifiers(c_numu, numuCCHisto_gsimp, "numu", false);
+	DrawSpecifiers(c_numu, h_numu_genie, "numu", false);
+	DrawSpecifiers(c_numu, numuCCHisto_gevgen, "numu", false); // Gevgen
 	
 	numuCCHisto_gevgen->SetLineColor(41);
 	h_numu_genie->SetLineColor(40);
@@ -451,10 +447,10 @@ void plot_event_rates(const char* horn) {
 	
 	// ---------------------------  Numubar ------------------------------------
 	TCanvas* c_numubar = new TCanvas();
-	DrawSpecifiers(c_numubar, anumuCCHisto, "numubar");
-	DrawSpecifiers(c_numubar, anumuCCHisto_gsimp, "numubar");
-	DrawSpecifiers(c_numubar, h_numubar_genie, "numubar");
-	DrawSpecifiers(c_numubar, anumuCCHisto_gevgen, "numubar"); // Gevgen
+	DrawSpecifiers(c_numubar, anumuCCHisto, "numubar", false);
+	DrawSpecifiers(c_numubar, anumuCCHisto_gsimp, "numubar", false);
+	DrawSpecifiers(c_numubar, h_numubar_genie, "numubar", false);
+	DrawSpecifiers(c_numubar, anumuCCHisto_gevgen, "numubar", false); // Gevgen
 
 	anumuCCHisto_gevgen->SetLineColor(41);
 	h_numubar_genie->SetLineColor(40);
@@ -478,6 +474,11 @@ void plot_event_rates(const char* horn) {
 	
 	// -----------------------------  ALL --------------------------------------
 	TCanvas* c_all = new TCanvas();
+	DrawSpecifiers(c_all, nueCCHisto, "nue", true);
+	DrawSpecifiers(c_all, anueCCHisto, "nuebar", true);
+	DrawSpecifiers(c_all, numuCCHisto, "numu", true);
+	DrawSpecifiers(c_all, anumuCCHisto, "numubar", true);
+	
 	gPad->SetLeftMargin(0.15);
 	gPad->SetBottomMargin(0.12);
 	numuCCHisto->SetTitle(";#nu Energy [GeV]; #nu CC / 79 t / 6 #times 10^{20} POT / 25 MeV");
