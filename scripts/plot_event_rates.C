@@ -1,5 +1,5 @@
 /*
-This script will plot the event rate predictions at microboone using flugg/gsimple files
+This script will plot the event rate predictions at microboone using flugg files
 and compare this with the dk2nu prediction. Also added comparisons with genie generation
 of events and gevgen which generates events on argon 40 whilst taking a flux histo.  
 
@@ -72,7 +72,7 @@ void plot_event_rates(const char* horn) {
 
 	// Pre declare variables
 	TString Gethist_TPC, Gethist_TPC_dk2nu;
-	TFile *f, *f_gsimp, *f_genie, *f_genie_nue, *f_gevgen_numu, *f_gevgen_numubar, *f_gevgen_nue, *f_gevgen_nuebar;
+	TFile *f, *f_flugg, *f_genie, *f_genie_nue, *f_gevgen_numu, *f_gevgen_numubar, *f_gevgen_nue, *f_gevgen_nuebar;
 	bool boolfile, boolhist;
 	double rebin{10}; // number to rebin the histograms by
 
@@ -95,11 +95,11 @@ void plot_event_rates(const char* horn) {
 	TH1D* nueCCHisto   = new TH1D("nueCCHisto",   "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",                        histNbins,histMin,histMax);
 	TH1D* anueCCHisto  = new TH1D("anueCCHisto",  "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{e} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",      histNbins,histMin,histMax);
 
-	// Gsimple 
-	TH1D* numuCCHisto_gsimp  = new TH1D("numuCCHisto_gsimp",  "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",                  histNbins,histMin,histMax);
-	TH1D* anumuCCHisto_gsimp = new TH1D("anumuCCHisto_gsimp", "#bar{#nu}_{#mu} CC; #bar{#nu}_{#mu} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
-	TH1D* nueCCHisto_gsimp   = new TH1D("nueCCHisto_gsimp",   "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",                        histNbins,histMin,histMax);
-	TH1D* anueCCHisto_gsimp  = new TH1D("anueCCHisto_gsimp",  "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",    histNbins,histMin,histMax);
+	// Flugg
+	TH1D* numuCCHisto_flugg  = new TH1D("numuCCHisto_flugg",  "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",                  histNbins,histMin,histMax);
+	TH1D* anumuCCHisto_flugg = new TH1D("anumuCCHisto_flugg", "#bar{#nu}_{#mu} CC; #bar{#nu}_{#mu} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",histNbins,histMin,histMax);
+	TH1D* nueCCHisto_flugg   = new TH1D("nueCCHisto_flugg",   "#nu_{e} CC; #nu_{e} Energy [GeV]; #nu_{e} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",                        histNbins,histMin,histMax);
+	TH1D* anueCCHisto_flugg  = new TH1D("anueCCHisto_flugg",  "#bar{#nu}_{e} CC; #bar{#nu}_{e} Energy [GeV]; #bar{#nu}_{#mu} CC / 79 t / 6 #times 10^{20} POT / 50 MeV",    histNbins,histMin,histMax);
 	
 	// Gevgen
 	TH1D* numuCCHisto_gevgen  = new TH1D("numuCCHisto_gevgen",  "#nu_{#mu} CC; #nu_{#mu} Energy [GeV]; #nu_{#mu} CC",                   4000,histMin,histMax);
@@ -117,13 +117,13 @@ void plot_event_rates(const char* horn) {
 		boolfile  = GetFile(f ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root");
 		// boolfile  = GetFile(f ,"/uboone/data/users/kmistry/work/PPFX/uboone/test/output_run0_lowstats.root");
 		if (boolfile == false) gSystem->Exit(0);
-		boolfile  = GetFile(f_gsimp , "/uboone/data/users/kmistry/work/PPFX/uboone/NuMIFlux_update_morebins.root");
+		boolfile  = GetFile(f_flugg , "/uboone/data/users/kmistry/work/PPFX/uboone/NuMIFlux_update_morebins.root");
 		if (boolfile == false) gSystem->Exit(0);
 	}
 	else {
 		boolfile  = GetFile(f ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/RHC/output_uboone_run0.root");
 		if (boolfile == false) gSystem->Exit(0);
-		boolfile  = GetFile(f_gsimp , "/uboone/app/users/kmistry/Flux/NuMIFlux/files/NuMIFlux_anti_morebins.root"); 
+		boolfile  = GetFile(f_flugg , "/uboone/app/users/kmistry/Flux/NuMIFlux/files/NuMIFlux_anti_morebins.root"); 
 		if (boolfile == false) gSystem->Exit(0);
 		
 	}
@@ -207,12 +207,12 @@ void plot_event_rates(const char* horn) {
 	boolhist = GetHist(f, h_numu,    "numu/Detsmear/numu_UW_AV_TPC_5MeV_bin");       if (boolhist == false) gSystem->Exit(0);
 	boolhist = GetHist(f, h_numubar, "numubar/Detsmear/numubar_UW_AV_TPC_5MeV_bin"); if (boolhist == false) gSystem->Exit(0);
 
-	// Get Gsimple histograms	
-	TH1D *h_nue_gsimp, *h_nuebar_gsimp, *h_numu_gsimp, *h_numubar_gsimp;
-	boolhist = GetHist(f_gsimp, h_nue_gsimp,     "nueFluxHisto");   if (boolhist == false) gSystem->Exit(0);
-	boolhist = GetHist(f_gsimp, h_nuebar_gsimp,  "anueFluxHisto");  if (boolhist == false) gSystem->Exit(0);
-	boolhist = GetHist(f_gsimp, h_numu_gsimp,    "numuFluxHisto");  if (boolhist == false) gSystem->Exit(0);
-	boolhist = GetHist(f_gsimp, h_numubar_gsimp, "anumuFluxHisto"); if (boolhist == false) gSystem->Exit(0);
+	// Get Flugg histograms	
+	TH1D *h_nue_flugg, *h_nuebar_flugg, *h_numu_flugg, *h_numubar_flugg;
+	boolhist = GetHist(f_flugg, h_nue_flugg,     "nueFluxHisto");   if (boolhist == false) gSystem->Exit(0);
+	boolhist = GetHist(f_flugg, h_nuebar_flugg,  "anueFluxHisto");  if (boolhist == false) gSystem->Exit(0);
+	boolhist = GetHist(f_flugg, h_numu_flugg,    "numuFluxHisto");  if (boolhist == false) gSystem->Exit(0);
+	boolhist = GetHist(f_flugg, h_numubar_flugg, "anumuFluxHisto"); if (boolhist == false) gSystem->Exit(0);
 	
 	// Get the GENIE histograms
 	boolhist = GetHist(f_genie, h_nue_genie,     "NuMIEventRates/Nue_dir/Nue_Energy");           if (boolhist == false) gSystem->Exit(0);
@@ -261,12 +261,14 @@ void plot_event_rates(const char* horn) {
 			value *= genieXsecNueCC->Eval(h_nue->GetBinCenter(i)); // Eval implies linear interpolation
 			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
 			nueCCHisto->SetBinContent(i, value);
+			nueCCHisto->SetBinError(i, nueCCHisto->GetBinError(i) * value);
 
 			// Nuebar
 			value = h_nuebar->GetBinContent(i);
 			value *= genieXsecNuebarCC->Eval(h_nuebar->GetBinCenter(i)); // Eval implies linear interpolation
 			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
 			anueCCHisto->SetBinContent(i, value);
+			anueCCHisto->SetBinError(i, anueCCHisto->GetBinError(i) * value);
 
 			// Numu
 			value = h_numu->GetBinContent(i);
@@ -276,37 +278,44 @@ void plot_event_rates(const char* horn) {
 			// value *= genieXsecSplineNumuCC->Eval(h_numu->GetBinLowEdge(i+10));
 			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
 			numuCCHisto->SetBinContent(i, value);
+			numuCCHisto->SetBinError(i, numuCCHisto->GetBinError(i) * value);
 
 			// Numubar
 			value = h_numubar->GetBinContent(i);
 			value *= genieXsecNumubarCC->Eval(h_numubar->GetBinCenter(i)); // Eval implies linear interpolation
 			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
 			anumuCCHisto->SetBinContent(i, value);
+			anumuCCHisto->SetBinError(i, anumuCCHisto->GetBinError(i) * value);
 
-			// ------------------------------  GSimple  -------------------------------------------------
+			// ------------------------------  Flugg  -------------------------------------------------
 			// Nue
-			value = h_nue_gsimp->GetBinContent(i);
-			value *= genieXsecNueCC->Eval(h_nue_gsimp->GetBinCenter(i)); // Eval implies linear interpolation
+			value = h_nue_flugg->GetBinContent(i);
+			value *= genieXsecNueCC->Eval(h_nue_flugg->GetBinCenter(i)); // Eval implies linear interpolation
 			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
-			nueCCHisto_gsimp->SetBinContent(i, value);
+			nueCCHisto_flugg->SetBinContent(i, value);
+			nueCCHisto_flugg->SetBinError(i, nueCCHisto_flugg->GetBinError(i) * value);
 
 			// Nuebar
-			value = h_nuebar_gsimp->GetBinContent(i);
-			value *= genieXsecNuebarCC->Eval(h_nuebar_gsimp->GetBinCenter(i)); // Eval implies linear interpolation
+			value = h_nuebar_flugg->GetBinContent(i);
+			value *= genieXsecNuebarCC->Eval(h_nuebar_flugg->GetBinCenter(i)); // Eval implies linear interpolation
 			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
-			anueCCHisto_gsimp->SetBinContent(i, value);
+			anueCCHisto_flugg->SetBinContent(i, value);
+			anueCCHisto_flugg->SetBinError(i, anueCCHisto_flugg->GetBinError(i) * value);
 
 			// Numu
-			value = h_numu_gsimp->GetBinContent(i);
-			value *= genieXsecNumuCC->Eval(h_numu_gsimp->GetBinCenter(i)); // Eval implies linear interpolation
+			value = h_numu_flugg->GetBinContent(i);
+			value *= genieXsecNumuCC->Eval(h_numu_flugg->GetBinCenter(i)); // Eval implies linear interpolation
 			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
-			numuCCHisto_gsimp->SetBinContent(i, value);
+			numuCCHisto_flugg->SetBinContent(i, value);
+			numuCCHisto_flugg->SetBinError(i, numuCCHisto_flugg->GetBinError(i) * value);
+
 
 			// Numubar
-			value = h_numubar_gsimp->GetBinContent(i);
-			value *= genieXsecNumubarCC->Eval(h_numubar_gsimp->GetBinCenter(i)); // Eval implies linear interpolation
+			value = h_numubar_flugg->GetBinContent(i);
+			value *= genieXsecNumubarCC->Eval(h_numubar_flugg->GetBinCenter(i)); // Eval implies linear interpolation
 			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
-			anumuCCHisto_gsimp->SetBinContent(i, value);
+			anumuCCHisto_flugg->SetBinContent(i, value);
+			anumuCCHisto_flugg->SetBinError(i, anumuCCHisto_flugg->GetBinError(i) * value);
 			// ---------------------------------------------------------------------------------------------
 
 		}
@@ -322,22 +331,22 @@ void plot_event_rates(const char* horn) {
 	leg->AddEntry(nueCCHisto,   "#nu_{e} ","l");
 	leg->AddEntry(anueCCHisto,  "#bar{#nu_{e}} ","l");
 
-	TLegend* leg_gsimp = new TLegend(0.75, 0.65, 0.95, 0.9);
-	leg_gsimp->SetNColumns(1);
-	leg_gsimp->SetBorderSize(0);
-	leg_gsimp->SetFillStyle(0);
-	leg_gsimp->SetTextFont(62);
-	leg_gsimp->SetTextSize(0.04);
+	TLegend* leg_flugg = new TLegend(0.75, 0.65, 0.95, 0.9);
+	leg_flugg->SetNColumns(1);
+	leg_flugg->SetBorderSize(0);
+	leg_flugg->SetFillStyle(0);
+	leg_flugg->SetTextFont(62);
+	leg_flugg->SetTextSize(0.04);
 
 	// Rebin
 	nueCCHisto         ->Rebin(rebin);
 	anueCCHisto        ->Rebin(rebin);
 	numuCCHisto        ->Rebin(rebin);
 	anumuCCHisto       ->Rebin(rebin);
-	nueCCHisto_gsimp   ->Rebin(rebin);
-	anueCCHisto_gsimp  ->Rebin(rebin);
-	numuCCHisto_gsimp  ->Rebin(rebin);
-	anumuCCHisto_gsimp ->Rebin(rebin);
+	nueCCHisto_flugg   ->Rebin(rebin);
+	anueCCHisto_flugg  ->Rebin(rebin);
+	numuCCHisto_flugg  ->Rebin(rebin);
+	anumuCCHisto_flugg ->Rebin(rebin);
 	nueCCHisto_gevgen  ->Rebin(rebin);
 	anueCCHisto_gevgen ->Rebin(rebin);
 	numuCCHisto_gevgen ->Rebin(rebin);
@@ -346,7 +355,7 @@ void plot_event_rates(const char* horn) {
 
 	// Area normalise to check the shape 
 	// h_nue_genie    ->Scale( nueCCHisto  ->Integral(0, -1) / h_nue_genie    ->Integral(0, -1) );
-	// h_nuebar_genie ->Scale( anueCCHisto ->Integral(0, 30) / h_nuebar_genie ->Integral(0, 30) );
+	h_nuebar_genie ->Scale( anueCCHisto ->Integral(0, 30) / h_nuebar_genie ->Integral(0, 30) );
 	// h_numu_genie   ->Scale( numuCCHisto ->Integral(0, -1) / h_numu_genie   ->Integral(0, h_numu_genie->GetNbinsX()-5) );
 	// h_numubar_genie->Scale( anumuCCHisto->Integral(0, -1) / h_numubar_genie->Integral(0, -1) );
 
@@ -363,120 +372,119 @@ void plot_event_rates(const char* horn) {
 
 	// -----------------------------  Nue --------------------------------------
 	TCanvas* c_nue = new TCanvas();
-	DrawSpecifiers(c_nue, nueCCHisto, "nue", false);
-	DrawSpecifiers(c_nue, nueCCHisto_gsimp, "nue", false);
-	DrawSpecifiers(c_nue, h_nue_genie, "nue", false);
+	DrawSpecifiers(c_nue, nueCCHisto,        "nue", false);
+	DrawSpecifiers(c_nue, nueCCHisto_flugg,  "nue", false);
+	DrawSpecifiers(c_nue, h_nue_genie,       "nue", false);
 	DrawSpecifiers(c_nue, nueCCHisto_gevgen, "nue", false); // Gevgen
 	
 	nueCCHisto_gevgen->SetLineColor(41);
 	h_nue_genie->SetLineColor(40);
-	nueCCHisto_gsimp->SetLineColor(kGreen+1);
+	nueCCHisto_flugg->SetLineColor(kGreen+1);
 	nueCCHisto->GetYaxis()->SetRangeUser(0,200);
 	
-	if (!strcmp(horn,"fhc")) nueCCHisto_gevgen->Draw("his,same");
-	nueCCHisto->Draw("his, same");
-	nueCCHisto_gsimp->Draw("his,same");
-	if (!strcmp(horn,"fhc")) h_nue_genie->Draw("his,same");
+	nueCCHisto->Draw("hist,E, same");
+	nueCCHisto_flugg->Draw("hist,E,same");
+	if (!strcmp(horn,"fhc")) h_nue_genie->Draw("hist,E,same");
+	if (!strcmp(horn,"fhc")) nueCCHisto_gevgen->Draw("hist,E,same");
 	
 
 	Draw_Nu_Mode(c_nue, horn); // Draw FHC Mode/RHC Mode Text
-	leg_gsimp->AddEntry(nueCCHisto, "dk2nu","l");
-	leg_gsimp->AddEntry(nueCCHisto_gsimp, "flugg","l");
-	if (!strcmp(horn,"fhc")) leg_gsimp->AddEntry(h_nue_genie, "genie","l");
-	if (!strcmp(horn,"fhc")) leg_gsimp->AddEntry(nueCCHisto_gevgen, "gevgen","l");
-	leg_gsimp->Draw();
+	leg_flugg->AddEntry(nueCCHisto, "dk2nu","l");
+	leg_flugg->AddEntry(nueCCHisto_flugg, "flugg","l");
+	if (!strcmp(horn,"fhc")) leg_flugg->AddEntry(h_nue_genie, "genie","l");
+	if (!strcmp(horn,"fhc")) leg_flugg->AddEntry(nueCCHisto_gevgen, "gevgen","l");
+	leg_flugg->Draw();
 	gStyle->SetTitleH(0.07);
 	c_nue->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "nue"));
-	leg_gsimp->Clear();
+	leg_flugg->Clear();
 	
 	
 	// --------------------------- Nuebar --------------------------------------
 	TCanvas* c_nuebar = new TCanvas();
-	DrawSpecifiers(c_nuebar, anueCCHisto, "nuebar", false);
-	DrawSpecifiers(c_nuebar, anueCCHisto_gsimp, "nuebar", false);
-	DrawSpecifiers(c_nuebar, h_nuebar_genie, "nuebar", false);
+	DrawSpecifiers(c_nuebar, anueCCHisto,        "nuebar", false);
+	DrawSpecifiers(c_nuebar, anueCCHisto_flugg,  "nuebar", false);
+	DrawSpecifiers(c_nuebar, h_nuebar_genie,     "nuebar", false);
 	DrawSpecifiers(c_nuebar, anueCCHisto_gevgen, "nuebar", false); // Gevgen
 	
 	anueCCHisto_gevgen->SetLineColor(41);
 	h_nuebar_genie->SetLineColor(40);
-	anueCCHisto_gsimp->SetLineColor(kGreen+1);
+	anueCCHisto_flugg->SetLineColor(kGreen+1);
 	anueCCHisto->GetYaxis()->SetRangeUser(0,30);
 	
-	if (!strcmp(horn,"fhc")) anueCCHisto_gevgen->Draw("his,same");
-	anueCCHisto->Draw("his, same");
-	anueCCHisto_gsimp->Draw("his,same");
-	if (!strcmp(horn,"fhc")) h_nuebar_genie->Draw("his,same");
+	anueCCHisto->Draw("hist,E, same");
+	anueCCHisto_flugg->Draw("hist,E,same");
+	if (!strcmp(horn,"fhc")) h_nuebar_genie->Draw("hist,E,same");
+	if (!strcmp(horn,"fhc")) anueCCHisto_gevgen->Draw("hist,E,same");
 	
 	Draw_Nu_Mode(c_nuebar, horn); // Draw FHC Mode/RHC Mode Text
-	leg_gsimp->AddEntry(anueCCHisto, "dk2nu","l");
-	leg_gsimp->AddEntry(anueCCHisto_gsimp, "flugg","l");
-	if (!strcmp(horn,"fhc")) leg_gsimp->AddEntry(h_nuebar_genie, "genie","l");
-	if (!strcmp(horn,"fhc")) leg_gsimp->AddEntry(anueCCHisto_gevgen, "gevgen","l");
-	leg_gsimp->Draw();
+	leg_flugg->AddEntry(anueCCHisto, "dk2nu","l");
+	leg_flugg->AddEntry(anueCCHisto_flugg, "flugg","l");
+	if (!strcmp(horn,"fhc")) leg_flugg->AddEntry(h_nuebar_genie, "genie","l");
+	if (!strcmp(horn,"fhc")) leg_flugg->AddEntry(anueCCHisto_gevgen, "gevgen","l");
+	leg_flugg->Draw();
 	gStyle->SetTitleH(0.07);
 	c_nuebar->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "nuebar"));
-	leg_gsimp->Clear();
+	leg_flugg->Clear();
 	
 	// ----------------------------  Numu --------------------------------------
 	TCanvas* c_numu = new TCanvas();
-	DrawSpecifiers(c_numu, numuCCHisto, "numu", false);
-	DrawSpecifiers(c_numu, numuCCHisto_gsimp, "numu", false);
-	DrawSpecifiers(c_numu, h_numu_genie, "numu", false);
+	DrawSpecifiers(c_numu, numuCCHisto,        "numu", false);
+	DrawSpecifiers(c_numu, numuCCHisto_flugg,  "numu", false);
+	DrawSpecifiers(c_numu, h_numu_genie,       "numu", false);
 	DrawSpecifiers(c_numu, numuCCHisto_gevgen, "numu", false); // Gevgen
 	
 	numuCCHisto_gevgen->SetLineColor(41);
 	h_numu_genie->SetLineColor(40);
-	numuCCHisto_gsimp->SetLineColor(kGreen+1);
+	numuCCHisto_flugg->SetLineColor(kGreen+1);
 	numuCCHisto->GetYaxis()->SetRangeUser(0,2000);
 	
-	if (!strcmp(horn,"fhc")) numuCCHisto_gevgen->Draw("his,same");
-	numuCCHisto->Draw("his, same");
-	numuCCHisto_gsimp->Draw("his,same");
-	if (!strcmp(horn,"fhc")) h_numu_genie->Draw("his,same");
-	
+	numuCCHisto->Draw("hist,E, same");
+	numuCCHisto_flugg->Draw("hist,E,same");
+	if (!strcmp(horn,"fhc")) h_numu_genie->Draw("hist,E,same");
+	if (!strcmp(horn,"fhc")) numuCCHisto_gevgen->Draw("hist,E,same");
 	
 	Draw_Nu_Mode(c_numu, horn); // Draw FHC Mode/RHC Mode Text
-	leg_gsimp->AddEntry(numuCCHisto, "dk2nu","l");
-	leg_gsimp->AddEntry(numuCCHisto_gsimp, "flugg","l");
-	if (!strcmp(horn,"fhc")) leg_gsimp->AddEntry(h_numu_genie, "genie","l");
-	if (!strcmp(horn,"fhc")) leg_gsimp->AddEntry(numuCCHisto_gevgen, "gevgen","l");
-	leg_gsimp->Draw();
+	leg_flugg->AddEntry(numuCCHisto, "dk2nu","l");
+	leg_flugg->AddEntry(numuCCHisto_flugg, "flugg","l");
+	if (!strcmp(horn,"fhc")) leg_flugg->AddEntry(h_numu_genie, "genie","l");
+	if (!strcmp(horn,"fhc")) leg_flugg->AddEntry(numuCCHisto_gevgen, "gevgen","l");
+	leg_flugg->Draw();
 	gStyle->SetTitleH(0.07);
 	c_numu->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "numu"));
-	leg_gsimp->Clear();
+	leg_flugg->Clear();
 	
 	// ---------------------------  Numubar ------------------------------------
 	TCanvas* c_numubar = new TCanvas();
-	DrawSpecifiers(c_numubar, anumuCCHisto, "numubar", false);
-	DrawSpecifiers(c_numubar, anumuCCHisto_gsimp, "numubar", false);
-	DrawSpecifiers(c_numubar, h_numubar_genie, "numubar", false);
+	DrawSpecifiers(c_numubar, anumuCCHisto,        "numubar", false);
+	DrawSpecifiers(c_numubar, anumuCCHisto_flugg,  "numubar", false);
+	DrawSpecifiers(c_numubar, h_numubar_genie,     "numubar", false);
 	DrawSpecifiers(c_numubar, anumuCCHisto_gevgen, "numubar", false); // Gevgen
 
 	anumuCCHisto_gevgen->SetLineColor(41);
 	h_numubar_genie->SetLineColor(40);
-	anumuCCHisto_gsimp->SetLineColor(kGreen+1);
+	anumuCCHisto_flugg->SetLineColor(kGreen+1);
 	anumuCCHisto->GetYaxis()->SetRangeUser(0,400);
 	
-	if (!strcmp(horn,"fhc")) anumuCCHisto_gevgen->Draw("his,same");
-	anumuCCHisto->Draw("his, same");
-	anumuCCHisto_gsimp->Draw("his,same");
-	if (!strcmp(horn,"fhc")) h_numubar_genie->Draw("his,same");
+	anumuCCHisto->Draw("hist,E, same");
+	anumuCCHisto_flugg->Draw("hist,E,same");
+	if (!strcmp(horn,"fhc")) h_numubar_genie->Draw("hist,E,same");
+	if (!strcmp(horn,"fhc")) anumuCCHisto_gevgen->Draw("hist,E,same");
 	
 	Draw_Nu_Mode(c_numubar, horn); // Draw FHC Mode/RHC Mode Text
-	leg_gsimp->AddEntry(anumuCCHisto, "dk2nu","l");
-	leg_gsimp->AddEntry(anumuCCHisto_gsimp, "flugg","l");
-	if (!strcmp(horn,"fhc")) leg_gsimp->AddEntry(h_numubar_genie, "genie","l");
-	if (!strcmp(horn,"fhc")) leg_gsimp->AddEntry(anumuCCHisto_gevgen, "gevgen","l");
-	leg_gsimp->Draw();
+	leg_flugg->AddEntry(anumuCCHisto, "dk2nu","l");
+	leg_flugg->AddEntry(anumuCCHisto_flugg, "flugg","l");
+	if (!strcmp(horn,"fhc")) leg_flugg->AddEntry(h_numubar_genie, "genie","l");
+	if (!strcmp(horn,"fhc")) leg_flugg->AddEntry(anumuCCHisto_gevgen, "gevgen","l");
+	leg_flugg->Draw();
 	gStyle->SetTitleH(0.07);
 	c_numubar->Print(Form("plots/Event_Rates/Event_Rate_Prediction_%s_%s.pdf", horn, "numubar"));
-	leg_gsimp->Clear();
+	leg_flugg->Clear();
 	
 	// -----------------------------  ALL --------------------------------------
 	TCanvas* c_all = new TCanvas();
-	DrawSpecifiers(c_all, nueCCHisto, "nue", true);
-	DrawSpecifiers(c_all, anueCCHisto, "nuebar", true);
-	DrawSpecifiers(c_all, numuCCHisto, "numu", true);
+	DrawSpecifiers(c_all, nueCCHisto,   "nue",     true);
+	DrawSpecifiers(c_all, anueCCHisto,  "nuebar",  true);
+	DrawSpecifiers(c_all, numuCCHisto,  "numu",    true);
 	DrawSpecifiers(c_all, anumuCCHisto, "numubar", true);
 	
 	gPad->SetLeftMargin(0.15);
