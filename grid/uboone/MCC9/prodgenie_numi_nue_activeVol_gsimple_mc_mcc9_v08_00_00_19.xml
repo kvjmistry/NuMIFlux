@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+
+<!-- Production Project -->
+<!DOCTYPE project [
+<!ENTITY release "v08_00_00_19">
+<!ENTITY file_type "mc">
+<!ENTITY run_type "physics">
+<!ENTITY user "kmistry">
+<!ENTITY name "prodgenie_numi_nue_active_vol_gsimple_mc_mcc9_fhc">
+]>
+
+
+<job>
+
+<project name="&name;">
+
+  <!-- Project size -->
+  <numevents>400000</numevents>
+
+  <!-- Operating System -->
+  <os>SL6</os>
+
+  <fcldir>/pnfs/uboone/resilient/users/kmistry/MCC9/</fcldir>
+
+  <!-- Batch resources -->
+  <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource>
+
+  <!-- Larsoft information -->
+  <larsoft>
+    <tag>&release;</tag>
+    <qual>e17:prof</qual>
+    <local>/pnfs/uboone/resilient/users/kmistry/tars/uboonecode_mcc9_v08_00_00_19.tar</local>
+  </larsoft>
+
+  <!-- <check>1</check> -->
+  <!-- <copy>1</copy> -->
+  
+  <!-- Project stages -->
+
+  <stage name="gen">
+    <fcl>prodgenie_numi_intrinsic_nue_uboone_gsimple_fhc.fcl</fcl>
+    <!-- <fcl>wirecell_g4_uboone.fcl</fcl> -->
+    <!-- <fcl>wirecell_detsim_numi_uboone.fcl</fcl> -->
+    <!-- <fcl>reco_uboone_mcc9_8_driver_stage1.fcl</fcl> -->
+    <!-- <datafiletypes>root,pndr</datafiletypes> -->
+    <outdir>/pnfs/uboone/scratch/users/&user;/MCC9/&name;/gen</outdir>
+    <logdir>/pnfs/uboone/scratch/users/&user;/MCC9/&name;/gen</logdir>
+    <workdir>/pnfs/uboone/scratch/users/&user;/MCC9/&name;/work/gen</workdir>
+    <bookdir>/uboone/data/users/&user;/book/MCC9/&name;/gen</bookdir>
+    <maxfilesperjob>1</maxfilesperjob>
+    <numjobs>100</numjobs>
+    <datatier>reconstructed</datatier>
+    <memory>3000</memory>
+    <jobsub>--expected-lifetime=24h -e IFDH_CP_UNLINK_ON_ERROR=1 </jobsub>
+    <jobsub_start>  --expected-lifetime=short</jobsub_start>
+  </stage>
+
+  <stage name="reco2">
+    <fcl>reco_uboone_mcc9_8_driver_stage2_numi_fullMC.fcl</fcl>
+    <datafiletypes>root,pndr</datafiletypes>
+    <outdir>/pnfs/uboone/scratch/users/&user;/MCC9/&name;/reco2</outdir>
+    <logdir>/pnfs/uboone/scratch/users/&user;/MCC9/&name;/reco2</logdir>
+    <workdir>/pnfs/uboone/scratch/users/&user;/work/MCC9/&name;/reco2</workdir>
+    <bookdir>/uboone/data/users/&user;/book/MCC9/&name;/reco2</bookdir>
+    <maxfilesperjob>1</maxfilesperjob>
+    <numjobs>193</numjobs>
+    <datatier>reconstructed</datatier>
+    <memory>4000</memory>
+    <schema>root</schema>
+    <jobsub>--expected-lifetime=6h -e IFDH_CP_UNLINK_ON_ERROR=1 </jobsub>
+    <jobsub_start>  --expected-lifetime=short</jobsub_start>
+  </stage>
+  
+  <!-- file type -->
+  <filetype>&file_type;</filetype>
+
+  <!-- run type -->
+  <runtype>&run_type;</runtype>
+
+</project>
+
+
+</job>
