@@ -1,7 +1,0 @@
-FILE : /pnfs/numix/flux/g4numi_syst_3rd_ana/test_g4numi_v6/me000z200i/minervame/run0009/g4numiv6_minervame_me000z200i_129_0009.root
-FILE : /pnfs/numix/flux/g4numi_syst_3rd_ana/test_g4numi_v6/me000z200i/minervame/run0009/g4numiv6_minervame_me000z200i_162_0009.root
-FILE : /pnfs/numix/flux/g4numi_syst_3rd_ana/test_g4numi_v6/me000z200i/minervame/run0009/g4numiv6_minervame_me000z200i_69_0009.root
-FILE : /pnfs/numix/flux/g4numi_syst_3rd_ana/test_g4numi_v6/me000z200i/minervame/run0009/g4numiv6_minervame_me000z200i_226_0009.root
-FILE : /pnfs/numix/flux/g4numi_syst_3rd_ana/test_g4numi_v6/me000z200i/minervame/run0009/g4numiv6_minervame_me000z200i_586_0009.root
-FILE : /pnfs/numix/flux/g4numi_syst_3rd_ana/test_g4numi_v6/me000z200i/minervame/run0009/g4numiv6_minervame_me000z200i_392_0009.root
-FILE : /pnfs/numix/flux/g4numi_syst_3rd_ana/test_g4numi_v6/me000z200i/minervame/run0009/g4numiv6_minervame_me000z200i_378_0009.root
