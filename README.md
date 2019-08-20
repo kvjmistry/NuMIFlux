@@ -1,4 +1,4 @@
-NuMI Flux Validation
+NuMI Flux
 ====================
 Scripts for NuMI flux and validation.
 
