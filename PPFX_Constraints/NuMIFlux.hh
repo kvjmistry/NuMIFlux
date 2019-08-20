@@ -76,7 +76,7 @@ public :
 
 
   NuMIFlux(string pattern="/pnfs/uboone/persistent/uboonebeam/numi_dk2nu_zero_threshold/FHC/g4numiv6_minervame_me000z200i_*.root");
-  //NuMIFlux(string pattern="/pnfs/uboone/persistent/uboonebeam/numi_dk2nu_zero_threshold/FHC/g4numiv6_minervame_me000z200i_120_0000.root");
+  // NuMIFlux(string pattern="/pnfs/uboone/persistent/uboonebeam/numi_dk2nu_zero_threshold/FHC/g4numiv6_minervame_me000z200i_12*_0000.root");
 
   virtual ~NuMIFlux();
 
@@ -136,15 +136,15 @@ NuMIFlux::NuMIFlux(string pattern) {
 
   // Constraint histograms
   // MIPP
-  pionplus_MIPP  =  new TH2D("pionplus_MIPP", "pionplus_MIPP  ;p_{L} [GeV/c] ;p_{T} [GeV/c]", 200, 0, 100, 200, 0, 2 );
-  pionminus_MIPP =  new TH2D("pionminus_MIPP","pionminus_MIPP ;p_{L} [GeV/c] ;p_{T} [GeV/c]", 200, 0, 100, 200, 0, 2 );
-  Kplus_MIPP     =  new TH2D("kaonplus_MIPP",    "Kplus_MIPP     ;p_{L} [GeV/c] ;p_{T} [GeV/c]", 200, 0, 100, 200, 0, 2 );
-  Kminus_MIPP    =  new TH2D("kaonminus_MIPP",   "Kminus_MIPP    ;p_{L} [GeV/c] ;p_{T} [GeV/c]", 200, 0, 100, 200, 0, 2 );
+  pionplus_MIPP  =  new TH2D("pionplus_MIPP", "pionplus_MIPP  ;p_{L} [GeV/c] ;p_{T} [GeV/c]", 100, 0, 100, 100, 0, 2 );
+  pionminus_MIPP =  new TH2D("pionminus_MIPP","pionminus_MIPP ;p_{L} [GeV/c] ;p_{T} [GeV/c]", 100, 0, 100, 100, 0, 2 );
+  Kplus_MIPP     =  new TH2D("kaonplus_MIPP", "Kplus_MIPP     ;p_{L} [GeV/c] ;p_{T} [GeV/c]", 100, 0, 100, 100, 0, 2 );
+  Kminus_MIPP    =  new TH2D("kaonminus_MIPP","Kminus_MIPP    ;p_{L} [GeV/c] ;p_{T} [GeV/c]", 100, 0, 100, 100, 0, 2 );
   // NA49
-  pionplus_NA49  =  new TH2D("pionplus_NA49",  "pionplus_NA49  ;xF  ;p_{T} [GeV/c]", 200, -1, 1, 100, 0, 2.0 );
-  pionminus_NA49 =  new TH2D("pionminus_NA49", "pionminus_NA49 ;xF  ;p_{T} [GeV/c]", 200, -1, 1, 100, 0, 2.0 );
-  Kplus_NA49     =  new TH2D("kaonplus_NA49",     "Kplus_NA49     ;xF  ;p_{T} [GeV/c]", 200, -1, 1, 100, 0, 2.0 );
-  Kminus_NA49    =  new TH2D("kaonminus_NA49",    "Kminus_NA49    ;xF  ;p_{T} [GeV/c]", 200, -1, 1, 100, 0, 2.0 );
+  pionplus_NA49  =  new TH2D("pionplus_NA49",  "pionplus_NA49  ;xF  ;p_{T} [GeV/c]", 100, -1, 1, 100, 0, 2.0 );
+  pionminus_NA49 =  new TH2D("pionminus_NA49", "pionminus_NA49 ;xF  ;p_{T} [GeV/c]", 100, -1, 1, 100, 0, 2.0 );
+  Kplus_NA49     =  new TH2D("kaonplus_NA49",  "Kplus_NA49     ;xF  ;p_{T} [GeV/c]", 100, -1, 1, 100, 0, 2.0 );
+  Kminus_NA49    =  new TH2D("kaonminus_NA49", "Kminus_NA49    ;xF  ;p_{T} [GeV/c]", 100, -1, 1, 100, 0, 2.0 );
 }
 
 NuMIFlux::~NuMIFlux() {
