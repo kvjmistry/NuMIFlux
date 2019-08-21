@@ -101,14 +101,14 @@ void DrawSpecifiers(TH2D* hist, std::string histname){
         text = new TLatex(.41, .825, "NA49 Coverage");
     }
     else if (histname == "kaonplus_NA49"){
-        hist->SetTitle("#K^{+}; x_{F}; p_{T} [GeV/c]");
+        hist->SetTitle("K^{+}; x_{F}; p_{T} [GeV/c]");
         hist->GetXaxis()->SetRangeUser(-0.04,1);
         hist->GetYaxis()->SetRangeUser(0,3.5);
         leg = new TLegend(.40, .75 , .44 , .79);
         text = new TLatex(.17, .755, "NA49 Coverage");
     }
     else if (histname == "kaonminus_NA49"){
-        hist->SetTitle("#K^{-}; x_{F}; p_{T} [GeV/c]");
+        hist->SetTitle("K^{-}; x_{F}; p_{T} [GeV/c]");
         hist->GetXaxis()->SetRangeUser(-0.04,1);
         hist->GetYaxis()->SetRangeUser(0,3.5);
         leg = new TLegend(.40, .75 , .44 , .79);
@@ -129,16 +129,16 @@ void DrawSpecifiers(TH2D* hist, std::string histname){
         text = new TLatex(.5, .55, "MIPP Coverage");
     }
     else if (histname == "kaonplus_MIPP"){
-        hist->SetTitle("#K^{+}; p_{Z}; p_{T} [GeV/c]");
-        hist->GetXaxis()->SetRangeUser(-0.15,1);
-        hist->GetYaxis()->SetRangeUser(0,3.5);
+        hist->SetTitle("K^{+}; p_{Z}; p_{T} [GeV/c]");
+        //hist->GetXaxis()->SetRangeUser(-0.15,1);
+        //hist->GetYaxis()->SetRangeUser(0,3.5);
         leg = new TLegend(.44, .55, .48, .59);
         text = new TLatex(.5, .55, "MIPP Coverage");
     }
     else if (histname == "kaonminus_MIPP"){
-        hist->SetTitle("#K^{-}; p_{Z}; p_{T} [GeV/c]");
-        hist->GetXaxis()->SetRangeUser(-0.15,1);
-        hist->GetYaxis()->SetRangeUser(0,3.5);
+        hist->SetTitle("K^{-}; p_{Z}; p_{T} [GeV/c]");
+        //hist->GetXaxis()->SetRangeUser(-0.15,1);
+        //hist->GetYaxis()->SetRangeUser(0,3.5);
         leg = new TLegend(.44, .55, .48, .59);
         text = new TLatex(.5, .55, "MIPP Coverage");
     }
@@ -149,11 +149,11 @@ void DrawSpecifiers(TH2D* hist, std::string histname){
     leg->SetFillStyle(0);
     leg->SetLineWidth(4);
     
-    text->Draw();
     text->SetTextColor(kBlack);
     text->SetNDC();
     text->SetTextSize(1.4/30.);
     text->SetTextAlign(11);
+    text->Draw();
     leg->Draw();
 
 

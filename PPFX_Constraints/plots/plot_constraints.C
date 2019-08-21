@@ -16,12 +16,12 @@ void plot_constraints(){
     std::vector<std::string> pars =  {
         "pionplus_NA49",
         "pionminus_NA49",
-        //"kaonplus_NA49",
-        //"kaonminus_NA49",
+        "kaonplus_NA49",
+        "kaonminus_NA49",
         "pionplus_MIPP",
-        "pionminus_MIPP"
-        //"kaonplus_MIPP",
-        //"kaonminus_MIPP"
+        "pionminus_MIPP",
+        "kaonplus_MIPP",
+        "kaonminus_MIPP"
     };
 
     for (int k=0; k < pars.size();k++){
@@ -33,8 +33,8 @@ void plot_constraints(){
         boolhist  = GetHist(f, hist, pars.at(k)); 
         if (boolhist == false) gSystem->Exit(0);
 
-        hist->RebinX(4);
-        hist->RebinY(4);
+        //hist->RebinX(4);
+        if (pars.at(k) == "kaonplus_MIPP" || pars.at(k) == "kaonminus_MIPP" || pars.at(k) == "kaonminus_NA49" || pars.at(k) == "kaonplus_NA49") hist->RebinY(4);
         
         DrawSpecifiers(hist, pars.at(k));
         IncreaseLabelSize(hist);
