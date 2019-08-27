@@ -17,10 +17,12 @@ sure this file is included in the same directory.
 void DrawSpecifiers(TCanvas* c, TH1D* &h, const char* mode, bool all){
 	// c->cd();
 
+	// h->SetLineWidth(2);
+
 	// Plottings
 	if (!strcmp(mode, "numu")){
 		h->SetLineColor(kRed+1);
-		// h->SetLineWidth(2);
+		
 	}
 	if (!strcmp(mode, "nue")){
 		h->SetLineColor(kRed+1);
@@ -133,6 +135,18 @@ void Make_Plots(TH1D* h_dk2nu, TH1D* h_flugg, TH1D* h_genie, TH1D* h_gsimple, TH
 		c  ->Clear();
 
 	}
+// ----------------------------------------------------------------------------
+// Function to get the total event rate
+void GetTotalER(TH1D* h_numu, TH1D* h_numubar, TH1D* h_nue, TH1D* h_nuebar, double &tot_ER, double &numu_ER, double &numubar_ER, double &nue_ER, double &nuebar_ER){
+
+	numu_ER    = h_numu   ->Integral(0,  h_numu   ->GetNbinsX()+1);
+	numubar_ER = h_numubar->Integral(0,  h_numubar->GetNbinsX()+1);
+	nue_ER     = h_nue    ->Integral(0,  h_nue    ->GetNbinsX()+1);
+	nuebar_ER  = h_nuebar ->Integral(0,  h_nuebar ->GetNbinsX()+1);
+
+	tot_ER     = numu_ER + numubar_ER + nue_ER + nuebar_ER;
+
+}
 // ----------------------------------------------------------------------------
 // Main
 void plot_event_rates(const char* horn) {
@@ -345,21 +359,24 @@ void plot_event_rates(const char* horn) {
 		TSpline3* genieXsecSplineNumuCC    = new TSpline3("genieXsecSplineNumuCC",    genieXsecNumuCC,    "", 0,20);
 		TSpline3* genieXsecSplineNumubarCC = new TSpline3("genieXsecSplineNumubarCC", genieXsecNumubarCC, "", 0,20);
 
+		bool UseTSpline(false); // decide here whether to use a TSpline3 or just eval the TGraph at bin centre
+
 		double value;
 		for(int i=1; i<histNbins+1; i++) {
 
 			// Nue
 			value = h_nue->GetBinContent(i);
-			// value *= genieXsecNueCC->Eval(h_nue->GetBinCenter(i)); // Eval implies linear interpolation
-			value *= genieXsecSplineNueCC->Eval(h_nue->GetBinCenter(i));
+			if (UseTSpline) value *= genieXsecSplineNueCC->Eval(h_nue->GetBinCenter(i));
+			else value *= genieXsecNueCC->Eval(h_nue->GetBinCenter(i)); // Eval implies linear interpolation 
+			// value *= bin_average_total_xsec(h_nue, genieXsecNueCC, i); 
 			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
 			nueCCHisto->SetBinContent(i, value);
 			nueCCHisto->SetBinError(i, nueCCHisto->GetBinError(i) * value);
 
 			// Nuebar
 			value = h_nuebar->GetBinContent(i);
-			// value *= genieXsecNuebarCC->Eval(h_nuebar->GetBinCenter(i)); // Eval implies linear interpolation
-			value *= genieXsecSplineNuebarCC->Eval(h_nuebar->GetBinCenter(i));
+			if (UseTSpline) value *= genieXsecSplineNuebarCC->Eval(h_nuebar->GetBinCenter(i));
+			else value *= genieXsecNuebarCC->Eval(h_nuebar->GetBinCenter(i)); // Eval implies linear interpolation 
 			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
 			anueCCHisto->SetBinContent(i, value);
 			anueCCHisto->SetBinError(i, anueCCHisto->GetBinError(i) * value);
@@ -367,17 +384,17 @@ void plot_event_rates(const char* horn) {
 			// Numu
 			value = h_numu->GetBinContent(i);
 			// value *= genieXsecNumuCC->Eval(h_numu->GetBinCenter(i)); // Eval implies linear interpolation
-			// value *= bin_average_total_xsec(h_numu, genieXsecNumuCC, i);
-			value *= genieXsecSplineNumuCC->Eval(h_numu->GetBinCenter(i));
-			// value *= genieXsecSplineNumuCC->Eval(h_numu->GetBinLowEdge(i+10));
+			if (UseTSpline) value *= genieXsecSplineNumuCC->Eval(h_numu->GetBinCenter(i));
+			else value *= genieXsecNumuCC->Eval(h_numu->GetBinCenter(i)); // Eval implies linear interpolation 
+			// value *= bin_average_total_xsec(h_numu, genieXsecNumuCC, i); 
 			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
 			numuCCHisto->SetBinContent(i, value);
 			numuCCHisto->SetBinError(i, numuCCHisto->GetBinError(i) * value);
 
 			// Numubar
 			value = h_numubar->GetBinContent(i);
-			// value *= genieXsecNumubarCC->Eval(h_numubar->GetBinCenter(i)); // Eval implies linear interpolation
-			value *= genieXsecSplineNumubarCC->Eval(h_numubar->GetBinCenter(i));
+			if (UseTSpline) value *= genieXsecSplineNumubarCC->Eval(h_numubar->GetBinCenter(i));
+			else value *= genieXsecNumubarCC->Eval(h_numubar->GetBinCenter(i)); // Eval implies linear interpolation 
 			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
 			anumuCCHisto->SetBinContent(i, value);
 			anumuCCHisto->SetBinError(i, anumuCCHisto->GetBinError(i) * value);
@@ -385,24 +402,24 @@ void plot_event_rates(const char* horn) {
 			// ------------------------------  Flugg  -------------------------------------------------
 			// Nue
 			value = h_nue_flugg->GetBinContent(i);
-			// value *= genieXsecNueCC->Eval(h_nue_flugg->GetBinCenter(i)); // Eval implies linear interpolation
-			value *= genieXsecSplineNueCC->Eval(h_nue_flugg->GetBinCenter(i)); // Eval implies linear interpolation
+			if (UseTSpline) value *= genieXsecSplineNueCC->Eval(h_nue_flugg->GetBinCenter(i)); // Eval implies linear interpolation
+			else value *= genieXsecNueCC->Eval(h_nue_flugg->GetBinCenter(i)); // Eval implies linear interpolation 
 			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
 			nueCCHisto_flugg->SetBinContent(i, value);
 			nueCCHisto_flugg->SetBinError(i, nueCCHisto_flugg->GetBinError(i) * value);
 
 			// Nuebar
 			value = h_nuebar_flugg->GetBinContent(i);
-			// value *= genieXsecNuebarCC->Eval(h_nuebar_flugg->GetBinCenter(i)); // Eval implies linear interpolation
-			value *= genieXsecSplineNuebarCC->Eval(h_nuebar_flugg->GetBinCenter(i)); // Eval implies linear interpolation
+			if (UseTSpline) value *= genieXsecSplineNuebarCC->Eval(h_nuebar_flugg->GetBinCenter(i)); // Eval implies linear interpolation
+			else value *= genieXsecNuebarCC->Eval(h_nuebar_flugg->GetBinCenter(i)); // Eval implies linear interpolation 
 			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
 			anueCCHisto_flugg->SetBinContent(i, value);
 			anueCCHisto_flugg->SetBinError(i, anueCCHisto_flugg->GetBinError(i) * value);
 
 			// Numu
 			value = h_numu_flugg->GetBinContent(i);
-			// value *= genieXsecNumuCC->Eval(h_numu_flugg->GetBinCenter(i)); // Eval implies linear interpolation
-			value *= genieXsecSplineNumuCC->Eval(h_numu_flugg->GetBinCenter(i)); // Eval implies linear interpolation
+			if (UseTSpline) value *= genieXsecSplineNumuCC->Eval(h_numu_flugg->GetBinCenter(i)); // Eval implies linear interpolation
+			else value *= genieXsecNumuCC->Eval(h_numu_flugg->GetBinCenter(i)); // Eval implies linear interpolation 
 			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
 			numuCCHisto_flugg->SetBinContent(i, value);
 			numuCCHisto_flugg->SetBinError(i, numuCCHisto_flugg->GetBinError(i) * value);
@@ -410,8 +427,8 @@ void plot_event_rates(const char* horn) {
 
 			// Numubar
 			value = h_numubar_flugg->GetBinContent(i);
-			// value *= genieXsecNumubarCC->Eval(h_numubar_flugg->GetBinCenter(i)); // Eval implies linear interpolation
-			value *= genieXsecSplineNumubarCC->Eval(h_numubar_flugg->GetBinCenter(i)); // Eval implies linear interpolation
+			if (UseTSpline) value *= genieXsecSplineNumubarCC->Eval(h_numubar_flugg->GetBinCenter(i)); // Eval implies linear interpolation
+			else value *= genieXsecNumubarCC->Eval(h_numubar_flugg->GetBinCenter(i)); // Eval implies linear interpolation 
 			value *= (1e-38 * Ntarget/40.); // 1/40 is due to I'm considering nu_mu_Ar40.
 			anumuCCHisto_flugg->SetBinContent(i, value);
 			anumuCCHisto_flugg->SetBinError(i, anumuCCHisto_flugg->GetBinError(i) * value);
@@ -419,16 +436,28 @@ void plot_event_rates(const char* horn) {
 
 		}
 	} // end if ( genieXsecPath )
+
+	// Get Event Rate integrals
+	double tot_ER{0}, numu_ER{0}, numubar_ER{0}, nue_ER{0}, nuebar_ER{0};
+	GetTotalER(numuCCHisto, anumuCCHisto, nueCCHisto, anueCCHisto, tot_ER, numu_ER, numubar_ER, nue_ER, nuebar_ER);
+
+	char numu_ER_char[15], numubar_ER_char[15], nue_ER_char[15], nuebar_ER_char[15];
 	
-	TLegend* leg = new TLegend(0.75, 0.65, 0.95, 0.9);
+	snprintf(numu_ER_char,    15, "%2.1f" ,100 * numu_ER    / tot_ER);
+	snprintf(numubar_ER_char, 15, "%2.1f" ,100 * numubar_ER / tot_ER);
+	snprintf(nue_ER_char,     15, "%2.1f" ,100 * nue_ER     / tot_ER);
+	snprintf(nuebar_ER_char,  15, "%2.1f" ,100 * nuebar_ER  / tot_ER);
+	
+	TLegend* leg = new TLegend(0.74, 0.65, 0.89, 0.9);
+	
 	leg->SetNColumns(1);
 	leg->SetBorderSize(0);
 	leg->SetFillStyle(0);
 	leg->SetTextFont(62);
-	leg->AddEntry(numuCCHisto,  "#nu_{#mu}","l");
-	leg->AddEntry(anumuCCHisto, "#bar{#nu_{#mu}}","l");
-	leg->AddEntry(nueCCHisto,   "#nu_{e} ","l");
-	leg->AddEntry(anueCCHisto,  "#bar{#nu_{e}} ","l");
+	leg->AddEntry(numuCCHisto,  Form("#nu_{#mu} (%s%%)",       numu_ER_char   ), "l");
+	leg->AddEntry(anumuCCHisto, Form("#bar{#nu_{#mu}} (%s%%)", numubar_ER_char), "l");
+	leg->AddEntry(nueCCHisto,   Form("#nu_{e} (%s%%)",         nue_ER_char    ), "l");
+	leg->AddEntry(anueCCHisto,  Form("#bar{#nu_{e}} (%s%%)",   nuebar_ER_char ), "l");
 
 	TLegend* leg_flugg = new TLegend(0.75, 0.65, 0.95, 0.9);
 	leg_flugg->SetNColumns(1);
