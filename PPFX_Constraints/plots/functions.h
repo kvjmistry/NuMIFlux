@@ -115,29 +115,29 @@ void DrawSpecifiers(TH2D* hist, std::string histname){
         text = new TLatex(.17, .755, "NA49 Coverage");
     }
     else if (histname == "pionplus_MIPP"){
-        hist->SetTitle("#pi^{+}; p_{Z}; p_{T} [GeV/c]");
-         hist->GetXaxis()->SetRangeUser(0,130);
+        hist->SetTitle("#pi^{+}; p_{Z} [GeV/c]; p_{T} [GeV/c]");
+         hist->GetXaxis()->SetRangeUser(0,80);
         hist->GetYaxis()->SetRangeUser(0,5);
         leg = new TLegend(.44, .55, .48, .59);
         text = new TLatex(.5, .55, "MIPP Coverage");
     }
     else if (histname == "pionminus_MIPP"){
-        hist->SetTitle("#pi^{-}; p_{Z}; p_{T} [GeV/c]");
-        hist->GetXaxis()->SetRangeUser(0,130);
+        hist->SetTitle("#pi^{-}; p_{Z} [GeV/c]; p_{T} [GeV/c]");
+        hist->GetXaxis()->SetRangeUser(0,80);
         hist->GetYaxis()->SetRangeUser(0,5);
         leg = new TLegend(.44, .55, .48, .59);
         text = new TLatex(.5, .55, "MIPP Coverage");
     }
     else if (histname == "kaonplus_MIPP"){
-        hist->SetTitle("K^{+}; p_{Z}; p_{T} [GeV/c]");
-        //hist->GetXaxis()->SetRangeUser(-0.15,1);
+        hist->SetTitle("K^{+}; p_{Z} [GeV/c]; p_{T} [GeV/c]");
+        hist->GetXaxis()->SetRangeUser(0,90);
         //hist->GetYaxis()->SetRangeUser(0,3.5);
         leg = new TLegend(.44, .55, .48, .59);
         text = new TLatex(.5, .55, "MIPP Coverage");
     }
     else if (histname == "kaonminus_MIPP"){
-        hist->SetTitle("K^{-}; p_{Z}; p_{T} [GeV/c]");
-        //hist->GetXaxis()->SetRangeUser(-0.15,1);
+        hist->SetTitle("K^{-}; p_{Z} [GeV/c]; p_{T} [GeV/c]");
+        hist->GetXaxis()->SetRangeUser(0,90);
         //hist->GetYaxis()->SetRangeUser(0,3.5);
         leg = new TLegend(.44, .55, .48, .59);
         text = new TLatex(.5, .55, "MIPP Coverage");
@@ -258,8 +258,38 @@ std::vector<TLine*> GetLineVector(std::string histname){
 
         lineVector= { line1, line2, line3, line4, line5, line6, line7, line8 };
     }
-    else if (histname == "pionplus_MIPP" || histname == "pionminus_MIPP" ||
-             histname == "kaonplus_MIPP" || histname == "kaonminus_MIPP"){
+    else if (histname == "pionplus_MIPP" || histname == "pionminus_MIPP"){
+       
+        // Box 1
+        TLine *line0  = new TLine( 0, 0, 2.0, 0 );
+        TLine *line1  = new TLine( 0, 0, 0, 0.4 );
+        TLine *line2  = new TLine( 0, 0.4, 0.4, 0.4 );
+        TLine *line3  = new TLine( 0.4, 0.4, 0.4, 0.5 );
+        TLine *line4  = new TLine( 0.4, 0.5, 0.6, 0.5 );
+        TLine *line5  = new TLine( 0.4, 0.5, 2.0, 0.5 );
+        TLine *line6  = new TLine( 2.0, 0, 2.0, 0.5 );
+
+        // Box 2
+        TLine *line7  = new TLine( 4.0, 0, 4.0, 0.4 );
+        TLine *line8  = new TLine( 4.0, 0.4, 6.0, 0.4 );
+        TLine *line9  = new TLine( 6.0, 0.4, 6.0, 0.5 );
+        TLine *line10  = new TLine( 6.0, 0.5, 8.0, 0.5 );
+        TLine *line11  = new TLine( 8.0, 0.5, 8.0, 2.0 );
+        TLine *line12  = new TLine( 8.0, 2.0, 80.0, 2.0 );
+        TLine *line13  = new TLine( 80.0, 0.2, 80.0, 2.0 );
+        TLine *line14  = new TLine( 70.0, 0.2, 80.0, 0.2 );
+        TLine *line15  = new TLine( 70.0, 0.0, 70.0, 0.2 );
+        TLine *line16  = new TLine( 4.0, 0.0, 70.0, 0.0 );
+        
+
+        lineVector = {
+                        line0,  line1,  line2, line3,  line4,  line5,  line6,
+                        line7,  line8,  line9, line10, line11, line12, line13,
+                        line14, line15, line16
+                     };
+
+    }
+    else if ( histname == "kaonplus_MIPP" || histname == "kaonminus_MIPP"){
 
             TLine *line1  = new TLine( 20, 0, 20, 1 );
             TLine *line2  = new TLine( 20, 1, 24, 1 );
