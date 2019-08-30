@@ -25,7 +25,7 @@ void plot_constraints(){
     };
 
     for (int k=0; k < pars.size();k++){
-       
+
         TCanvas *c = new TCanvas();
         TH2D *hist;
 

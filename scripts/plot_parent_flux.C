@@ -134,10 +134,10 @@ void plot_parent_flux(const char* horn, TString mode) { // (fhc/rhc, numu/nue)
 	h_ppfx_flux->SetLineColor(kBlack);
 	h_ppfx_flux->GetXaxis()->SetRangeUser(0,3.5);
 
-	if (mode == "numu")		h_ppfx_flux->SetTitle("#nu_{#mu}; Energy [GeV]; #nu / 6 #times 10^{20} POT / 25 MeV / cm^{2}");
-	if (mode == "nue")		h_ppfx_flux->SetTitle("#nu_{e}; Energy [GeV]; #nu / 6 #times 10^{20} POT / 25 MeV / cm^{2}");
-	if (mode == "numubar")	h_ppfx_flux->SetTitle("#bar{#nu_{#mu}}; Energy [GeV]; #nu / 6 #times 10^{20} POT / 25 MeV / cm^{2}");
-	if (mode == "nuebar")	h_ppfx_flux->SetTitle("#bar{#nu_{e}}; Energy [GeV]; #nu / 6 #times 10^{20} POT / 25 MeV / cm^{2}");
+	if (mode == "numu")		h_ppfx_flux->SetTitle("#nu_{#mu}; Energy [GeV]; #nu / 6 #times 10^{20} POT / GeV / cm^{2}");
+	if (mode == "nue")		h_ppfx_flux->SetTitle("#nu_{e}; Energy [GeV]; #nu / 6 #times 10^{20} POT / GeV / cm^{2}");
+	if (mode == "numubar")	h_ppfx_flux->SetTitle("#bar{#nu_{#mu}}; Energy [GeV]; #nu / 6 #times 10^{20} POT / GeV / cm^{2}");
+	if (mode == "nuebar")	h_ppfx_flux->SetTitle("#bar{#nu_{e}}; Energy [GeV]; #nu / 6 #times 10^{20} POT / GeV / cm^{2}");
 	
 	if (mode == "nue" || mode == "numu") gStyle->SetTitleH(0.1);
 	else gStyle->SetTitleH(0.07);

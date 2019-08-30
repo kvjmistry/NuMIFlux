@@ -321,7 +321,7 @@ void plot_beamline_flux(const char* mode){
 	h_1D.at(0)->Scale((6.0e20)/ (POT*1.0e4)); // scale to right POT and m2
 	h_1D.at(0)->Rebin(10);
 	h_1D.at(0)->GetXaxis()->SetRangeUser(0, 6);
-	h_1D.at(0)->SetTitle(Form("%s;Energy [GeV];#nu / 6 #times 10^{20} POT / 50 MeV / cm^{2}", mode_title));
+	h_1D.at(0)->SetTitle(Form("%s;Energy [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}", mode_title));
 	DrawSpecifiers(h_1D.at(0), lFlux_1D, "CV","his,same");
 	Draw_Nu_Mode(c_beamline_1D, horn); // Draw FHC Mode/RHC Mode Text
 	h_1D_clone = (TH1D*) h_1D.at(0)->Clone("h_1D_clone");

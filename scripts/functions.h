@@ -726,7 +726,7 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
 	if (mode == "numu"){
 		h_flux->SetLineColor(kRed+1);
 		h_flux->SetLineWidth(2);
-		h_flux->SetTitle(";Neutrino Energy [GeV];#nu / 6 #times 10^{20} POT / 10 MeV / cm^{2}");
+		h_flux->SetTitle(";Neutrino Energy [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
 		leg->AddEntry(h_flux, Form("#nu_{#mu} (%s%%)", flux_pcent),"l");
 		h_flux->Draw("hist,same");
 	}
@@ -735,7 +735,7 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
 		h_flux->SetLineColor(kRed+1);
 		h_flux->SetLineWidth(2);
 		h_flux->SetLineStyle(2);
-		h_flux->SetTitle(";Neutrino Energy [GeV];#nu / 6 #times 10^{20} POT / 10 MeV / cm^{2}");
+		h_flux->SetTitle(";Neutrino Energy [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
 		leg->AddEntry(h_flux, Form("#nu_{e} (%s%%)", flux_pcent),"l");
 		h_flux->Draw("hist,same");
 
@@ -744,7 +744,7 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
 	else if (mode == "numubar"){
 		h_flux->SetLineColor(kBlue+1);
 		h_flux->SetLineWidth(2);
-		h_flux->SetTitle(";Neutrino Energy [GeV];#nu / 6 #times 10^{20} POT / 10 MeV / cm^{2}");
+		h_flux->SetTitle(";Neutrino Energy [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
 		leg->AddEntry(h_flux, Form("#bar{#nu_{#mu}} (%s%%)", flux_pcent),"l");
 		h_flux->Draw("hist,same");
 	}
@@ -753,7 +753,7 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
 		h_flux->SetLineColor(kBlue+1);
 		h_flux->SetLineWidth(2);
 		h_flux->SetLineStyle(2);
-		h_flux->SetTitle(";Neutrino Energy [GeV];#nu / 6 #times 10^{20} POT / 10 MeV / cm^{2}");
+		h_flux->SetTitle(";Neutrino Energy [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
 		leg->AddEntry(h_flux, Form("#bar{#nu_{e}} (%s%%)", flux_pcent),"l");
 		h_flux->Draw("hist,same");
 	

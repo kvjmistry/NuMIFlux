@@ -101,7 +101,7 @@ void plot_gsimple_flux(const char* horn, const char* mode) {
 	// Plottings
 	h_dk2nu_flux->SetLineColor(kRed+1);
 	h_dk2nu_flux->SetLineWidth(2);
-	h_dk2nu_flux->SetTitle(";E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / 25 MeV / cm^{2}");
+	h_dk2nu_flux->SetTitle(";E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
 	// h_dk2nu_flux->SetTitle(";E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
 	IncreaseLabelSize(h_dk2nu_flux);
 	h_dk2nu_flux->GetXaxis()->SetRangeUser(0,5);
