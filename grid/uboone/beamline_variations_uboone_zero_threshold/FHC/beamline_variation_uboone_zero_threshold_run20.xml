@@ -6,7 +6,7 @@
 
 <!-- Production Project -->
 <!DOCTYPE project [
-<!ENTITY relreco "v07_08_00">
+<!ENTITY relreco "v08_00_00_19">
 <!ENTITY file_type "mc">
 <!ENTITY run_type "physics">
 
@@ -16,13 +16,13 @@
 
 <!-- change your USER_NAME -->
 <!ENTITY user_name "kmistry">
-<!ENTITY n_jobs "500">
+<!ENTITY n_jobs "499"> <!--499 -->
 <!ENTITY unisim_run "run20">
 <!ENTITY type "fhc">
 
 
 <!-- change your PROJECT_FOLDER_NAME -->
-<!ENTITY proj_name "PPFX_uBooNE_BugFix_Slim_withTilt">
+<!ENTITY proj_name "PPFX_uBooNE">
 ]>
 
 <job>
@@ -46,21 +46,21 @@
   <larsoft>
     <tag>&relreco;</tag>
     <qual>e17:prof</qual>
-    <local>/pnfs/uboone/resilient/users/kmistry/tars/PPFX_uboone_bugfix_slim_withtilt.tar</local>
+    <local>/pnfs/uboone/resilient/users/kmistry/tars/uboonecode_mcc9_v08_00_00_19.tar</local>
   </larsoft>
   
-  <check>0</check>
-  <copy>0</copy>
+  <!-- <check>0</check> -->
+  <!-- <copy>0</copy> -->
 
   <!-- Project stages -->
 
   <stage name="val">
     <fcl>/pnfs/uboone/persistent/users/kmistry/PPFX/fluxreader_uboone.fcl</fcl>
     <fcl>/pnfs/uboone/persistent/users/kmistry/PPFX/ppfx_uboone_slim.fcl</fcl>
-    <outdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&proj_name;_&unisim_run;</outdir>
-    <logdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&proj_name;_&unisim_run;</logdir>
-    <bookdir>/uboone/data/users/&user_name;/PPFX/book/&relreco;/&name;/&proj_name;_&unisim_run;</bookdir>
-    <workdir>/pnfs/uboone/resilient/users/&user_name;/PPFX/&relreco;/&name;/&proj_name;_&unisim_run;</workdir>
+    <outdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</outdir>
+    <logdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</logdir>
+    <bookdir>/uboone/data/users/&user_name;/book/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</bookdir>
+    <workdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</workdir>
     <inputlist>/pnfs/uboone/persistent/users/kmistry/PPFX/beamline/file_list_fhc_uboone_zero_threshold_&unisim_run;.txt</inputlist>
     <maxfilesperjob>1</maxfilesperjob>
     <numjobs>&n_jobs;</numjobs>
