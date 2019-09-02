@@ -28,25 +28,22 @@ ls
 
 echo
 echo "======== SETUP THE ENV ========"
-source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setup
 source /cvmfs/uboone.opensciencegrid.org/products/setup_uboone.sh
-source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setups.sh
-echo "setup uboonecode v07_08_00 -q e17:prof"
-setup uboonecode v08_00_00_14 -q e17:prof
+source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setup
+source /cvmfs/fermilab.opensciencegrid.org/products/larsoft/setup 
+export PRODUCTS=${PRODUCTS}:/cvmfs/fermilab.opensciencegrid.org/products/common/db/
+echo "setup uboonecode v08_08_00_19 -q e17:prof"
+setup uboonecode v08_00_00_19 -q e17:prof
+echo "setup ifdhc"
 setup ifdhc #v2_2_3
 export IFDH_GRIDFTP_EXTRA="-st 10" #set ifdh cp stall timeout to 10 sec
 export IFDH_CP_MAXRETRIES=5
 
-# Try exporting all the env variables in interactive library path as not all of them seem to get set...
-ifdh cp -D /pnfs/uboone/resilient/users/kmistry/files/Environmental_variables.txt .
-for e in $(cat Environmental_variables.txt)
-do
-	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$e
-done
-
-# copy a tarball and untar it if you need it
-#ifdh cp /pnfs/uboone/resilient/users/kmistry/tars/PPFX_uboone_bugfix_slim_withtilt.tar intar.tar
-#tar -vxf intar.tar
+# For some reason these ups products dont get auto setup
+echo "setup sqlite v3_20_01_00"
+echo "gcc v7_3_0"
+setup sqlite v3_20_01_00
+setup gcc v7_3_0
 
 echo
 echo "======== COPY THE EXECUTABLES ========"
