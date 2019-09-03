@@ -104,6 +104,22 @@ int main(int argc, char** argv) {
 	Enu_Th_CV_AV_TPC.resize(4);
 	Enu_Th_UW_AV_TPC.resize(4);
 
+	// Other
+	parent_mom.resize(4);
+	parent_angle.resize(4);
+	parent_zpos.resize(4); 
+	PiDAR_zpos.resize(4);
+	KDAR_zpos.resize(4); 
+	MuDAR_zpos.resize(4);
+	parent_zpos_angle.resize(4);
+	parent_zpos_angle_energy.resize(4);
+	flux_targ.resize(4);
+	flux_pipe.resize(4);
+	flux_dump.resize(4);
+	flux_targ_theta.resize(4);
+	flux_pipe_theta.resize(4);
+	flux_dump_theta.resize(4);
+
 	// Weighted
 	Enu_Syst_AV_TPC.resize(4);    // 1D
 	Enu_Th_Syst_AV_TPC.resize(4); // 2D
@@ -138,6 +154,22 @@ int main(int argc, char** argv) {
 		Enu_UW_AV_TPC[i] = new TH1D(Form("%s_UW_AV_TPC",flav[i].c_str()),"",n, bin);
 		Th_CV_AV_TPC [i] = new TH1D(Form("Th_%s_CV_TPC", flav[i].c_str()), "", 18, 0, 180);
 		Th_UW_AV_TPC [i] = new TH1D(Form("Th_%s_UW_TPC", flav[i].c_str()), "", 18, 0, 180);
+
+		// Other Histograms
+		parent_mom[i]   = new TH1D(Form("%s_parent_mom",   flav[i].c_str()), "", 100, 0, 25);    // momentum distribution of nu parent
+		parent_angle[i] = new TH1D(Form("%s_parent_angle", flav[i].c_str()), "", 180, 0, 180);   // angle distribution of nu parent
+		parent_zpos[i]  = new TH1D(Form("%s_parent_zpos",  flav[i].c_str()), "", 400, 0, 80000); // zpos distribution of nu parent
+		PiDAR_zpos[i]   = new TH1D(Form("%s_PiDAR_zpos",   flav[i].c_str()),"",  400, 0, 80000); // Pidar peak zpos
+		KDAR_zpos[i]    = new TH1D(Form("%s_KDAR_zpos",    flav[i].c_str()), "", 400, 0, 80000); // Kdar peak zpos 
+		MuDAR_zpos[i]   = new TH1D(Form("%s_MuDAR_zpos",   flav[i].c_str()),"",  400, 0, 80000); // Mudar peak zpos
+		parent_zpos_angle[i]        = new TH2D(Form("%s_parent_zpos_angle", flav[i].c_str()), "", 200, 0, 80000, 180 , 0, 180);
+		parent_zpos_angle_energy[i] = new TH2D(Form("%s_parent_zpos_angle_energy", flav[i].c_str()), "", 200, 0, 80000, 180 , 0, 180);
+		flux_targ[i] = new TH1D( Form("%s_flux_targ", flav[i].c_str()),"", 4000, 0, 20 );
+		flux_pipe[i] = new TH1D( Form("%s_flux_pipe", flav[i].c_str()),"", 4000, 0, 20 );
+		flux_dump[i] = new TH1D( Form("%s_flux_dump", flav[i].c_str()),"", 4000, 0, 20 );
+		flux_targ_theta[i] = new TH1D( Form("%s_flux_targ_theta", flav[i].c_str()),"", 4000, 0, 20 );
+		flux_pipe_theta[i] = new TH1D( Form("%s_flux_pipe_theta", flav[i].c_str()),"", 4000, 0, 20 );
+		flux_dump_theta[i] = new TH1D( Form("%s_flux_dump_theta", flav[i].c_str()),"", 4000, 0, 20 );
 
 		// 2D
 		Enu_Th_CV_AV_TPC[i] = new TH2D(Form("%s_CV_AV_TPC_2D",flav[i].c_str()),"",n, bin, n_th, bin_th);
@@ -179,7 +211,7 @@ int main(int argc, char** argv) {
 
 			// Universes
 			for(int k=0; k<100; k++){
-				Enu_Syst_AV_TPC[i][j][k] =  new TH1D(Form("%s_%s_Uni_%d_AV_TPC",flav[i].c_str(), labels[j].c_str(), k),"",n, bin);
+				Enu_Syst_AV_TPC[i][j][k]    =  new TH1D(Form("%s_%s_Uni_%d_AV_TPC",flav[i].c_str(), labels[j].c_str(), k),"",n, bin);
 				Enu_Th_Syst_AV_TPC[i][j][k] =  new TH2D(Form("%s_%s_Uni_%d_AV_TPC_2D",flav[i].c_str(), labels[j].c_str(), k),"",n, bin, n_th, bin_th);
 			}
 		}
@@ -456,20 +488,30 @@ int main(int argc, char** argv) {
 
 			}
 			
-			if (Enu > 0.025 && Enu < 0.03 && mcflux.fptype == 211 ){ // Pidar peak
-				NuMu_PiDAR_zpos->Fill(mcflux.fvz, cv_weight);
+			if (Pmom_dk == 0 && (mcflux.fptype == 211 || mcflux.fptype == -211) ){ // Pidar peak
+				PiDAR_zpos[pdg]->Fill(mcflux.fvz, cv_weight);
 			}
-			if (Enu > 0.235 && Enu < 0.24 && (mcflux.fptype == 321 || mcflux.fptype == -321)){ // kdar peak
-				NuMu_KDAR_zpos->Fill(mcflux.fvz, cv_weight);
+			if (Pmom_dk == 0 && (mcflux.fptype == 321 || mcflux.fptype == -321)){  // Kdar peak
+				KDAR_zpos[pdg]->Fill(mcflux.fvz, cv_weight);
+			}
+			if (Pmom_dk == 0 && (mcflux.fptype == 13 || mcflux.fptype == -13)){    // Mudar peak
+				MuDAR_zpos[pdg]->Fill(mcflux.fvz, cv_weight);
 			}
 
-			// Look in the energy peak for muons
-			if (Enu > 0.074 && Enu < 0.082 && mcflux.fptype == 13 ){
-				NuMu_peak_mom_muon   ->Fill(Pmom_dk,cv_weight );
-				NuMu_peak_theta_muon ->Fill(theta, cv_weight );
-				NuMu_peak_zpos_muon  ->Fill(mcflux.fvz,cv_weight );
-				// std::cout << "E:\t" << Enu << "Parent:\t" << mcflux.fptype <<"  theta:\t" <<theta<<"   ntype:\t"<< mcflux.fndecay<<   std::endl;
-			}
+			// Other plots
+			parent_mom[pdg]  ->Fill(Pmom_tg,    cv_weight);
+			parent_angle[pdg]->Fill(theta,      cv_weight);
+			parent_zpos[pdg] ->Fill(mcflux.fvz, cv_weight);
+			parent_zpos_angle[pdg]        ->Fill(mcflux.fvz, theta, cv_weight);
+			parent_zpos_angle_energy[pdg]->Fill(mcflux.fvz, theta, Enu);
+		
+			if ( mcflux.fvz < 10000) flux_targ[pdg] ->Fill(Enu, cv_weight);
+			if ( mcflux.fvz > 10000 &&  mcflux.fvz < 72000) flux_pipe[pdg] ->Fill(Enu, cv_weight);
+			if ( mcflux.fvz > 72000) flux_dump[pdg] ->Fill(Enu, cv_weight);
+
+			if ( theta < 20) flux_targ_theta[pdg] ->Fill(Enu, cv_weight);
+			if ( theta > 20 &&  theta < 110) flux_pipe_theta[pdg] ->Fill(Enu, cv_weight);
+			if ( theta > 110) flux_dump_theta[pdg] ->Fill(Enu, cv_weight);
 
 			// 2D Stuff
 			Enu_Th_CV_AV_TPC[pdg]->Fill(Enu, theta, cv_weight);
@@ -544,11 +586,20 @@ int main(int argc, char** argv) {
 		subdir.at(f).at(parent.size()+1) = subdir[f][0]->mkdir("OtherPlots");
 		subdir.at(f).at(parent.size()+1)->cd();
 		
-		NuMu_PiDAR_zpos->Write();
-		NuMu_KDAR_zpos->Write();
-		NuMu_peak_mom_muon->Write();
-		NuMu_peak_theta_muon->Write();
-		NuMu_peak_zpos_muon->Write();
+		PiDAR_zpos[f]->Write();
+		KDAR_zpos[f]->Write();
+		MuDAR_zpos[f]->Write();
+		parent_mom[f]->Write();
+		parent_angle[f]->Write();
+		parent_zpos[f]->Write();
+		parent_zpos_angle[f]->Write();
+		parent_zpos_angle_energy[f]->Write();
+		flux_targ[f]->Write();
+		flux_pipe[f]->Write();
+		flux_dump[f]->Write();
+		flux_targ_theta[f]->Write();
+		flux_pipe_theta[f]->Write();
+		flux_dump_theta[f]->Write();
 
 		// Bolted this stuff in as an afterthought, could improve but it works ;)
 		std::cout << "Window" << std::endl;

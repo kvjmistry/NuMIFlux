@@ -88,11 +88,22 @@ std::vector<std::vector<TH1D*> > Targ_mom_Parent; 	    // Momentum by parent as 
 std::vector<std::vector<TH1D*> > DAR_Enu_Parent; 	    // Energy spectrum of decay at rest particles
 
 // Other hists
-TH1D* NuMu_PiDAR_zpos      = new TH1D("NuMu_PiDAR_zpos","", 400 , 0, 80000); // numu Pidar peak zpos
-TH1D* NuMu_KDAR_zpos       = new TH1D("NuMu_KDAR_zpos","", 400 , 0, 80000);  // numu kdar peak zpos
-TH1D* NuMu_peak_mom_muon   = new TH1D("NuMu_peak_mom_muon","", 100 , 0, 25);  // muon parent momentum at large enu peak
-TH1D* NuMu_peak_theta_muon = new TH1D("NuMu_peak_theta_muon","", 40 , 0, 180);  // muon parent thetaat large peak
-TH1D* NuMu_peak_zpos_muon  = new TH1D("NuMu_peak_zpos_muon","", 400 , 0, 80000);  // muon parent thetaat large peak
+std::vector<TH1D*> PiDAR_zpos;
+std::vector<TH1D*> KDAR_zpos;
+std::vector<TH1D*> MuDAR_zpos;
+std::vector<TH1D*> parent_mom;   // momentum distribution of nu parent
+std::vector<TH1D*> parent_angle; // angle distribution of nu parent
+std::vector<TH1D*> parent_zpos;  // zpos distribution of nu parent
+std::vector<TH2D*> parent_zpos_angle;  // zpos vs  distribution of nu parent
+std::vector<TH2D*> parent_zpos_angle_energy;  // zpos vs angle vs energy of nu parent
+
+std::vector<TH1D*> flux_targ; // flux from target
+std::vector<TH1D*> flux_pipe; // flux from decay pipe
+std::vector<TH1D*> flux_dump; // flux from beam dump
+
+std::vector<TH1D*> flux_targ_theta; // flux from target with theta cut
+std::vector<TH1D*> flux_pipe_theta; // flux from decay pipe with theta cut
+std::vector<TH1D*> flux_dump_theta; // flux from beam dump with theta cut
 
 // 2D histograms
 std::vector<TH2D*> Enu_Th_CV_AV_TPC;
