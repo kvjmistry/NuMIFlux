@@ -2,7 +2,7 @@
 
 <!-- Production Project -->
 <!DOCTYPE project [
-<!ENTITY release "v08_00_00_14">
+<!ENTITY release "v08_00_00_19">
 <!ENTITY file_type "mc">
 <!ENTITY run_type "physics">
 <!ENTITY user "kmistry">
@@ -15,7 +15,7 @@
 <project name="&name;">
 
   <!-- Project size -->
-  <numevents>10000</numevents>
+  <numevents>500</numevents>
 
   <!-- Operating System -->
   <os>SL6</os>
@@ -27,7 +27,7 @@
   <larsoft>
     <tag>&release;</tag>
     <qual>e17:prof</qual>
-    <local>/pnfs/uboone/resilient/users/kmistry/tars/uboonecode_mcc9_v08_00_00_14.tar</local>
+    <local>/pnfs/uboone/resilient/users/kmistry/tars/uboonecode_mcc9_v08_00_00_19.tar</local>
   </larsoft>
 
   <!-- <check>1</check> -->
@@ -35,21 +35,22 @@
   
   <!-- Project stages -->
 
-  <stage name="gen_reco1">
+  <stage name="gen_reco2">
     <fcl>prodgenie_numi_nu_cosmic_uboone_dk2nu_fhc.fcl</fcl>
     <fcl>wirecell_g4_uboone.fcl</fcl>
     <fcl>wirecell_detsim_numi_uboone.fcl</fcl>
     <fcl>reco_uboone_mcc9_8_driver_stage1.fcl</fcl>
+    <fcl>reco_uboone_mcc9_8_driver_stage2_numi_fullMC.fcl</fcl>
     <datafiletypes>root,pndr</datafiletypes>
-    <outdir>/pnfs/uboone/scratch/users/&user;/MCC9/&name;/gen_reco1</outdir>
-    <logdir>/pnfs/uboone/scratch/users/&user;/MCC9/&name;/gen_reco1</logdir>
-    <workdir>/pnfs/uboone/scratch/users/&user;/MCC9/&name;/work/gen_reco1</workdir>
-    <bookdir>/uboone/data/users/&user;/book/MCC9/&name;/gen_reco1</bookdir>
+    <outdir>/pnfs/uboone/scratch/users/&user;/MCC9/&name;/gen_reco2</outdir>
+    <logdir>/pnfs/uboone/scratch/users/&user;/MCC9/&name;/gen_reco2</logdir>
+    <workdir>/pnfs/uboone/scratch/users/&user;/MCC9/&name;/work/gen_reco2</workdir>
+    <bookdir>/uboone/data/users/&user;/book/MCC9/&name;/gen_reco2</bookdir>
     <maxfilesperjob>1</maxfilesperjob>
-    <numjobs>200</numjobs>
+    <numjobs>10</numjobs>
     <datatier>reconstructed</datatier>
-    <memory>5000</memory>
-    <jobsub>--expected-lifetime=36h -e IFDH_CP_UNLINK_ON_ERROR=1 </jobsub>
+    <memory>6000</memory>
+    <jobsub>--expected-lifetime=50h -e IFDH_CP_UNLINK_ON_ERROR=1 </jobsub>
     <jobsub_start>  --expected-lifetime=short</jobsub_start>
   </stage>
 
