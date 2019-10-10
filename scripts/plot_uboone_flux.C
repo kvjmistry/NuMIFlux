@@ -17,7 +17,7 @@
 
 // ----------------------------------------------------------------------------
 // Main
-void plot_uboone_flux(const char* horn,  const char* mode) { // (input, numu/nue)
+void plot_uboone_flux(const char* horn,  const char* mode, const char* detector) { // (input, numu/nue)
 	gStyle->SetOptStat(0); // say no to stats box
 
 	// Declare variables
@@ -28,14 +28,31 @@ void plot_uboone_flux(const char* horn,  const char* mode) { // (input, numu/nue
 	bool boolfile;
 	const char* mode_title;
 
-	// Load in the file, either fhc or rhc
-	if (!strcmp(horn,"fhc")) {
-		boolfile  = GetFile(f1 ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root");
+	// Choose which file to get based on the detector
+	if (!strcmp(detector,"uboone")) {
+		// Load in the file, either fhc or rhc
+		if (!strcmp(horn,"fhc")) {
+			boolfile  = GetFile(f1 ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root");
+			if (boolfile == false) gSystem->Exit(0);
+		}
+		else {
+			boolfile  = GetFile(f1 ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/RHC/output_uboone_run0.root");
+			if (boolfile == false) gSystem->Exit(0);
+		}
+	}
+	else if (!strcmp(detector,"nova")){
+		boolfile  = GetFile(f1 ,"/uboone/data/users/kmistry/work/PPFX/nova/output.root");
 		if (boolfile == false) gSystem->Exit(0);
+
+	}
+	else if (!strcmp(detector,"minerva")){
+		boolfile  = GetFile(f1 ,"/uboone/data/users/kmistry/work/PPFX/minerva/output.root");
+		if (boolfile == false) gSystem->Exit(0);
+
 	}
 	else {
-		boolfile  = GetFile(f1 ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/RHC/output_uboone_run0.root");
-		if (boolfile == false) gSystem->Exit(0);
+		std::cout << "unknown detector type specified: " << detector << std::endl;
+		gSystem->Exit(0);
 	}
 
 	// Create title characters from input
@@ -58,6 +75,12 @@ void plot_uboone_flux(const char* horn,  const char* mode) { // (input, numu/nue
 		"PPFXThinPion",
 		"PPFXTotAbsorp",
 		"PPFXMaster"};
+
+	// Overwrite the updated names. This has only been done for nova and minerva so far
+	if (!strcmp(detector,"nova") || !strcmp(detector,"minerva") ){
+		inputmode[7] = "thinna_PPFXThinNucA";
+		inputmode[8] = "thinn_PPFXThinNuc";
+	}
 
 	// ------------------------------------------------------------------------------------------------------------
 	//                                                   CV Flux

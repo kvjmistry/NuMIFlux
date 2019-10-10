@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
 
 	// labels = {"ms_PPFX","Total"};
 	//labels = {"PPFXMaster"};
-	labels = {"PPFXMIPPKaon","PPFXMIPPPion","PPFXOther","PPFXTargAtten","PPFXThinKaon","PPFXThinMeson","PPFXThinNeutron","PPFXThinNucA","PPFXThinNuc","PPFXThinPion","PPFXTotAbsorp","PPFXMaster"};
+	labels = {"PPFXMIPPKaon","PPFXMIPPPion","PPFXOther","PPFXTargAtten","PPFXThinKaon","PPFXThinMeson","PPFXThinNeutron","thinna_PPFXThinNucA","thinn_PPFXThinNuc","PPFXThinPion","PPFXTotAbsorp","PPFXMaster"};
 
 	// Loop over input arguments
 	for (int i = 1; i < argc; i++) {
@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
 		std::string input = string(argv[i]);
 
 		// Initialise the detector type 
-		if (input == "uboone" || input == "nova" ){
+		if (input == "uboone" || input == "nova" || input == "minerva" ){
 			std::string detector_type = string(argv[i]);
 			Initialise(detector_type, Detector_);
 			input_flag = true;

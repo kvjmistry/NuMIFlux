@@ -292,7 +292,60 @@ void Initialise(std::string detector_type, Detector &Detector_){
 		bins[4] = {0.0, 180.0};
 
 	}
-	else{
+	else if (detector_type == "minerva"){
+		
+		// Estimate AV with a rectangular prism (for window/intersection method ONLY)
+		xRange.first  = -1.0*43.0*TMath::Sqrt(3);
+		xRange.second = 43.0*TMath::Sqrt(3);
+		yRange.first  = -86.0;
+		yRange.second = 86.0;
+		zRange.first  = 751.3;
+		zRange.second = 878.0;
+
+		// Rotation angle
+		double t = -0.0582977560; // in radians
+
+		// Rotation matrix in beam->det
+		Rot_row_x = {1, 0,                  0 };
+		Rot_row_y = {0, TMath::Cos(t),      TMath::Sin(t) };
+		Rot_row_z = {0, -1.0*TMath::Sin(t), TMath::Cos(t) };
+
+		Win_Base  = {  175, -200, 41.4 };
+		Win_pt1   = {  175,  256, 41.4 };
+		Win_pt2   = { -175, -200, 41.4 };
+
+		Trans_Targ2Det_det = {24.86, 6035.0, -102274.0}; //cm -- detector coords
+		Trans_Targ2Det_beam = {-24.860000,-65.779431,102451.879358};  //  det_origin_beamcoor = -1.0 * R * beam_origin_detcoor;
+
+		// numu
+		bins[0] = { 0.0,  0.5,  1.0,  1.5,  2.0,  2.5,  3.0,  3.5,  4.0,  4.5,
+					5.0,  5.5,  6.0,  6.5,  7.0,  7.5,  8.0,  8.5,  9.0,  9.5,
+					10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0, 14.5,
+					15.0, 15.5, 16.0, 16.5, 17.0, 17.5, 18.0, 18.5, 19.0, 19.5, 20.0 };
+		
+		// nue
+		bins[1] = { 0.0,  0.5,  1.0,  1.5,  2.0,  2.5,  3.0,  3.5,  4.0,  4.5,
+					5.0,  5.5,  6.0,  6.5,  7.0,  7.5,  8.0,  8.5,  9.0,  9.5,
+					10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0, 14.5,
+					15.0, 15.5, 16.0, 16.5, 17.0, 17.5, 18.0, 18.5, 19.0, 19.5, 20.0 };
+		
+		// numubar
+		bins[2] = { 0.0,  0.5,  1.0,  1.5,  2.0,  2.5,  3.0,  3.5,  4.0,  4.5,
+					5.0,  5.5,  6.0,  6.5,  7.0,  7.5,  8.0,  8.5,  9.0,  9.5,
+					10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0, 14.5,
+					15.0, 15.5, 16.0, 16.5, 17.0, 17.5, 18.0, 18.5, 19.0, 19.5, 20.0 };
+		
+		// nuebar
+		bins[3] = { 0.0,  0.5,  1.0,  1.5,  2.0,  2.5,  3.0,  3.5,  4.0,  4.5,
+					5.0,  5.5,  6.0,  6.5,  7.0,  7.5,  8.0,  8.5,  9.0,  9.5,
+					10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0, 14.5,
+					15.0, 15.5, 16.0, 16.5, 17.0, 17.5, 18.0, 18.5, 19.0, 19.5, 20.0 };
+		
+		// Theta
+		bins[4] = {0.0, 180.0};
+
+	}
+	else {
 		std::cout << "Unknown detector type given, EXITING....." << std::endl;
 		exit(1);
 	}
@@ -586,12 +639,76 @@ int calcEnuWgt(auto const& mcflux, const TVector3& xyz, double& enu, double& wgt
 // Picks a random point in the detector
 TVector3 RandomInDet(Detector Detector_) {
 
-	// Randomly choose point in microboone
-	double x = gRandom->Uniform(Detector_.xRange.first, Detector_.xRange.second); //cm
-	double y = gRandom->Uniform(Detector_.yRange.first, Detector_.yRange.second); //cm
-	double z = gRandom->Uniform(Detector_.zRange.first, Detector_.zRange.second); //cm
+	if (Detector_.detector_name != "minerva"){
+		// Randomly choose point in microboone
+		double x = gRandom->Uniform(Detector_.xRange.first, Detector_.xRange.second); //cm
+		double y = gRandom->Uniform(Detector_.yRange.first, Detector_.yRange.second); //cm
+		double z = gRandom->Uniform(Detector_.zRange.first, Detector_.zRange.second); //cm
 
-	return TVector3(x, y, z);
+		return TVector3(x, y, z);
+
+	}
+	// For miverva where the geometry is more complicated	
+	else {
+		
+		// Active track regiion from leo's thesis - downstream half of MINERvA AV
+		double z = gRandom->Uniform(Detector_.zRange.first, Detector_.zRange.second);
+		double x{0}, y{0};
+
+		double n = 43.0; // Half length of hexagon side - 86 cm apothem
+		
+		// Set a boolean in_hex = inside bounds of hexagon
+		bool in_hex = false;
+
+		// Randomly throw z, & xy in a rectangle, rethrow if not in hexagon
+		double yline;
+		while (in_hex == false) {
+
+			x = gRandom->Uniform(-1.0*n*TMath::Sqrt(3), n*TMath::Sqrt(3));
+			y = gRandom->Uniform(-1.0*2.0*n,            2.0*n           );
+
+			// does not apply to |y| < n
+			if ((y<n) && (y>-n)) {
+				in_hex = true;
+			}
+
+			// first quadrant case
+			if ((x > 0) && (y > n)) {
+				yline = -(1.0/TMath::Sqrt(3))*x+2*n;
+				if (y<yline) {
+					in_hex = true;
+				}
+			}
+			
+			// second quadrant case
+			if ((x < 0) && (y > n)) {
+				yline = (1.0/TMath::Sqrt(3))*x+2*n;
+				if (y<yline) {
+					in_hex = true;
+				}
+			}
+
+			// third quadrant case
+			if ((x < 0) && (y < -n)) {
+				yline = (-1.0/TMath::Sqrt(3))*x-2*n;
+				if (y>yline) {
+					in_hex = true;
+				}
+			}
+
+			// fourth quadrant case
+			if ((x > 0) && (y < -n)) {
+				yline = (1.0/TMath::Sqrt(3))*x-2*n;
+				if (y>yline) {
+					in_hex = true;
+				}
+			}
+		}
+		
+		return TVector3(x, y, z);
+	
+	} // End else
+	
 }
 //___________________________________________________________________________
 TVector3 FromDetToBeam( const TVector3 det, bool rotate_only, Detector Detector_ ) {
