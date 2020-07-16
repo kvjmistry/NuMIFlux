@@ -66,7 +66,7 @@ def main():
 
   print "\nOutput logfile(s):",logfile
 
-  submit_command = ("jobsub_submit {GRID} {MEMORY_} -N {NJOBS} -dMAKEHIST {OUTDIR} "
+  submit_command = ("jobsub_submit {GRID} {MEMORY_} -N {NJOBS} -d MAKEHIST {OUTDIR} "
       "-G uboone "
       "-e FILES_PER_JOB={FILES_PER_JOB} " 
       "-e RUN={RUN} "

@@ -1,12 +1,10 @@
 <?xml version="1.0"?>
 
-<!--This uboone version includes the bugfix to unphysical muon decays -->
-<!-- The windown tilt is added back in and just running the masterweight to save computing time-->
 <!-- This is the CV variation  -->
 
 <!-- Production Project -->
 <!DOCTYPE project [
-<!ENTITY relreco "v07_08_00">
+<!ENTITY relreco "v08_00_00_27">
 <!ENTITY file_type "mc">
 <!ENTITY run_type "physics">
 
@@ -22,14 +20,14 @@
 
 
 <!-- change your PROJECT_FOLDER_NAME -->
-<!ENTITY proj_name "PPFX_uBooNE_BugFix_Slim_withTilt">
+<!ENTITY proj_name "PPFX_uboone_RHC_CV">
 ]>
 
 <job>
 <project name="&unisim_run;_uboone_&type;">
 
   <!-- Project size -->
-  <numevents>100000000</numevents>
+  <numevents>-1</numevents>
   
  <!-- Operating System -->
   <os>SL6</os>
@@ -46,7 +44,7 @@
   <larsoft>
     <tag>&relreco;</tag>
     <qual>e17:prof</qual>
-    <local>/pnfs/uboone/resilient/users/kmistry/tars/PPFX_uboone_bugfix_slim_withtilt.tar</local>
+    <local>/pnfs/uboone/resilient/users/kmistry/tars/ppfx_uboone_rhc_v27.tar</local>
   </larsoft>
   
   <check>0</check>
@@ -59,7 +57,7 @@
     <fcl>/pnfs/uboone/persistent/users/kmistry/PPFX/ppfx_uboone_slim.fcl</fcl>
     <outdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&proj_name;_&unisim_run;</outdir>
     <logdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&proj_name;_&unisim_run;</logdir>
-    <bookdir>/uboone/data/users/&user_name;/PPFX/book/&relreco;/&name;/&proj_name;_&unisim_run;</bookdir>
+    <bookdir>/uboone/data/users/&user_name;/book/PPFX/&relreco;/&name;/&proj_name;_&unisim_run;</bookdir>
     <workdir>/pnfs/uboone/resilient/users/&user_name;/PPFX/&relreco;/&name;/&proj_name;_&unisim_run;</workdir>
     <inputlist>/pnfs/uboone/persistent/users/kmistry/PPFX/beamline/file_list_rhc_uboone_zero_threshold_&unisim_run;.txt</inputlist>
     <maxfilesperjob>1</maxfilesperjob>
@@ -67,7 +65,7 @@
     <!--<memory>4000</memory>-->
     <jobsub>--expected-lifetime=10h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
     <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
-    <!-- schema>root</schema> -->
+    <schema>gsiftp</schema>
   </stage>  
 
 </project>
