@@ -2,7 +2,7 @@
 
 <!--This uboone version includes the bugfix to unphysical muon decays -->
 <!-- The windown tilt is added back in and just running the masterweight to save computing time-->
-<!-- This is the Horm2_x_m3mm variation  -->
+<!-- This is the Horn_p2kA variation  -->
 
 <!-- Production Project -->
 <!DOCTYPE project [
@@ -17,11 +17,11 @@
 <!-- change your USER_NAME -->
 <!ENTITY user_name "kmistry">
 <!ENTITY n_jobs "500">
-<!ENTITY unisim_run "run10">
-<!ENTITY type "fhc">
+<!ENTITY unisim_run "run1">
+<!ENTITY type "rhc">
 
 <!-- Update this list for the g4numi files you have made for this variation-->
-<!ENTITY inlist "/pnfs/uboone/persistent/users/kmistry/PPFX/beamline/file_list_fhc_uboone_zero_threshold_run10.txt">
+<!ENTITY inlist "/pnfs/uboone/persistent/users/kmistry/PPFX/beamline/file_list_rhc_uboone_zero_threshold_run1.txt">
 
 
 <!-- change your PROJECT_FOLDER_NAME -->
@@ -60,7 +60,7 @@
 
   <stage name="val">
     <fcl>fluxreader_uboone.fcl</fcl>
-    <fcl>run_eventweight_ppfx_fluxmode_numi_fhc_slim.fcl</fcl>
+    <fcl>run_eventweight_ppfx_fluxmode_numi_rhc_slim.fcl</fcl>
     <outdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</outdir>
     <logdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</logdir>
     <bookdir>/uboone/data/users/&user_name;/book/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</bookdir>
