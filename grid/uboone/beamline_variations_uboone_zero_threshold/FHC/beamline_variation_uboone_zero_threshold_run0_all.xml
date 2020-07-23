@@ -16,7 +16,7 @@
 
 <!-- change your USER_NAME -->
 <!ENTITY user_name "kmistry">
-<!ENTITY n_jobs "1">
+<!ENTITY n_jobs "500">
 <!ENTITY unisim_run "run0">
 <!ENTITY type "fhc">
 
@@ -35,7 +35,7 @@
   <os>SL7</os>
 
   <!-- Batch resources -->
-  <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource><!--DEDICATED,OPPORTUNISTIC,OFFSITE-->
+  <resource>DEDICATED,OPPORTUNISTIC</resource><!--DEDICATED,OPPORTUNISTIC,OFFSITE-->
   
   <!-- Project Version -->
   <filetype>&file_type;</filetype>

@@ -38,10 +38,10 @@ int main(int argc, char** argv) {
 
     InputTag eventweight_tag_00("eventweight","","EventWeightMar18");
     InputTag eventweight_tag_01("eventweight","","EventWeightMar18ExtraGENIE1");
-    InputTag eventweight_tag_02("eventweight","","EventWeightMar18ExtraGENIE2");
-    InputTag eventweight_tag_03("eventweight","","EventWeightMar18ExtraGENIE3");
-    InputTag eventweight_tag_04("eventweight","","EventWeightMar18ExtraGENIE4");
-    InputTag eventweight_tag_05("eventweight","","EventWeightMar18ExtraGENIE5");
+    // InputTag eventweight_tag_02("eventweight","","EventWeightMar18ExtraGENIE2");
+    // InputTag eventweight_tag_03("eventweight","","EventWeightMar18ExtraGENIE3");
+    // InputTag eventweight_tag_04("eventweight","","EventWeightMar18ExtraGENIE4");
+    // InputTag eventweight_tag_05("eventweight","","EventWeightMar18ExtraGENIE5");
 
     std::vector<art::InputTag> vecTag;
     vecTag.push_back(eventweight_tag_00);
@@ -60,13 +60,24 @@ int main(int argc, char** argv) {
                                        "ppfx_ms_UBPPFX"};
 
     double totalPOT{0};
-    int n_universes = 100;
+    int n_universes = 100; // By default set to 100 unless we override this
 
     std::vector<std::string> badfiles;
     std::vector<std::string> filename;
 
     // systematic - universe 
-    std::vector< std::vector< double > > Weights;   
+    std::vector< std::vector< double > > Weights;  
+    std::vector< std::vector< float > > Weights_float;  
+    float theta; 
+    float Enu;
+    float Pmom_dk;
+    float Pmom_tg;
+    float cv_weight;
+    float dk2nu_weight;
+    int    tree_nu_pdg; // True neutrino pdg
+    int    par_pdg; // Tree nuetrino parent pdg
+    float decay_zpos; // Parent decay position
+    float imp_weight; // Importance weight
 
     std::vector<std::string> flav = { "numu", "nue", "numubar", "nuebar" };
 
@@ -135,14 +146,14 @@ int main(int argc, char** argv) {
 
         // For CV, we actaully have 600 universes
         if (input == "CV" ){
-            n_universes = 600;
+            n_universes = 200;
 
             // Add the extra input tags 
             vecTag.push_back(eventweight_tag_01);
-            vecTag.push_back(eventweight_tag_02);
-            vecTag.push_back(eventweight_tag_03);
-            vecTag.push_back(eventweight_tag_04);
-            vecTag.push_back(eventweight_tag_05);
+            // vecTag.push_back(eventweight_tag_02);
+            // vecTag.push_back(eventweight_tag_03);
+            // vecTag.push_back(eventweight_tag_04);
+            // vecTag.push_back(eventweight_tag_05);
             extra_genie = true;
             continue;
         }
@@ -206,10 +217,29 @@ int main(int argc, char** argv) {
     Enu_Syst_AV_TPC.resize(flav.size());    // 1D
     Enu_Th_Syst_AV_TPC.resize(flav.size()); // 2D
     
+    TFile* output = new TFile("output.root", "RECREATE");
+
     // Tree for POT counting
     TTree* POTTree = new TTree("POT","Total POT");
+    POTTree->SetDirectory(output);
     POTTree -> Branch("POT", &totalPOT);
     POTTree -> Fill();
+
+    
+
+    TTree* FluxTree = new TTree("FluxTree","FluxTree");
+    FluxTree->SetDirectory(output);
+    FluxTree -> Branch("theta", &theta);
+    FluxTree -> Branch("Enu", &Enu);
+    FluxTree -> Branch("Pmom_dk", &Pmom_dk);
+    // FluxTree -> Branch("Pmom_tg", &Pmom_tg);
+    FluxTree -> Branch("cv_weight", &cv_weight);
+    FluxTree -> Branch("dk2nu_weight", &dk2nu_weight);
+    FluxTree -> Branch("tree_nu_pdg", &tree_nu_pdg);
+    FluxTree -> Branch("par_pdg", &par_pdg);
+    // FluxTree -> Branch("decay_zpos", &decay_zpos);
+    // FluxTree -> Branch("imp_weight", &imp_weight);
+    
 
     // Histogram Bins | 1 for each flavour + theta
 	std::vector<std::vector<double>> bins(5);
@@ -324,52 +354,44 @@ int main(int argc, char** argv) {
         n++;
 
         // Alert the user
-        if (n % 1000000 == 0) std::cout << "On entry " << n/1000000.0 <<"M" << std::endl;
+        if (n % 10000 == 0) std::cout << "On entry " << n/10000.0 <<"0k" << std::endl;
 
-        if (n == 30) break; 
+        // if (n == 30) break; 
 
         auto const& mctruths = *ev.getValidHandle<vector<simb::MCTruth>>(mctruths_tag);   
         auto const& mcfluxs  = *ev.getValidHandle<vector<simb::MCFlux>>(mctruths_tag);   
 
-        gallery::Handle<std::vector<evwgh::MCEventWeight>> ew_handle;
-        gallery::Handle<std::vector<evwgh::MCEventWeight>> ew_handle_extra1;
-        gallery::Handle<std::vector<evwgh::MCEventWeight>> ew_handle_extra2;
-        gallery::Handle<std::vector<evwgh::MCEventWeight>> ew_handle_extra3;
-        gallery::Handle<std::vector<evwgh::MCEventWeight>> ew_handle_extra4;
-        gallery::Handle<std::vector<evwgh::MCEventWeight>> ew_handle_extra5;
+        gallery::Handle<std::vector<evwgh::MCEventWeight>> ew_handle, ew_handle_extra1, ew_handle_extra2, ew_handle_extra3, ew_handle_extra4, ew_handle_extra5;
+
         
-        std::vector<art::Ptr<evwgh::MCEventWeight>> evtwghts;
-        std::vector<art::Ptr<evwgh::MCEventWeight>> evtwghts_extra1;
-        std::vector<art::Ptr<evwgh::MCEventWeight>> evtwghts_extra2;
-        std::vector<art::Ptr<evwgh::MCEventWeight>> evtwghts_extra3;
-        std::vector<art::Ptr<evwgh::MCEventWeight>> evtwghts_extra4;
-        std::vector<art::Ptr<evwgh::MCEventWeight>> evtwghts_extra5;
-        
-        
+        std::vector<art::Ptr<evwgh::MCEventWeight>> evtwghts, evtwghts_extra1, evtwghts_extra2, evtwghts_extra3, evtwghts_extra4, evtwghts_extra5;
+
         ev.getByLabel(eventweight_tag_00, ew_handle);
         fill_ptr_vector(evtwghts, ew_handle);
         if(!ew_handle.isValid())std::cout << "Error the handle for eventweight_tag_00 was not valid"<< std::endl;
 
         if (extra_genie){
+
             ev.getByLabel(eventweight_tag_01, ew_handle_extra1);
             fill_ptr_vector(evtwghts_extra1, ew_handle_extra1);
             if(!ew_handle_extra1.isValid())std::cout << "Error the handle for eventweight_tag_01 was not valid"<< std::endl;
+            
 
-            ev.getByLabel(eventweight_tag_02, ew_handle_extra2);
-            fill_ptr_vector(evtwghts_extra2, ew_handle_extra2);
-            if(!ew_handle_extra2.isValid())std::cout << "Error the handle for eventweight_tag_02 was not valid"<< std::endl;
+            // ev.getByLabel(eventweight_tag_02, ew_handle_extra2);
+            // fill_ptr_vector(evtwghts_extra2, ew_handle_extra2);
+            // if(!ew_handle_extra2.isValid())std::cout << "Error the handle for eventweight_tag_02 was not valid"<< std::endl;
 
-            ev.getByLabel(eventweight_tag_03, ew_handle_extra3);
-            fill_ptr_vector(evtwghts_extra3, ew_handle_extra3);
-            if(!ew_handle_extra3.isValid())std::cout << "Error the handle for eventweight_tag_03 was not valid"<< std::endl;
+            // ev.getByLabel(eventweight_tag_03, ew_handle_extra3);
+            // fill_ptr_vector(evtwghts_extra3, ew_handle_extra3);
+            // if(!ew_handle_extra3.isValid())std::cout << "Error the handle for eventweight_tag_03 was not valid"<< std::endl;
 
-            ev.getByLabel(eventweight_tag_04, ew_handle_extra4);
-            fill_ptr_vector(evtwghts_extra4, ew_handle_extra4);
-            if(!ew_handle_extra4.isValid())std::cout << "Error the handle for eventweight_tag_04 was not valid"<< std::endl;
+            // ev.getByLabel(eventweight_tag_04, ew_handle_extra4);
+            // fill_ptr_vector(evtwghts_extra4, ew_handle_extra4);
+            // if(!ew_handle_extra4.isValid())std::cout << "Error the handle for eventweight_tag_04 was not valid"<< std::endl;
 
-            ev.getByLabel(eventweight_tag_05, ew_handle_extra5);
-            fill_ptr_vector(evtwghts_extra5, ew_handle_extra5);
-            if(!ew_handle_extra5.isValid())std::cout << "Error the handle for eventweight_tag_05 was not valid"<< std::endl;
+            // ev.getByLabel(eventweight_tag_05, ew_handle_extra5);
+            // fill_ptr_vector(evtwghts_extra5, ew_handle_extra5);
+            // if(!ew_handle_extra5.isValid())std::cout << "Error the handle for eventweight_tag_05 was not valid"<< std::endl;
         }
 
         // Loop over MCTruths
@@ -382,10 +404,10 @@ int main(int argc, char** argv) {
 
             if (extra_genie){
                 evtwght_map_extra1 = evtwghts_extra1.at(i)->fWeight;
-                evtwght_map_extra2 = evtwghts_extra2.at(i)->fWeight;
-                evtwght_map_extra3 = evtwghts_extra3.at(i)->fWeight;
-                evtwght_map_extra4 = evtwghts_extra4.at(i)->fWeight;
-                evtwght_map_extra5 = evtwghts_extra5.at(i)->fWeight;
+                // evtwght_map_extra2 = evtwghts_extra2.at(i)->fWeight;
+                // evtwght_map_extra3 = evtwghts_extra3.at(i)->fWeight;
+                // evtwght_map_extra4 = evtwghts_extra4.at(i)->fWeight;
+                // evtwght_map_extra5 = evtwghts_extra5.at(i)->fWeight;
                 
             }
 
@@ -403,19 +425,21 @@ int main(int argc, char** argv) {
                 continue;
             }
 
-            double cv_weight = 1;    // PPFX CV
-            double dk2nu_weight = 1; // dk2nu CV
+            tree_nu_pdg = mctruth.GetNeutrino().Nu().PdgCode();
+
+            cv_weight = 1.0;    // PPFX CV
+            dk2nu_weight = 1.0; // dk2nu CV
             
             // Now get the momentums to calculate theta
             TVector3 mom_det = {mctruth.GetNeutrino().Nu().Px(),mctruth.GetNeutrino().Nu().Py(),mctruth.GetNeutrino().Nu().Pz()};
             TVector3 mom_beam = FromDetToBeam(mom_det, true); // Rotate vector to beam coordinates
             mom_beam = mom_beam.Unit();
             TVector3 beam_dir = {0 , 0 , 1};
-            double theta = mom_beam.Angle(beam_dir) * 180 / 3.1415926;
+            theta = mom_beam.Angle(beam_dir) * 180 / 3.1415926;
 
-            double Enu = mctruth.GetNeutrino().Nu().E();
-            double Pmom_dk = std::sqrt( mcflux.fpdpz*mcflux.fpdpz + mcflux.fpdpy*mcflux.fpdpy + mcflux.fpdpx*mcflux.fpdpx ); // Parent momentum at decay
-            double Pmom_tg = std::sqrt(mcflux.ftpx*mcflux.ftpx + mcflux.ftpy*mcflux.ftpy + mcflux.ftpz*mcflux.ftpz);         // Parent moment
+            Enu = mctruth.GetNeutrino().Nu().E();
+            Pmom_dk = std::sqrt( mcflux.fpdpz*mcflux.fpdpz + mcflux.fpdpy*mcflux.fpdpy + mcflux.fpdpx*mcflux.fpdpx ); // Parent momentum at decay
+            Pmom_tg = std::sqrt(mcflux.ftpx*mcflux.ftpx + mcflux.ftpy*mcflux.ftpy + mcflux.ftpz*mcflux.ftpz);         // Parent moment
 
             if (evtwgt_map.find("ppfx_cv_UBPPFXCV") != evtwgt_map.end()) {
 
@@ -452,16 +476,23 @@ int main(int argc, char** argv) {
             // Get the extra weights
             if (extra_genie){
                 GetPPFXWeights(Weights, 100, evtwght_map_extra1, labels);
-                GetPPFXWeights(Weights, 200, evtwght_map_extra2, labels);
-                GetPPFXWeights(Weights, 300, evtwght_map_extra3, labels);
-                GetPPFXWeights(Weights, 400, evtwght_map_extra4, labels);
-                GetPPFXWeights(Weights, 500, evtwght_map_extra5, labels);
+                
+                // GetPPFXWeights(Weights, 200, evtwght_map_extra2, labels);
+                // GetPPFXWeights(Weights, 300, evtwght_map_extra3, labels);
+                // GetPPFXWeights(Weights, 400, evtwght_map_extra4, labels);
+                // GetPPFXWeights(Weights, 500, evtwght_map_extra5, labels);
             }
 
 
             // ++++++++++++++++++++++++++++++++
             // Now got weights, fill histograms
             // ++++++++++++++++++++++++++++++++
+
+            par_pdg = mcflux.fptype;
+            decay_zpos = mcflux.fvz;
+            imp_weight  = mcflux.fnimpwt;
+
+            
 
             // TPC AV
             Enu_CV_AV_TPC[pdg]              ->Fill(Enu, cv_weight);
@@ -579,6 +610,7 @@ int main(int argc, char** argv) {
             Enu_Th_CV_AV_TPC[pdg]->Fill(Enu, theta, cv_weight);
             Enu_Th_UW_AV_TPC[pdg]->Fill(Enu, theta, dk2nu_weight);
 
+           
 
             // Now fill multisims
             for (unsigned l=0; l<labels.size(); l++) {
@@ -591,7 +623,7 @@ int main(int argc, char** argv) {
                 }
             }
 
-
+            FluxTree -> Fill();
 
         } // End loop over mctruth
 
@@ -601,11 +633,7 @@ int main(int argc, char** argv) {
     // ++++++++++++++++++++++++++++++++
     // Plotting 
     // ++++++++++++++++++++++++++++++++
-
-    TFile* output = new TFile("output.root", "RECREATE");
-
-    POTTree->SetDirectory(output);
-
+    output->cd();
     TDirectory* savdir = gDirectory;
 
     std::cout << "flavour.size:\t" <<flav.size()<<std::endl;
@@ -681,7 +709,7 @@ int main(int argc, char** argv) {
         
         for (unsigned p=0; p < labels.size(); p++){
             
-            for(int i = 0; i < 100; i++){
+            for(int i = 0; i < n_universes; i++){
                 Enu_Syst_AV_TPC.at(f).at(p).at(i)->Write();
                 Enu_Th_Syst_AV_TPC.at(f).at(p).at(i)->Write();
             }
@@ -690,6 +718,7 @@ int main(int argc, char** argv) {
     }
 
     POTTree->Write();
+    FluxTree->Write();
 
     output->Close();
 

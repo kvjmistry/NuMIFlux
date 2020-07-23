@@ -79,7 +79,7 @@ TVector3 FromDetToBeam( const TVector3 det, bool rotate_only ) {
 }
 //___________________________________________________________________________
 // Function to check the status of weights, if they are bad, set to zero
-void check_weight(double &weight){
+void check_weight(float &weight){
     
     if (weight < 0) weight = 0; // get rid of them pesky negative weights
     
@@ -108,7 +108,7 @@ void GetPPFXWeights(std::vector< std::vector< double > > &Weights, int shift, st
                 }     
                 else {
                     Weights[l][i+shift] *= evtwgt_map.find(labels[l])->second.at(i);
-                    std::cout <<evtwgt_map.find(labels[l])->second.at(i) << std::endl;
+                    // std::cout <<evtwgt_map.find(labels[l])->second.at(i) << std::endl;
                 }
 
             } // End loop over universes

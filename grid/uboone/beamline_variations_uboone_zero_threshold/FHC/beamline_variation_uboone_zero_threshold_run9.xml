@@ -6,7 +6,7 @@
 
 <!-- Production Project -->
 <!DOCTYPE project [
-<!ENTITY relreco "v08_00_00_19">
+<!ENTITY relreco "v08_00_00_46">
 <!ENTITY file_type "mc">
 <!ENTITY run_type "physics">
 
@@ -20,6 +20,8 @@
 <!ENTITY unisim_run "run9">
 <!ENTITY type "fhc">
 
+<!-- Update this list for the g4numi files you have made for this variation-->
+<!ENTITY inlist "/pnfs/uboone/persistent/users/kmistry/PPFX/beamline/file_list_fhc_uboone_zero_threshold_run9.txt">
 
 <!-- change your PROJECT_FOLDER_NAME -->
 <!ENTITY proj_name "PPFX_uBooNE">
@@ -29,10 +31,10 @@
 <project name="&unisim_run;_uboone_&type;">
 
   <!-- Project size -->
-  <numevents>100000000</numevents>
+  <numevents>-1</numevents>
   
  <!-- Operating System -->
-  <os>SL6</os>
+  <os>SL7</os>
 
   <!-- Batch resources -->
   <resource>DEDICATED,OPPORTUNISTIC,OFFSITE</resource><!--DEDICATED,OPPORTUNISTIC,OFFSITE-->
@@ -46,7 +48,7 @@
   <larsoft>
     <tag>&relreco;</tag>
     <qual>e17:prof</qual>
-    <local>/pnfs/uboone/resilient/users/kmistry/tars/uboonecode_mcc9_v08_00_00_19.tar</local>
+    <local>/pnfs/uboone/resilient/users/kmistry/tars/uboonecode_mcc9_v08_00_00_46_sl7.tar</local>
   </larsoft>
   
   <!-- <check>0</check> -->
@@ -55,19 +57,20 @@
   <!-- Project stages -->
 
   <stage name="val">
-    <fcl>/pnfs/uboone/persistent/users/kmistry/PPFX/fluxreader_uboone.fcl</fcl>
-    <fcl>/pnfs/uboone/persistent/users/kmistry/PPFX/ppfx_uboone_slim.fcl</fcl>
+    <fcl>fluxreader_uboone.fcl</fcl>
+    <fcl>run_eventweight_ppfx_fluxmode_numi_fhc_slim.fcl</fcl>
     <outdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</outdir>
     <logdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</logdir>
     <bookdir>/uboone/data/users/&user_name;/book/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</bookdir>
     <workdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</workdir>
-    <inputlist>/pnfs/uboone/persistent/users/kmistry/PPFX/beamline/file_list_fhc_uboone_zero_threshold_&unisim_run;.txt</inputlist>
+    <inputlist>&inlist;</inputlist>
     <maxfilesperjob>1</maxfilesperjob>
     <numjobs>&n_jobs;</numjobs>
+    <disk>20GB</disk>
     <!--<memory>4000</memory>-->
     <jobsub>--expected-lifetime=10h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
     <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
-    <!-- schema>root</schema> -->
+    <schema>gsiftp</schema>
   </stage>  
 
 </project>
