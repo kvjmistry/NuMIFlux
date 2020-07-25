@@ -47,13 +47,37 @@ setup gcc v7_3_0
 
 echo
 echo "======== COPY THE EXECUTABLES ========"
-echo "ifdh cp /pnfs/uboone/resilient/users/kmistry/exe/makehist makehist"
-ifdh cp /pnfs/uboone/resilient/users/kmistry/exe/makehist makehist
+echo "The HPSET is set to: ${HPSET}"
+if [ ${HPSET} -eq 0 ]; then 
+	# copy over the default file and also the filelist
+	echo "ifdh cp /pnfs/uboone/resilient/users/kmistry/exe/makehist_v2 makehist"
+	ifdh cp /pnfs/uboone/resilient/users/kmistry/exe/makehist_v2 makehist
+	echo "ifdh cp /pnfs/uboone/persistent/users/kmistry/PPFX/makehist/files_run${RUN}.list files.list"
+	ifdh cp /pnfs/uboone/persistent/users/kmistry/PPFX/makehist/files_run${RUN}.list files.list
+elif [ ${HPSET} -eq 1 ]; then 
+	# copy over the default file and also the filelist
+	echo "ifdh cp /pnfs/uboone/resilient/users/kmistry/exe/makehist_v2 makehist"
+	ifdh cp /pnfs/uboone/resilient/users/kmistry/exe/makehist_v2 makehist
+	echo "ifdh cp /pnfs/uboone/persistent/users/kmistry/PPFX/makehist/files_run${RUN}.list files.list"
+	ifdh cp /pnfs/uboone/persistent/users/kmistry/PPFX/makehist/files_run${RUN}.list files.list
+elif [ ${HPSET} -eq 2 ]; then
+	# copy over the set 2 file and also the filelist
+	echo "ifdh cp /pnfs/uboone/resilient/users/kmistry/exe/makehist_v2_set2 makehist"
+	ifdh cp /pnfs/uboone/resilient/users/kmistry/exe/makehist_v2_set2 makehist
+	echo "ifdh cp /pnfs/uboone/persistent/users/kmistry/PPFX/makehist/files_run${RUN}_set2.list files.list"
+	ifdh cp /pnfs/uboone/persistent/users/kmistry/PPFX/makehist/files_run${RUN}_set2.list files.list
+elif [ ${HPSET} -eq 3 ]; then
+	# copy over the set 3 file and also the filelist
+	echo "ifdh cp /pnfs/uboone/resilient/users/kmistry/exe/makehist_v2_set3 makehist"
+	ifdh cp /pnfs/uboone/resilient/users/kmistry/exe/makehist_v2_set3 makehist
+	echo "ifdh cp /pnfs/uboone/persistent/users/kmistry/PPFX/makehist/files_run${RUN}_set3.list files.list"
+	ifdh cp /pnfs/uboone/persistent/users/kmistry/PPFX/makehist/files_run${RUN}_set3.list files.list
+fi
+
 chmod u+x makehist
 
 echo
-echo "======== COPY THE FILELIST ========"
-ifdh cp /pnfs/uboone/persistent/users/kmistry/PPFX/makehist/files_run${RUN}.list files.list
+echo "======== Split the FILELIST ========"
 
 # Now get cut the file list up into the relavent chunk
 LINE1=$((PROCESS*${FILES_PER_JOB} + 1))
@@ -80,14 +104,20 @@ ls -ltrh
 
 echo
 echo "======== EXECUTING 2D makehist ========"
-echo "./makehist g4*.root"
-./makehist uboone g4*.root
+if [ ${HPSET} -eq 0 ]; then 
+	echo "./makehist g4*.root"
+	./makehist uboone g4*.root
+else
+	# This is to include the multisims
+	echo "./makehist g4*.root CV"
+	./makehist uboone g4*.root CV
+fi  
 
 # Rename the output file
 echo
 echo "======== Renaming the output file ========"
-echo "mv output.root output_uboone_${PROCESS}.root"
-mv output.root output_uboone_${PROCESS}.root
+echo "mv output.root output_uboone_${PROCESS}_Set${HPSET}.root"
+mv output.root output_uboone_${PROCESS}_Set${HPSET}.root
 
 echo
 echo "Moving output to CONDOR_DIR_MAKEHIST"

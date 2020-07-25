@@ -51,13 +51,13 @@
   
   <!-- Project stages -->
 
-  <stage name="val">
+  <stage name="val3">
     <fcl>fluxreader_uboone.fcl</fcl>
-    <fcl>run_eventweight_ppfx_fluxmode_numi_fhc.fcl</fcl>
-    <outdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</outdir>
-    <logdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</logdir>
-    <bookdir>/uboone/data/users/&user_name;/book/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</bookdir>
-    <workdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</workdir>
+    <fcl>run_eventweight_microboone_fluxmode_extrappfx_2_numi_fhc.fcl</fcl>
+    <outdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra2</outdir>
+    <logdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra2</logdir>
+    <bookdir>/uboone/data/users/&user_name;/book/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra2</bookdir>
+    <workdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra2</workdir>
     <inputlist>/pnfs/uboone/persistent/users/kmistry/PPFX/beamline/file_list_fhc_uboone_zero_threshold_run0_newlocation.txt</inputlist>
     <maxfilesperjob>1</maxfilesperjob>
     <numjobs>&n_jobs;</numjobs>
@@ -68,12 +68,12 @@
     <schema>gsiftp</schema>
   </stage>  
 
-  <stage name="val2">
-    <fcl>run_eventweight_microboone_fluxmode_extrappfx_1_numi_fhc.fcl</fcl>
-    <outdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra1</outdir>
-    <logdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra1</logdir>
-    <bookdir>/uboone/data/users/&user_name;/book/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra1</bookdir>
-    <workdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra1</workdir>
+  <stage name="val4">
+    <fcl>run_eventweight_microboone_fluxmode_extrappfx_3_numi_fhc.fcl</fcl>
+    <outdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra3</outdir>
+    <logdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra3</logdir>
+    <bookdir>/uboone/data/users/&user_name;/book/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra3</bookdir>
+    <workdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra3</workdir>
     <maxfilesperjob>1</maxfilesperjob>
     <numjobs>494</numjobs>
     <!--<memory>4000</memory>-->

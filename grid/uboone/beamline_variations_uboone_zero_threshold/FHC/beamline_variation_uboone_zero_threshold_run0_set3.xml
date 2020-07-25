@@ -51,22 +51,37 @@
   
   <!-- Project stages -->
 
-  <stage name="val">
+  <stage name="val5">
     <fcl>fluxreader_uboone.fcl</fcl>
-    <fcl>run_eventweight_ppfx_fluxmode_numi_fhc.fcl</fcl>
-    <outdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</outdir>
-    <logdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</logdir>
-    <bookdir>/uboone/data/users/&user_name;/book/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</bookdir>
-    <workdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</workdir>
+    <fcl>run_eventweight_microboone_fluxmode_extrappfx_4_numi_fhc.fcl</fcl>
+    <outdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra4</outdir>
+    <logdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra4</logdir>
+    <bookdir>/uboone/data/users/&user_name;/book/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra4</bookdir>
+    <workdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra4</workdir>
     <inputlist>/pnfs/uboone/persistent/users/kmistry/PPFX/beamline/file_list_fhc_uboone_zero_threshold_run0_newlocation.txt</inputlist>
     <maxfilesperjob>1</maxfilesperjob>
     <numjobs>&n_jobs;</numjobs>
     <!--<memory>4000</memory>-->
     <disk>20GB</disk>
-    <jobsub>--expected-lifetime=30h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
+    <jobsub>--expected-lifetime=24h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
     <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
     <schema>gsiftp</schema>
   </stage>  
+
+  <stage name="val6">
+    <fcl>run_eventweight_microboone_fluxmode_extrappfx_5_numi_fhc.fcl</fcl>
+    <outdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra5</outdir>
+    <logdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra5</logdir>
+    <bookdir>/uboone/data/users/&user_name;/book/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra5</bookdir>
+    <workdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra5</workdir>
+    <maxfilesperjob>1</maxfilesperjob>
+    <numjobs>494</numjobs>
+    <!--<memory>4000</memory>-->
+    <disk>20GB</disk>
+    <jobsub>--expected-lifetime=24h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
+    <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
+    <schema>gsiftp</schema>
+  </stage>
 
 </project>
 

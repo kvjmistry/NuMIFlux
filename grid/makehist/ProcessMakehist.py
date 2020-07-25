@@ -16,6 +16,7 @@ FILES_PER_JOB         = 1
 MEMORY                = 700 # MB
 LIFETIME              = 3   # Hrs
 PROCESS_SHIFT         = 0
+HPSET                 = 0
 
 def main():
   options = get_options()
@@ -71,9 +72,10 @@ def main():
       "-e FILES_PER_JOB={FILES_PER_JOB} " 
       "-e RUN={RUN} "
       "-e PROCESS_SHIFT={PROCESS_SHIFT} "
+      "-e HPSET={HPSET} "
       "-L {LOGFILE} "
       "file://{CACHE}makehist_job.sh".format(
-      GRID       = ("--OS=SL6 -g "
+      GRID       = ("--OS=SL7 -g "
                     "--resource-provides=usage_model=DEDICATED,OPPERTUNISTIC,OFFSITE "
                     "--role=Analysis "
                     "--expected-lifetime={LIFETIME}h ".format(LIFETIME = options.lifetime)),
@@ -122,6 +124,10 @@ def get_options():
   grid_group.add_option("--process_shift",
         default = PROCESS_SHIFT, type=int,
         help = "Shift the process number, to re-run over a job that failed. Default = %default.")
+
+  grid_group.add_option("--hpset",
+        default = HPSET, type=int,
+        help = "The hadron production set number, to run over the different sets of hp multisims. If this is zero then we use the beamline config. Default = %default.")
 
   parser.add_option_group(grid_group)
 

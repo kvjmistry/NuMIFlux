@@ -81,68 +81,6 @@
     <schema>gsiftp</schema>
   </stage>
 
-  <stage name="val3">
-    <fcl>run_eventweight_microboone_fluxmode_extrappfx_2_numi_rhc.fcl</fcl>
-    <outdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra2</outdir>
-    <logdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra2</logdir>
-    <bookdir>/uboone/data/users/&user_name;/book/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra2</bookdir>
-    <workdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra2</workdir>
-    <maxfilesperjob>1</maxfilesperjob>
-    <numjobs>465</numjobs>
-    <!--<memory>4000</memory>-->
-    <disk>20GB</disk>
-    <jobsub>--expected-lifetime=26h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
-    <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
-    <schema>gsiftp</schema>
-  </stage>
-
-  <stage name="val4">
-    <fcl>run_eventweight_microboone_fluxmode_extrappfx_3_numi_rhc.fcl</fcl>
-    <outdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra3</outdir>
-    <logdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra3</logdir>
-    <bookdir>/uboone/data/users/&user_name;/book/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra3</bookdir>
-    <workdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra3</workdir>
-    <maxfilesperjob>1</maxfilesperjob>
-    <numjobs>465</numjobs>
-    <!--<memory>4000</memory>-->
-    <disk>20GB</disk>
-    <jobsub>--expected-lifetime=26h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
-    <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
-    <schema>gsiftp</schema>
-  </stage>
-
-  <stage name="val5">
-    <fcl>run_eventweight_microboone_fluxmode_extrappfx_4_numi_rhc.fcl</fcl>
-    <outdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra4</outdir>
-    <logdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra4</logdir>
-    <bookdir>/uboone/data/users/&user_name;/book/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra4</bookdir>
-    <workdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra4</workdir>
-    <maxfilesperjob>1</maxfilesperjob>
-    <numjobs>465</numjobs>
-    <!--<memory>4000</memory>-->
-    <disk>20GB</disk>
-    <jobsub>--expected-lifetime=26h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
-    <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
-    <schema>gsiftp</schema>
-  </stage>
-
-
-  <stage name="val6">
-    <fcl>run_eventweight_microboone_fluxmode_extrappfx_5_numi_rhc.fcl</fcl>
-    <outdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra5</outdir>
-    <logdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra5</logdir>
-    <bookdir>/uboone/data/users/&user_name;/book/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra5</bookdir>
-    <workdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra5</workdir>
-    <maxfilesperjob>1</maxfilesperjob>
-    <numjobs>465</numjobs>
-    <!--<memory>4000</memory>-->
-    <disk>20GB</disk>
-    <jobsub>--expected-lifetime=26h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
-    <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
-    <schema>gsiftp</schema>
-  </stage>
-
-
 </project>
 
 

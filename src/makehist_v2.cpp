@@ -36,15 +36,24 @@ int main(int argc, char** argv) {
 
     bool extra_genie = false;
 
+    // Variable to control what set we are in
+    int set = 1;
+
+    // Beamline and CV
     InputTag eventweight_tag_00("eventweight","","EventWeightMar18");
     InputTag eventweight_tag_01("eventweight","","EventWeightMar18ExtraGENIE1");
-    // InputTag eventweight_tag_02("eventweight","","EventWeightMar18ExtraGENIE2");
-    // InputTag eventweight_tag_03("eventweight","","EventWeightMar18ExtraGENIE3");
-    // InputTag eventweight_tag_04("eventweight","","EventWeightMar18ExtraGENIE4");
-    // InputTag eventweight_tag_05("eventweight","","EventWeightMar18ExtraGENIE5");
-
-    std::vector<art::InputTag> vecTag;
-    vecTag.push_back(eventweight_tag_00);
+    
+    // Set 2
+    // set = 2;
+    // std::cout << "Running Set 2"<< std::endl;
+    // InputTag eventweight_tag_00("eventweight","","EventWeightMar18ExtraGENIE2");
+    // InputTag eventweight_tag_01("eventweight","","EventWeightMar18ExtraGENIE3");
+    
+    // Set 3
+    // set = 3;
+    // std::cout << "Running Set 3"<< std::endl;
+    // InputTag eventweight_tag_00("eventweight","","EventWeightMar18ExtraGENIE4");
+    // InputTag eventweight_tag_01("eventweight","","EventWeightMar18ExtraGENIE5");
     
     std::vector<std::string> labels = {"ppfx_mippk_PPFXMIPPKaon",
                                        "ppfx_mipppi_PPFXMIPPPion",
@@ -149,11 +158,6 @@ int main(int argc, char** argv) {
             n_universes = 200;
 
             // Add the extra input tags 
-            vecTag.push_back(eventweight_tag_01);
-            // vecTag.push_back(eventweight_tag_02);
-            // vecTag.push_back(eventweight_tag_03);
-            // vecTag.push_back(eventweight_tag_04);
-            // vecTag.push_back(eventweight_tag_05);
             extra_genie = true;
             continue;
         }
@@ -335,8 +339,19 @@ int main(int argc, char** argv) {
 
             // Universes
             for(int k=0; k<n_universes; k++){
-                Enu_Syst_AV_TPC[i][j][k]    =  new TH1D(Form("%s_%s_Uni_%d_AV_TPC",flav[i].c_str(), labels[j].c_str(), k),"",n, bin);
-                Enu_Th_Syst_AV_TPC[i][j][k] =  new TH2D(Form("%s_%s_Uni_%d_AV_TPC_2D",flav[i].c_str(), labels[j].c_str(), k),"",n, bin, n_th, bin_th);
+                // Shift the universes for the different sets
+                int index_uni = k;
+                
+                if (set == 2 ){
+                    index_uni+=200;
+                }
+                
+                if (set == 3 ){
+                    index_uni+=400;
+                }
+                
+                Enu_Syst_AV_TPC[i][j][k]    =  new TH1D(Form("%s_%s_Uni_%d_AV_TPC",flav[i].c_str(), labels[j].c_str(), index_uni),"",n, bin);
+                Enu_Th_Syst_AV_TPC[i][j][k] =  new TH2D(Form("%s_%s_Uni_%d_AV_TPC_2D",flav[i].c_str(), labels[j].c_str(), index_uni),"",n, bin, n_th, bin_th);
             }
         }
     }
@@ -361,10 +376,10 @@ int main(int argc, char** argv) {
         auto const& mctruths = *ev.getValidHandle<vector<simb::MCTruth>>(mctruths_tag);   
         auto const& mcfluxs  = *ev.getValidHandle<vector<simb::MCFlux>>(mctruths_tag);   
 
-        gallery::Handle<std::vector<evwgh::MCEventWeight>> ew_handle, ew_handle_extra1, ew_handle_extra2, ew_handle_extra3, ew_handle_extra4, ew_handle_extra5;
+        gallery::Handle<std::vector<evwgh::MCEventWeight>> ew_handle, ew_handle_extra1;
 
         
-        std::vector<art::Ptr<evwgh::MCEventWeight>> evtwghts, evtwghts_extra1, evtwghts_extra2, evtwghts_extra3, evtwghts_extra4, evtwghts_extra5;
+        std::vector<art::Ptr<evwgh::MCEventWeight>> evtwghts, evtwghts_extra1;
 
         ev.getByLabel(eventweight_tag_00, ew_handle);
         fill_ptr_vector(evtwghts, ew_handle);
@@ -376,22 +391,6 @@ int main(int argc, char** argv) {
             fill_ptr_vector(evtwghts_extra1, ew_handle_extra1);
             if(!ew_handle_extra1.isValid())std::cout << "Error the handle for eventweight_tag_01 was not valid"<< std::endl;
             
-
-            // ev.getByLabel(eventweight_tag_02, ew_handle_extra2);
-            // fill_ptr_vector(evtwghts_extra2, ew_handle_extra2);
-            // if(!ew_handle_extra2.isValid())std::cout << "Error the handle for eventweight_tag_02 was not valid"<< std::endl;
-
-            // ev.getByLabel(eventweight_tag_03, ew_handle_extra3);
-            // fill_ptr_vector(evtwghts_extra3, ew_handle_extra3);
-            // if(!ew_handle_extra3.isValid())std::cout << "Error the handle for eventweight_tag_03 was not valid"<< std::endl;
-
-            // ev.getByLabel(eventweight_tag_04, ew_handle_extra4);
-            // fill_ptr_vector(evtwghts_extra4, ew_handle_extra4);
-            // if(!ew_handle_extra4.isValid())std::cout << "Error the handle for eventweight_tag_04 was not valid"<< std::endl;
-
-            // ev.getByLabel(eventweight_tag_05, ew_handle_extra5);
-            // fill_ptr_vector(evtwghts_extra5, ew_handle_extra5);
-            // if(!ew_handle_extra5.isValid())std::cout << "Error the handle for eventweight_tag_05 was not valid"<< std::endl;
         }
 
         // Loop over MCTruths
@@ -404,10 +403,6 @@ int main(int argc, char** argv) {
 
             if (extra_genie){
                 evtwght_map_extra1 = evtwghts_extra1.at(i)->fWeight;
-                // evtwght_map_extra2 = evtwghts_extra2.at(i)->fWeight;
-                // evtwght_map_extra3 = evtwghts_extra3.at(i)->fWeight;
-                // evtwght_map_extra4 = evtwghts_extra4.at(i)->fWeight;
-                // evtwght_map_extra5 = evtwghts_extra5.at(i)->fWeight;
                 
             }
 
@@ -450,8 +445,8 @@ int main(int argc, char** argv) {
                     // cv_weight = last.second.at(0);
                 }
                 else {
-                    // std::cout << "CV weight:\t" << last.second.at(0) << std::endl;
                     cv_weight     = evtwgt_map.find("ppfx_cv_UBPPFXCV")->second.at(0);
+                    std::cout << "CV weight:\t" << cv_weight << std::endl;
                 }  
 
             }
@@ -477,10 +472,6 @@ int main(int argc, char** argv) {
             if (extra_genie){
                 GetPPFXWeights(Weights, 100, evtwght_map_extra1, labels);
                 
-                // GetPPFXWeights(Weights, 200, evtwght_map_extra2, labels);
-                // GetPPFXWeights(Weights, 300, evtwght_map_extra3, labels);
-                // GetPPFXWeights(Weights, 400, evtwght_map_extra4, labels);
-                // GetPPFXWeights(Weights, 500, evtwght_map_extra5, labels);
             }
 
 
@@ -718,7 +709,7 @@ int main(int argc, char** argv) {
     }
 
     POTTree->Write();
-    FluxTree->Write();
+    // FluxTree->Write();
 
     output->Close();
 

@@ -20,8 +20,8 @@
 <!ENTITY unisim_run "run5">
 <!ENTITY type "fhc">
 
-<!-- Update this list for the g4numi files you have made for this variation-->
-<!ENTITY inlist "/pnfs/uboone/persistent/users/kmistry/PPFX/beamline/file_list_fhc_uboone_zero_threshold_run5.txt">
+<!-- Dont change this-->
+<!ENTITY inlist "kmistry_g4numiv6_FHC_run5_Horn1_y_p3mm_April2019">
 
 
 <!-- change your PROJECT_FOLDER_NAME -->
@@ -65,7 +65,7 @@
     <logdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</logdir>
     <bookdir>/uboone/data/users/&user_name;/book/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</bookdir>
     <workdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</workdir>
-    <inputlist>&inlist;</inputlist>
+    <inputdef>&inlist;</inputdef>
     <maxfilesperjob>1</maxfilesperjob>
     <numjobs>&n_jobs;</numjobs>
     <disk>20GB</disk>

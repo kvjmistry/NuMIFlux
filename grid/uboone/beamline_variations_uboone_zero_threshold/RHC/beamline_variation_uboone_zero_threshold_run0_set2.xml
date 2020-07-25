@@ -1,8 +1,7 @@
 <?xml version="1.0"?>
 
-<!--This uboone version includes the bugfix to unphysical muon decays -->
-<!-- The windown tilt is added back in and just running the masterweight to save computing time-->
-<!-- This is the CV variation with all ppfx reweighters ran -->
+<!-- This is the CV variation  -->
+<!-- This is for the second set of hp universes -->
 
 <!-- Production Project -->
 <!DOCTYPE project [
@@ -11,18 +10,18 @@
 <!ENTITY run_type "physics">
 
 <!-- change your SAMPLE_NAME-->
-<!ENTITY name "uboone_dk2nu_beamline_zero_threshold">
+<!ENTITY name "uboone_dk2nu_beamline_zero_threshold_rhc">
 <!ENTITY prod_mode "numi">
 
 <!-- change your USER_NAME -->
 <!ENTITY user_name "kmistry">
 <!ENTITY n_jobs "500">
 <!ENTITY unisim_run "run0">
-<!ENTITY type "fhc">
+<!ENTITY type "rhc">
 
 
 <!-- change your PROJECT_FOLDER_NAME -->
-<!ENTITY proj_name "PPFX_uBooNE">
+<!ENTITY proj_name "PPFX_uboone_RHC_CV">
 ]>
 
 <job>
@@ -51,14 +50,14 @@
   
   <!-- Project stages -->
 
-  <stage name="val">
+  <stage name="val3">
     <fcl>fluxreader_uboone.fcl</fcl>
-    <fcl>run_eventweight_ppfx_fluxmode_numi_fhc.fcl</fcl>
-    <outdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</outdir>
-    <logdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</logdir>
-    <bookdir>/uboone/data/users/&user_name;/book/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</bookdir>
-    <workdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;</workdir>
-    <inputlist>/pnfs/uboone/persistent/users/kmistry/PPFX/beamline/file_list_fhc_uboone_zero_threshold_run0_newlocation.txt</inputlist>
+    <fcl>run_eventweight_microboone_fluxmode_extrappfx_2_numi_rhc.fcl</fcl>
+    <outdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra2</outdir>
+    <logdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra2</logdir>
+    <bookdir>/uboone/data/users/&user_name;/book/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra2</bookdir>
+    <workdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra2</workdir>
+    <inputlist>/pnfs/uboone/persistent/users/kmistry/PPFX/beamline/file_list_rhc_uboone_zero_threshold_&unisim_run;.txt</inputlist>
     <maxfilesperjob>1</maxfilesperjob>
     <numjobs>&n_jobs;</numjobs>
     <!--<memory>4000</memory>-->
@@ -67,18 +66,18 @@
     <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
     <schema>gsiftp</schema>
   </stage>  
-
-  <stage name="val2">
-    <fcl>run_eventweight_microboone_fluxmode_extrappfx_1_numi_fhc.fcl</fcl>
-    <outdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra1</outdir>
-    <logdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra1</logdir>
-    <bookdir>/uboone/data/users/&user_name;/book/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra1</bookdir>
-    <workdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra1</workdir>
+  
+  <stage name="val4">
+    <fcl>run_eventweight_microboone_fluxmode_extrappfx_3_numi_rhc.fcl</fcl>
+    <outdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra3</outdir>
+    <logdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra3</logdir>
+    <bookdir>/uboone/data/users/&user_name;/book/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra3</bookdir>
+    <workdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra3</workdir>
     <maxfilesperjob>1</maxfilesperjob>
-    <numjobs>494</numjobs>
+    <numjobs>500</numjobs>
     <!--<memory>4000</memory>-->
     <disk>20GB</disk>
-    <jobsub>--expected-lifetime=24h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
+    <jobsub>--expected-lifetime=26h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
     <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
     <schema>gsiftp</schema>
   </stage>
