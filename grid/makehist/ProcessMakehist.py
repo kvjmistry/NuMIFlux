@@ -17,6 +17,7 @@ MEMORY                = 700 # MB
 LIFETIME              = 3   # Hrs
 PROCESS_SHIFT         = 0
 HPSET                 = 0
+HORN                  = "FHC"
 
 def main():
   options = get_options()
@@ -28,22 +29,29 @@ def main():
       print MAKEHISTDIR, " directory doen't exist, so creating...\n"
       os.mkdir(MAKEHISTDIR)
 
+  # create horn current directory
+  HORNDIR = "/pnfs/uboone/scratch/users/{USER}/makehist/{HORN}/".format( USER = os.getenv("USER"), HORN = options.horn)
+
+  if os.path.isdir(HORNDIR) == False:
+      print HORNDIR, " directory doen't exist, so creating...\n"
+      os.mkdir(HORNDIR)
+  
   # Create a run number directory
-  RUNDIR = "/pnfs/uboone/scratch/users/{USER}/makehist/run{RUN}/".format( USER = os.getenv("USER"), RUN = options.run)
+  RUNDIR = "/pnfs/uboone/scratch/users/{USER}/makehist/{HORN}/run{RUN}/".format( USER = os.getenv("USER"), HORN = options.horn, RUN = options.run)
 
   if os.path.isdir(RUNDIR) == False:
       print RUNDIR, " directory doen't exist, so creating...\n"
       os.mkdir(RUNDIR)
 
   # Create a output file directory  
-  OUTDIR = "/pnfs/uboone/scratch/users/{USER}/makehist/run{RUN}/files/".format( USER = os.getenv("USER"), RUN = options.run)
+  OUTDIR = "/pnfs/uboone/scratch/users/{USER}/makehist/{HORN}/run{RUN}/files/".format( USER = os.getenv("USER"), HORN = options.horn, RUN = options.run)
 
   if os.path.isdir(OUTDIR) == False:
       print OUTDIR, " directory doen't exist, so creating...\n"
       os.mkdir(OUTDIR)
 
   # Create a log file directory  
-  LOGDIR = "/pnfs/uboone/scratch/users/{USER}/makehist/run{RUN}/log/".format( USER = os.getenv("USER"), RUN = options.run)
+  LOGDIR = "/pnfs/uboone/scratch/users/{USER}/makehist/{HORN}/run{RUN}/log/".format( USER = os.getenv("USER"), HORN = options.horn, RUN = options.run)
 
   if os.path.isdir(LOGDIR) == False:
       print LOGDIR, " directory doen't exist, so creating...\n"
@@ -52,7 +60,7 @@ def main():
   logfile = LOGDIR + "/makehist_{RUN}_\$PROCESS.log".format(RUN = options.run)
 
   # scratch area from which to send tarfile/config files to grid
-  CACHEDIR = "/pnfs/uboone/scratch/users/{USER}/makehist/run{RUN}/CACHE/".format( USER = os.getenv("USER"), RUN = options.run)
+  CACHEDIR = "/pnfs/uboone/scratch/users/{USER}/makehist/{HORN}/run{RUN}/CACHE/".format( USER = os.getenv("USER"), HORN = options.horn, RUN = options.run)
   
   if os.path.isdir(CACHEDIR) == False:
       print CACHEDIR, " directory doen't exist, so creating...\n"
@@ -79,12 +87,13 @@ def main():
                     "--resource-provides=usage_model=DEDICATED,OPPERTUNISTIC,OFFSITE "
                     "--role=Analysis "
                     "--expected-lifetime={LIFETIME}h ".format(LIFETIME = options.lifetime)),
-      MEMORY_     =  "--memory {MEMORY}MB ".format(MEMORY = options.memory),
+      MEMORY_     =  "--memory={MEMORY}MB ".format(MEMORY = options.memory),
       NJOBS      = options.n_jobs,
       OUTDIR     = OUTDIR,
       FILES_PER_JOB = options.files_per_job,
       RUN        = options.run,
       PROCESS_SHIFT = options.process_shift,
+      HPSET         = options.hpset, 
       LOGFILE    = logfile,
       CACHE      = CACHE)
   )
@@ -129,6 +138,10 @@ def get_options():
         default = HPSET, type=int,
         help = "The hadron production set number, to run over the different sets of hp multisims. If this is zero then we use the beamline config. Default = %default.")
 
+  grid_group.add_option("--horn",
+        default = HORN,
+        help = "The horn current configuration FHC or RHC. Default = %default.")
+
   parser.add_option_group(grid_group)
 
   options, remainder = parser.parse_args()
@@ -144,6 +157,8 @@ def finalize_options(options):
   print 'memory',                     options.memory
   print 'lifetime',                   options.lifetime
   print 'process_shift',              options.process_shift
+  print 'hpset',                      options.hpset
+  print 'horn',                       options.horn
 
   return options
 

@@ -64,7 +64,7 @@ void plot_gsimple_flux(const char* horn, const char* mode) {
 	// boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/parent/v3/output_parent_all.root"); if (boolfile == false) gSystem->Exit(0); // file with all large weights kept and just the ones which are < 0 removed
 	
 	if (!strcmp(horn,"fhc")) {
-		boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root");
+		boolfile  = GetFile(f_ppfx_mod ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/FHC/output_uboone_run0.root");
 		if (boolfile == false) gSystem->Exit(0);
 		boolfile  = GetFile(f_gsimple , "/uboone/data/users/kmistry/work/PPFX/uboone/NuMIFlux_update_morebins.root"); 
 		if (boolfile == false) gSystem->Exit(0);

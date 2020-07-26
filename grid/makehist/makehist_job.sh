@@ -106,11 +106,11 @@ echo
 echo "======== EXECUTING 2D makehist ========"
 if [ ${HPSET} -eq 0 ]; then 
 	echo "./makehist g4*.root"
-	./makehist uboone g4*.root
+	./makehist g4*.root
 else
 	# This is to include the multisims
 	echo "./makehist g4*.root CV"
-	./makehist uboone g4*.root CV
+	./makehist g4*.root CV
 fi  
 
 # Rename the output file

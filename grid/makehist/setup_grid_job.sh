@@ -12,3 +12,6 @@ source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setups.sh
 setup ifdhc #v2_2_3
 export IFDH_GRIDFTP_EXTRA="-st 10" #set ifdh cp stall timeout to 10 sec
 export IFDH_CP_MAXRETRIES=2
+
+
+# We might actually need ifdhc v

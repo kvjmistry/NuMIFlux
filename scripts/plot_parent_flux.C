@@ -103,7 +103,7 @@ void plot_parent_flux(const char* horn, TString mode) { // (fhc/rhc, numu/nue)
 
 	// FHC File in 
 	if (!strcmp(horn, "fhc")) {
-		boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root");
+		boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/FHC/output_uboone_run0.root");
 		if (boolfile == false) gSystem->Exit(0);
 	}
 	else { // RHC file

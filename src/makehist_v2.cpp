@@ -249,19 +249,19 @@ int main(int argc, char** argv) {
 	std::vector<std::vector<double>> bins(5);
 
     bins[0] = { // numu
-            0.00, 0.025, 0.03, 0.235 ,0.24, 0.50, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 3.00, 4.00, 5.00, 6.00, 7.00, 10.00 };
+            0.00, 0.025, 0.03, 0.235 ,0.24, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 2.75, 3.00, 4.00, 5.00, 6.00, 7.00, 10.00 };
 
     bins[1] = {  // nue
-        0.00 ,0.06, 0.125, 0.25, 0.5, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 3.50, 4.00, 5.00 };
+        0.00 ,0.06, 0.125, 0.25, 0.5, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 2.75, 3.00, 3.25, 3.50, 4.00, 5.00 };
 
     bins[2] = {// numubar
-        0.00, 0.025, 0.03, 0.235 ,0.24, 0.50, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 3.00, 4.00, 5.00, 6.00, 7.00, 10.00 };
+            0.00, 0.025, 0.03, 0.235 ,0.24, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 2.75, 3.00, 4.00, 5.00, 6.00, 7.00, 10.00 };
 
     bins[3] = {  // nuebar
-        0.00 ,0.06, 0.125,  0.25, 0.5, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 3.50, 4.00, 5.00 };
+        0.00 ,0.06, 0.125, 0.25, 0.5, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 2.75, 3.00, 3.25, 3.50, 4.00, 5.00 };
     
     // Theta
-    bins[4] = {  0, 20, 110,  160 }; // theta -- removed edge theta bins where no events live and split into 3 bins for stats
+    bins[4] = {  0, 10, 20, 110, 160 }; // theta -- removed edge theta bins where no events live and split into 3 bins for stats
 
     
     // Resize the weight labels
@@ -284,8 +284,8 @@ int main(int argc, char** argv) {
         // FLux histograms
         Enu_CV_AV_TPC[i] = new TH1D(Form("%s_CV_AV_TPC",flav[i].c_str()),"",n, bin);
         Enu_UW_AV_TPC[i] = new TH1D(Form("%s_UW_AV_TPC",flav[i].c_str()),"",n, bin);
-        Th_CV_AV_TPC [i] = new TH1D(Form("Th_%s_CV_TPC", flav[i].c_str()), "", 18, 0, 180);
-        Th_UW_AV_TPC [i] = new TH1D(Form("Th_%s_UW_TPC", flav[i].c_str()), "", 18, 0, 180);
+        Th_CV_AV_TPC [i] = new TH1D(Form("Th_%s_CV_TPC", flav[i].c_str()), "", 180, 0, 180);
+        Th_UW_AV_TPC [i] = new TH1D(Form("Th_%s_UW_TPC", flav[i].c_str()), "", 180, 0, 180);
 
         // Other Histograms
         parent_mom[i]   = new TH1D(Form("%s_parent_mom",   flav[i].c_str()), "", 100, 0, 25);    // momentum distribution of nu parent
@@ -439,14 +439,14 @@ int main(int argc, char** argv) {
             if (evtwgt_map.find("ppfx_cv_UBPPFXCV") != evtwgt_map.end()) {
 
                 // if(last.second.at(0) > 30 || last.second.at(0) < 0){ // still fill even if bad weight, changed from >90 to >30
-                if(evtwgt_map.find("ppfx_cv_UBPPFXCV")->second.at(0) < 0){ // change this to only throw out negative weights
+                if(evtwgt_map.find("ppfx_cv_UBPPFXCV")->second.at(0) < 0 || evtwgt_map.find("ppfx_cv_UBPPFXCV")->second.at(0) > 50 ){ 
                     std::cout << "Bad CV weight, setting to 1: " << evtwgt_map.find("ppfx_cv_UBPPFXCV")->second.at(0) << std::endl;
                     cv_weight = 1;
                     // cv_weight = last.second.at(0);
                 }
                 else {
                     cv_weight     = evtwgt_map.find("ppfx_cv_UBPPFXCV")->second.at(0);
-                    std::cout << "CV weight:\t" << cv_weight << std::endl;
+                    // std::cout << "CV weight:\t" << cv_weight << std::endl;
                 }  
 
             }

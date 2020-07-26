@@ -87,6 +87,12 @@ void check_weight(float &weight){
         std::cout << "got a nan:\t" << weight << std::endl;
         weight = 0;
     }
+
+    // Catch infinate values
+    if (std::isinf(weight)) { // catch NaN values
+        std::cout << "got a inf:\t" << weight << std::endl;
+        weight = 0;
+    }
 }
 //___________________________________________________________________________
 // Get the PPFX weights
@@ -102,13 +108,23 @@ void GetPPFXWeights(std::vector< std::vector< double > > &Weights, int shift, st
             // Loop over ms universes
             for (unsigned i=0; i < evtwgt_map.find(labels[l])->second.size(); i++) { 
 
-                // Update the weight if it is negative
-                if (evtwgt_map.find(labels[l])->second.at(i) < 0){ 
+                // Update the weight if it is negative or greater than 50
+                if (evtwgt_map.find(labels[l])->second.at(i) < 0 || evtwgt_map.find(labels[l])->second.at(i) > 50){ 
                     Weights[l][i+shift] *= 1; 
                 }     
                 else {
                     Weights[l][i+shift] *= evtwgt_map.find(labels[l])->second.at(i);
                     // std::cout <<evtwgt_map.find(labels[l])->second.at(i) << std::endl;
+                    if (std::isnan(Weights[l][i+shift]) == 1) { // catch NaN values
+                        std::cout << "got a nan:\t" << Weights[l][i+shift] << std::endl;
+                        Weights[l][i+shift] = 0;
+                    }
+
+                    // Catch infinate values
+                    if (std::isinf(Weights[l][i+shift])) { // catch NaN values
+                        std::cout << "got a inf:\t" << Weights[l][i+shift] << std::endl;
+                        Weights[l][i+shift] = 0;
+                    }
                 }
 
             } // End loop over universes
