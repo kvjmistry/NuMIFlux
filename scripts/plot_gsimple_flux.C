@@ -141,6 +141,7 @@ void plot_gsimple_flux(const char* horn, const char* mode) {
 	// Draw all fluxes on one plot
 	// ------------------------------------------------------------------------------------------------------------
 	TCanvas* c_plotall = new TCanvas();
+	gPad->SetFixedAspectRatio();
 	TLegend* l_plotall = new TLegend(0.74, 0.65, 0.89, 0.9);
 
 	c_plotall->cd();

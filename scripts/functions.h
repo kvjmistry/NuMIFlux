@@ -719,15 +719,18 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
     Normalise(h_flux);
 
 
-    // 6e20 POT, 50/1000 for 50 MeV from 1GeV, 1e-4 for m2->cm2
-    h_flux->Scale( (6.0e20)/ (fPOT*1.0e4) );  
+    // 50/1000 for 50 MeV from 1GeV, 1e-4 for m2->cm2
+
+    double POT_Scale = 1.0; // The POT to scale to // was 6.0e20
+
+    h_flux->Scale( (POT_Scale)/ (fPOT*1.0e4) );  
 
     IncreaseLabelSize(h_flux);	
 
     if (mode == "numu"){
         h_flux->SetLineColor(kRed+1);
         h_flux->SetLineWidth(2);
-        h_flux->SetTitle(";Neutrino Energy [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
+        h_flux->SetTitle(";Neutrino Energy [GeV];#nu / POT / GeV / cm^{2}");
         leg->AddEntry(h_flux, Form("#nu_{#mu} (%s%%)", flux_pcent),"l");
         h_flux->Draw("hist,same");
     }
@@ -736,7 +739,7 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
         h_flux->SetLineColor(kRed+1);
         h_flux->SetLineWidth(2);
         h_flux->SetLineStyle(2);
-        h_flux->SetTitle(";Neutrino Energy [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
+        h_flux->SetTitle(";Neutrino Energy [GeV];#nu / POT / GeV / cm^{2}");
         leg->AddEntry(h_flux, Form("#nu_{e} (%s%%)", flux_pcent),"l");
         h_flux->Draw("hist,same");
 
@@ -745,7 +748,7 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
     else if (mode == "numubar"){
         h_flux->SetLineColor(kBlue+1);
         h_flux->SetLineWidth(2);
-        h_flux->SetTitle(";Neutrino Energy [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
+        h_flux->SetTitle(";Neutrino Energy [GeV];#nu / POT / GeV / cm^{2}");
         leg->AddEntry(h_flux, Form("#bar{#nu_{#mu}} (%s%%)", flux_pcent),"l");
         h_flux->Draw("hist,same");
     }
@@ -754,7 +757,7 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
         h_flux->SetLineColor(kBlue+1);
         h_flux->SetLineWidth(2);
         h_flux->SetLineStyle(2);
-        h_flux->SetTitle(";Neutrino Energy [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
+        h_flux->SetTitle(";Neutrino Energy [GeV];#nu / POT / GeV / cm^{2}");
         leg->AddEntry(h_flux, Form("#bar{#nu_{e}} (%s%%)", flux_pcent),"l");
         h_flux->Draw("hist,same");
     

@@ -18,6 +18,7 @@ LIFETIME              = 3   # Hrs
 PROCESS_SHIFT         = 0
 HPSET                 = 0
 HORN                  = "FHC"
+FLIST                 = "/pnfs/uboone/persistent/users/kmistry/PPFX/makehist/files_run0.list"
 
 def main():
   options = get_options()
@@ -57,7 +58,7 @@ def main():
       print LOGDIR, " directory doen't exist, so creating...\n"
       os.mkdir(LOGDIR)
 
-  logfile = LOGDIR + "/makehist_{RUN}_\$PROCESS.log".format(RUN = options.run)
+  logfile = LOGDIR + "/makehist_{RUN}_HPSET_{HPSET}_\$PROCESS.log".format(RUN = options.run, HPSET = options.hpset)
 
   # scratch area from which to send tarfile/config files to grid
   CACHEDIR = "/pnfs/uboone/scratch/users/{USER}/makehist/{HORN}/run{RUN}/CACHE/".format( USER = os.getenv("USER"), HORN = options.horn, RUN = options.run)
@@ -81,6 +82,7 @@ def main():
       "-e RUN={RUN} "
       "-e PROCESS_SHIFT={PROCESS_SHIFT} "
       "-e HPSET={HPSET} "
+      "-e FLIST={FLIST} "
       "-L {LOGFILE} "
       "file://{CACHE}makehist_job.sh".format(
       GRID       = ("--OS=SL7 -g "
@@ -94,6 +96,7 @@ def main():
       RUN        = options.run,
       PROCESS_SHIFT = options.process_shift,
       HPSET         = options.hpset, 
+      FLIST         = options.flist,
       LOGFILE    = logfile,
       CACHE      = CACHE)
   )
@@ -142,6 +145,10 @@ def get_options():
         default = HORN,
         help = "The horn current configuration FHC or RHC. Default = %default.")
 
+  grid_group.add_option("--flist",
+        default = FLIST,
+        help = "A path to the input filelist. Default = %default.")
+
   parser.add_option_group(grid_group)
 
   options, remainder = parser.parse_args()
@@ -159,6 +166,7 @@ def finalize_options(options):
   print 'process_shift',              options.process_shift
   print 'hpset',                      options.hpset
   print 'horn',                       options.horn
+  print 'flist',                      options.flist
 
   return options
 

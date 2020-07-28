@@ -12,8 +12,10 @@ id
 echo
 echo "Run: ${RUN}"
 echo "Files per job: ${FILES_PER_JOB}"
-echo "IN PROCESS: ${PROCESS}"
+echo "IN PROCESS:    ${PROCESS}"
 echo "SHIFT PROCESS: ${PROCESS_SHIFT}"
+echo "HPSET:         ${HPSET}"
+echo "Input list:    ${FLIST}" 
 echo
 PROCESS=$((PROCESS + PROCESS_SHIFT)) # shift process numbers
 echo "Process ID is ${PROCESS}"
@@ -47,31 +49,30 @@ setup gcc v7_3_0
 
 echo
 echo "======== COPY THE EXECUTABLES ========"
-echo "The HPSET is set to: ${HPSET}"
 if [ ${HPSET} -eq 0 ]; then 
 	# copy over the default file and also the filelist
 	echo "ifdh cp /pnfs/uboone/resilient/users/kmistry/exe/makehist_v2 makehist"
 	ifdh cp /pnfs/uboone/resilient/users/kmistry/exe/makehist_v2 makehist
-	echo "ifdh cp /pnfs/uboone/persistent/users/kmistry/PPFX/makehist/files_run${RUN}.list files.list"
-	ifdh cp /pnfs/uboone/persistent/users/kmistry/PPFX/makehist/files_run${RUN}.list files.list
+	echo "ifdh cp ${FLIST} files.list"
+	ifdh cp ${FLIST} files.list
 elif [ ${HPSET} -eq 1 ]; then 
 	# copy over the default file and also the filelist
 	echo "ifdh cp /pnfs/uboone/resilient/users/kmistry/exe/makehist_v2 makehist"
 	ifdh cp /pnfs/uboone/resilient/users/kmistry/exe/makehist_v2 makehist
-	echo "ifdh cp /pnfs/uboone/persistent/users/kmistry/PPFX/makehist/files_run${RUN}.list files.list"
-	ifdh cp /pnfs/uboone/persistent/users/kmistry/PPFX/makehist/files_run${RUN}.list files.list
+	echo "ifdh cp ${FLIST} files.list"
+	ifdh cp ${FLIST} files.list
 elif [ ${HPSET} -eq 2 ]; then
 	# copy over the set 2 file and also the filelist
 	echo "ifdh cp /pnfs/uboone/resilient/users/kmistry/exe/makehist_v2_set2 makehist"
 	ifdh cp /pnfs/uboone/resilient/users/kmistry/exe/makehist_v2_set2 makehist
-	echo "ifdh cp /pnfs/uboone/persistent/users/kmistry/PPFX/makehist/files_run${RUN}_set2.list files.list"
-	ifdh cp /pnfs/uboone/persistent/users/kmistry/PPFX/makehist/files_run${RUN}_set2.list files.list
+	echo "ifdh cp ${FLIST} files.list"
+	ifdh cp ${FLIST} files.list
 elif [ ${HPSET} -eq 3 ]; then
 	# copy over the set 3 file and also the filelist
 	echo "ifdh cp /pnfs/uboone/resilient/users/kmistry/exe/makehist_v2_set3 makehist"
 	ifdh cp /pnfs/uboone/resilient/users/kmistry/exe/makehist_v2_set3 makehist
-	echo "ifdh cp /pnfs/uboone/persistent/users/kmistry/PPFX/makehist/files_run${RUN}_set3.list files.list"
-	ifdh cp /pnfs/uboone/persistent/users/kmistry/PPFX/makehist/files_run${RUN}_set3.list files.list
+	echo "ifdh cp ${FLIST} files.list"
+	ifdh cp ${FLIST} files.list
 fi
 
 chmod u+x makehist
