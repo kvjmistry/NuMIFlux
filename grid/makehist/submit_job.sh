@@ -31,7 +31,7 @@ python ProcessMakehist.py --n_jobs=500 --files_per_job=1 --run=0 --process_shift
 python ProcessMakehist.py --n_jobs=433 --files_per_job=1 --run=0 --process_shift=0 --memory=900 --lifetime=6 --hpset=2 --horn='FHC' --flist="/pnfs/uboone/persistent/users/kmistry/PPFX/makehist/FHC/files_run0_set2.list"
 
 # CV set 3
-python ProcessMakehist.py --n_jobs=500 --files_per_job=1 --run=0 --process_shift=0 --memory=900 --lifetime=6 --hpset=3 --horn='FHC' --flist="/pnfs/uboone/persistent/users/kmistry/PPFX/makehist/FHC/files_run0_set3.list"
+python ProcessMakehist.py --n_jobs=445 --files_per_job=1 --run=0 --process_shift=0 --memory=900 --lifetime=6 --hpset=3 --horn='FHC' --flist="/pnfs/uboone/persistent/users/kmistry/PPFX/makehist/FHC/files_run0_set3.list"
 
 # RHC ----------------------------------------------------------------------------------------------------------------
 
@@ -39,7 +39,7 @@ python ProcessMakehist.py --n_jobs=500 --files_per_job=1 --run=0 --process_shift
 python ProcessMakehist.py --n_jobs=465 --files_per_job=1 --run=0 --process_shift=0 --memory=900 --lifetime=6 --hpset=1 --horn='RHC' --flist="/pnfs/uboone/persistent/users/kmistry/PPFX/makehist/RHC/files_run0.list"
 
 # CV set 2
-python ProcessMakehist.py --n_jobs=500 --files_per_job=1 --run=0 --process_shift=0 --memory=900 --lifetime=6 --hpset=2 --horn='RHC' --flist="/pnfs/uboone/persistent/users/kmistry/PPFX/makehist/RHC/files_run0_Set2.list"
+python ProcessMakehist.py --n_jobs=473 --files_per_job=1 --run=0 --process_shift=0 --memory=900 --lifetime=6 --hpset=2 --horn='RHC' --flist="/pnfs/uboone/persistent/users/kmistry/PPFX/makehist/RHC/files_run0_set2.list"
 
 # CV set 3
-python ProcessMakehist.py --n_jobs=500 --files_per_job=1 --run=0 --process_shift=0 --memory=900 --lifetime=6 --hpset=3 --horn='RHC' --flist="/pnfs/uboone/persistent/users/kmistry/PPFX/makehist/RHC/files_run0_Set3.list"
+python ProcessMakehist.py --n_jobs=500 --files_per_job=1 --run=0 --process_shift=0 --memory=900 --lifetime=6 --hpset=3 --horn='RHC' --flist="/pnfs/uboone/persistent/users/kmistry/PPFX/makehist/RHC/files_run0_set3.list"
