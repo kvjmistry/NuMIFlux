@@ -42,4 +42,4 @@ python ProcessMakehist.py --n_jobs=465 --files_per_job=1 --run=0 --process_shift
 python ProcessMakehist.py --n_jobs=473 --files_per_job=1 --run=0 --process_shift=0 --memory=900 --lifetime=6 --hpset=2 --horn='RHC' --flist="/pnfs/uboone/persistent/users/kmistry/PPFX/makehist/RHC/files_run0_set2.list"
 
 # CV set 3
-python ProcessMakehist.py --n_jobs=500 --files_per_job=1 --run=0 --process_shift=0 --memory=900 --lifetime=6 --hpset=3 --horn='RHC' --flist="/pnfs/uboone/persistent/users/kmistry/PPFX/makehist/RHC/files_run0_set3.list"
+python ProcessMakehist.py --n_jobs=430 --files_per_job=1 --run=0 --process_shift=0 --memory=900 --lifetime=6 --hpset=3 --horn='RHC' --flist="/pnfs/uboone/persistent/users/kmistry/PPFX/makehist/RHC/files_run0_set3.list"

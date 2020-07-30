@@ -218,7 +218,7 @@ void DivideHists(TH1D* hCV, TH1D* hUniv, TH1D* &h_1D){
 void plot_beamline_flux(const char* mode){
 	gStyle->SetOptStat(0); // say no to stats box
 
-	const char * horn = "fhc";
+	const char * horn = "rhc";
 
 	std::vector<std::string> params = { // A vector with the variations NEW ONES with no threshold
 		"CV",                
@@ -297,13 +297,19 @@ void plot_beamline_flux(const char* mode){
 
 	// ------------------------------------------------------------------------------------------------------------
 	// CV
-	boolfile  = GetFile(f , "/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run0.root"); if (boolfile == false) gSystem->Exit(0); // Most up to date version of CV
-	boolhist  = GetHist(f, h_2D, Form("%s/Detsmear/%s_CV_AV_TPC_2D", mode, mode)); if (boolhist == false) gSystem->Exit(0); // CV 2D Histogram
-	boolhist  = GetHist(f, h_1D.at(0), Form("%s/Detsmear/%s_CV_AV_TPC_5MeV_bin", mode, mode)); if (boolhist == false) gSystem->Exit(0); // CV 1D Histogram
+	boolfile  = GetFile(f , "/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/RHC/output_uboone_rhc_run0_set1.root"); 
+	if (boolfile == false) gSystem->Exit(0); // Most up to date version of CV
+	
+	boolhist  = GetHist(f, h_2D, Form("%s/Detsmear/%s_CV_AV_TPC_2D", mode, mode)); 
+	if (boolhist == false) gSystem->Exit(0); // CV 2D Histogram
+	
+	boolhist  = GetHist(f, h_1D.at(0), Form("%s/Detsmear/%s_CV_AV_TPC", mode, mode));
+	if (boolhist == false) gSystem->Exit(0); // CV 1D Histogram
+	
 	POT = GetPOT(f);
 
 	double flux_cv  = h_1D.at(0)->Integral(0,  h_1D.at(0)->GetNbinsX()+1); // Get the CV Flux
-	std::vector<double> beamline_flux(params.size());
+	std::vector<double> beamline_flux(params.size(), 0);
 	beamline_flux.at(0) = flux_cv * (6.0e20)/ (POT*1.0e4);
 
 	// 2D
@@ -319,10 +325,10 @@ void plot_beamline_flux(const char* mode){
 	c_beamline_1D->cd();
 	Normalise(h_1D.at(0));
 	h_1D.at(0)->Scale((6.0e20)/ (POT*1.0e4)); // scale to right POT and m2
-	h_1D.at(0)->Rebin(10);
+	// h_1D.at(0)->Rebin(10);
 	h_1D.at(0)->GetXaxis()->SetRangeUser(0, 6);
 	h_1D.at(0)->SetTitle(Form("%s;Energy [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}", mode_title));
-	DrawSpecifiers(h_1D.at(0), lFlux_1D, "CV","his,same");
+	DrawSpecifiers(h_1D.at(0), lFlux_1D, "CV","hist,same");
 	Draw_Nu_Mode(c_beamline_1D, horn); // Draw FHC Mode/RHC Mode Text
 	h_1D_clone = (TH1D*) h_1D.at(0)->Clone("h_1D_clone");
 
@@ -330,9 +336,11 @@ void plot_beamline_flux(const char* mode){
 	// ------------------------------------------------------------------------------------------------------------
 	// Loop over the beamline
 	for (int i = 1; i < params.size(); i++){
-		boolfile  = GetFile(f , Form("/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/output_uboone_run%i.root",i)); if (boolfile == false) continue;
+		boolfile  = GetFile(f , Form("/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46//RHC/output_uboone_rhc_run%i.root",i)); 
+		if (boolfile == false) continue; // Skip if the file does not exist
+		
 		boolhist  = GetHist(f, h_2D, Form("%s/Detsmear/%s_CV_AV_TPC_2D", mode, mode)); if (boolhist == false) gSystem->Exit(0);
-		boolhist  = GetHist(f, h_1D.at(i), Form("%s/Detsmear/%s_CV_AV_TPC_5MeV_bin", mode, mode)); if (boolhist == false) gSystem->Exit(0);
+		boolhist  = GetHist(f, h_1D.at(i), Form("%s/Detsmear/%s_CV_AV_TPC", mode, mode)); if (boolhist == false) gSystem->Exit(0);
 
 		beamline_flux.at(i) = h_1D.at(i)->Integral(0,  h_1D.at(i)->GetNbinsX()+1) * (6.0e20)/ (POT*1.0e4); // Get the beamline Flux
 
@@ -364,17 +372,17 @@ void plot_beamline_flux(const char* mode){
 		gPad->SetRightMargin(0.2);
 		h_1D.at(i)->SetDirectory(0);
 		Normalise(h_1D.at(i));
-		h_1D.at(i)->Rebin(10);
+		// h_1D.at(i)->Rebin(10);
 		h_1D.at(i)->Scale((6.0e20)/ (POT*1.0e4)); // scale to right POT and m2
-		DrawSpecifiers(h_1D.at(i), lFlux_1D, params.at(i), "his,same");
+		DrawSpecifiers(h_1D.at(i), lFlux_1D, params.at(i), "hist,same");
 
 		// Divide histograms and draw again
 		TH1D* clone = (TH1D*) h_1D.at(i)->Clone("clone");
 		c_beamline_ratio_1D->cd();
 		gPad->SetRightMargin(0.2);
 		clone->Divide(h_1D_clone);
-		clone->GetXaxis()->SetRangeUser(0, 3);
-		clone->GetYaxis()->SetRangeUser(0.5, 1.5);
+		clone->GetXaxis()->SetRangeUser(0, 4);
+		clone->GetYaxis()->SetRangeUser(0.6, 1.4);
 		clone->SetTitle(Form("%s;Energy [GeV];Ratio with CV", mode_title));
 		DrawSpecifiers(clone, lFlux_ratio_1D, params.at(i), "E1,same");
 		

@@ -32,11 +32,11 @@ void plot_uboone_flux(const char* horn,  const char* mode, const char* detector)
     if (!strcmp(detector,"uboone")) {
         // Load in the file, either fhc or rhc
         if (!strcmp(horn,"fhc")) {
-            boolfile  = GetFile(f1 ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/FHC/output_uboone_run0.root");
+            boolfile  = GetFile(f1 ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/FHC/output_uboone_fhc_run0_merged.root");
             if (boolfile == false) gSystem->Exit(0);
         }
         else {
-            boolfile  = GetFile(f1 ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/RHC/output_uboone_run0.root");
+            boolfile  = GetFile(f1 ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/RHC/output_uboone_rhc_run0_merged.root");
             if (boolfile == false) gSystem->Exit(0);
         }
     }
@@ -300,7 +300,7 @@ void plot_uboone_flux(const char* horn,  const char* mode, const char* detector)
     boolhist = GetHist(f1, hCV2d, Form("%s/Detsmear/%s_CV_AV_TPC_2D", mode, mode));   if (boolhist == false) gSystem->Exit(0);
     const int nBinsEnu = hCV2d->GetXaxis()->GetNbins(); // Enu
     const int nBinsTh  = hCV2d->GetYaxis()->GetNbins(); // Theta
-    int nuni{200};
+    int nuni{600};
     
     //------------------------------
     // Normalise 2d hist by bin area / deg / GeV

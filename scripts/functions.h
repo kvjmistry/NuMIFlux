@@ -327,7 +327,7 @@ void UnwrapHist(TH2D* h2d, TH1D* &h_unwrap){
 // ------------------------------------------------------------------------------------------------------------
 void CalcCovariance(std::string inputmode, const char* mode, TString Cov_names, TFile* f, TH2D* &cov, TH1D* horig, const int nbins  ){
     TH1D* hu; 					// Flux hist for each universe
-    const int nuni = 200; // num universes
+    const int nuni = 600; // num universes
 
     // Loop over universes
     for (int k=0; k<nuni; k++) {
@@ -413,7 +413,7 @@ void CalcFracCovariance(TH1D* &hCV, TH2D* &frac_cov, int nbins ){
 // Use this for covariance calculation in 4d
 void CalcCovariance_4D(TH2D* &cov, TH1D* &hCV, TH1D* &hu, const int &nbinsX, const int &nbinsY, int k  ){
 
-    int nuni{200};
+    int nuni{600};
     // Loop over rows
     for (int i=1; i<nbinsX+1; i++) {
 
@@ -886,7 +886,7 @@ void CalcPull(TH1D* hCV, TH1D *hMean, TH1D* &hPull){
     std::cout << "Calculating the Pull"<<std::endl;
     
     for (unsigned int i = 1; i< hCV->GetNbinsX() + 1; i++){
-        hPull->Fill( (hCV->GetBinContent(i) - hMean->GetBinContent(i) )/ (hMean->GetBinError(i)/sqrt(200))  );
+        hPull->Fill( (hCV->GetBinContent(i) - hMean->GetBinContent(i) )/ (hMean->GetBinError(i)/sqrt(600))  );
         }
     
     hPull->SetLineWidth(2);
@@ -958,15 +958,15 @@ std::vector<TLine*> MakeTLineVector(TString mode){
     std::vector<double> Ebins, Thbins;
 
     if (mode == "nue" || mode =="nuebar"){ // nue, nuebar
-        Ebins = { 0.00 ,0.06, 0.125,  0.25, 0.5, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 3.50};
+        Ebins = { 0.00 ,0.06, 0.125, 0.25, 0.5, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 2.75, 3.00, 3.25, 3.50};
     } 
     else{ // numu or numubar
-        Ebins = {0.00, 0.025, 0.03, 0.235 ,0.24, 0.50, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 3.00, 4.00};
+        Ebins = {0.00, 0.025, 0.03, 0.235 ,0.24, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.25, 2.50, 2.75, 3.00, 4.00};
         // Ebins = {0.00, 0.025, 0.03, 0.235 ,0.24, 0.50}; // for zoomed version
 
     }
 
-    Thbins = {  0, 20, 110,  160 };
+    Thbins = {  0, 10, 20, 110, 160 };
 
     double Th0 = Thbins[0]; 
     double Th1 = Thbins[Thbins.size()-1];

@@ -37,15 +37,17 @@ std::vector<std::string> inputmode = {
 
 void merge_hpsets(){
 
-    int n_uni = 400;
+    int n_uni = 600;
 
     // Open the TFiles
-    TFile *f_set1 = TFile::Open("/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/FHC/output_uboone_run0_set1.root");
-    TFile *f_set2 = TFile::Open("/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/FHC/output_uboone_run0_set2.root");
+    TFile *f_set1 = TFile::Open("/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/FHC/output_uboone_fhc_run0_set1.root");
+    TFile *f_set2 = TFile::Open("/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/FHC/output_uboone_fhc_run0_set2.root");
+    TFile *f_set3 = TFile::Open("/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/FHC/output_uboone_fhc_run0_set3.root");
 
     // Get the POT for each file
     double pot_set1 =  GetPOT(f_set1);
     double pot_set2 =  GetPOT(f_set2);
+    double pot_set3 =  GetPOT(f_set3);
 
     // Now we want to define the histograms
     std::vector<std::vector<TH1D*>> h_cv_vec;
@@ -132,6 +134,18 @@ void merge_hpsets(){
                     // Scale its POT
                     h_univ_1D.at(f).at(t).at(uni)->Scale(1.0 / pot_set2);
                     h_univ_2D.at(f).at(t).at(uni)->Scale(1.0 / pot_set2); 
+                }
+                else {
+                    
+                    boolhist = GetHist(f_set3, h_univ_1D.at(f).at(t).at(uni), Form("%s/Multisims/%s_%s_Uni_%i_AV_TPC",    flav.at(f).c_str(), flav.at(f).c_str(), inputmode.at(t).c_str(), uni)); 
+                    boolhist = GetHist(f_set3, h_univ_2D.at(f).at(t).at(uni), Form("%s/Multisims/%s_%s_Uni_%i_AV_TPC_2D", flav.at(f).c_str(), flav.at(f).c_str(), inputmode.at(t).c_str(), uni)); 
+                    
+                    if (boolhist == false) gSystem->Exit(0);
+                
+                    // Scale its POT
+                    h_univ_1D.at(f).at(t).at(uni)->Scale(1.0 / pot_set3);
+                    h_univ_2D.at(f).at(t).at(uni)->Scale(1.0 / pot_set3); 
+
                 }
                 
             } // end loop over universes
