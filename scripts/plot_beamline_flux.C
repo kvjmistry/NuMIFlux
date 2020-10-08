@@ -149,7 +149,7 @@ void DrawSpecifiers(TH1D* &hist, TLegend* legend, std::string param, const char*
 		hist->SetLineStyle(2);
 	}
 	else if  (param == "Old_Horn" ){ 
-		hist->SetLineColor(30);
+		hist->SetLineColor(kSpring+9);
 		legend->AddEntry(hist, "Old Horn", "l");
 		hist->SetLineStyle(1);
 	}
@@ -215,10 +215,10 @@ void DivideHists(TH1D* hCV, TH1D* hUniv, TH1D* &h_1D){
 }
 
 // ------------------------------------------------------------------------------------------------------------
-void plot_beamline_flux(const char* mode){
+void plot_beamline_flux(const char* mode, const char * horn){
 	gStyle->SetOptStat(0); // say no to stats box
 
-	const char * horn = "rhc";
+	std::cout << "Using horn mode: " << std::string(horn) << std::endl;
 
 	std::vector<std::string> params = { // A vector with the variations NEW ONES with no threshold
 		"CV",                
@@ -297,7 +297,14 @@ void plot_beamline_flux(const char* mode){
 
 	// ------------------------------------------------------------------------------------------------------------
 	// CV
-	boolfile  = GetFile(f , "/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/RHC/output_uboone_rhc_run0_set1.root"); 
+	if (std::string(horn) == "fhc"){
+		boolfile  = GetFile(f , "/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/FHC/output_uboone_fhc_run0_set1.root"); 
+	}
+	else { 
+		boolfile  = GetFile(f , "/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/RHC/output_uboone_rhc_run0_set1.root"); 
+	}
+	
+	
 	if (boolfile == false) gSystem->Exit(0); // Most up to date version of CV
 	
 	boolhist  = GetHist(f, h_2D, Form("%s/Detsmear/%s_CV_AV_TPC_2D", mode, mode)); 
@@ -336,7 +343,19 @@ void plot_beamline_flux(const char* mode){
 	// ------------------------------------------------------------------------------------------------------------
 	// Loop over the beamline
 	for (int i = 1; i < params.size(); i++){
-		boolfile  = GetFile(f , Form("/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46//RHC/output_uboone_rhc_run%i.root",i)); 
+
+		if (params.at(i) == "Horn1_refined_descr" || params.at(i) == "Old_Horn") continue; // Remove these variations
+		
+		if (std::string(horn) == "fhc"){
+			boolfile  = GetFile(f , Form("/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/FHC/output_uboone_fhc_run%i.root",i)); 
+			// std::cout << boolfile << std::endl;
+			if (boolfile == false) continue; // Skip if the file does not exist
+		}
+		else {
+			boolfile  = GetFile(f , Form("/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/RHC/output_uboone_rhc_run%i.root",i)); 
+			if (boolfile == false) continue; // Skip if the file does not exist
+		}
+		
 		if (boolfile == false) continue; // Skip if the file does not exist
 		
 		boolhist  = GetHist(f, h_2D, Form("%s/Detsmear/%s_CV_AV_TPC_2D", mode, mode)); if (boolhist == false) gSystem->Exit(0);
@@ -442,6 +461,10 @@ void plot_beamline_flux(const char* mode){
 	// Now make a plot of the percentage changes from the CV for Integrated Flux
 	TH1D *hBeamline_flux= new TH1D("Beamline",Form("%s Beamline Integrated Flux", mode_title), params.size(), 0, params.size());
 	for (unsigned int i = 1; i < params.size(); i++){
+		if (beamline_flux.at(i) == 0) {
+			hBeamline_flux->Fill(params_tidy[i].c_str(),0);
+			continue;
+		}
 		hBeamline_flux->Fill(params_tidy[i].c_str(), 100 * beamline_flux.at(i) / beamline_flux.at(0) - 100);
 
 	}
@@ -470,12 +493,13 @@ void plot_beamline_flux(const char* mode){
 	// ++++++++++++++++++++++++++++++++++
 	// create plots folder if it does not exist
 	gSystem->Exec("if [ ! -d \"plots/beamline\" ]; then echo \"\nBeamline folder does not exist... creating\"; mkdir -p plots/beamline; fi"); 
-	c_beamline->Print(Form("plots/beamline/%s_Beamline_2D_unwrapped_Flux.pdf",mode));
-	c_beamline_1D->Print(Form("plots/beamline/%s_Beamline_1D_Flux.pdf",mode));
+	
+	c_beamline->Print(Form("plots/beamline/%s_Beamline_2D_unwrapped_Flux_%s.pdf",mode, horn));
+	c_beamline_1D->Print(Form("plots/beamline/%s_Beamline_1D_Flux_%s.pdf",mode, horn));
 
-	c_beamline_ratio->Print(Form("plots/beamline/%s_Beamline_2D_unwrapped_Flux_ratio.pdf",mode));
-	c_beamline_ratio_1D->Print(Form("plots/beamline/%s_Beamline_1D_Flux_ratio.pdf",mode));
+	c_beamline_ratio->Print(Form("plots/beamline/%s_Beamline_2D_unwrapped_Flux_ratio_%s.pdf",mode, horn));
+	c_beamline_ratio_1D->Print(Form("plots/beamline/%s_Beamline_1D_Flux_ratio_%s.pdf",mode, horn));
 
-	c_beamline_flux->Print(Form("plots/beamline/%s_Beamline_Integrated_Flux_Change.pdf",mode));
+	c_beamline_flux->Print(Form("plots/beamline/%s_Beamline_Integrated_Flux_Change_%s.pdf",mode, horn));
 
 } // End

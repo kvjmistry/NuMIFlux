@@ -24,10 +24,10 @@ then
 	root -l -q -b 'plot_gsimple_flux.C("'$horn'","numubar")'
 elif [ $mode == "beamline" ]
 then 
-	root -l -q -b 'plot_beamline_flux.C("nue")'
-	root -l -q -b 'plot_beamline_flux.C("nuebar")'
-	root -l -q -b 'plot_beamline_flux.C("numu")'
-	root -l -q -b 'plot_beamline_flux.C("numubar")'
+	root -l -q -b 'plot_beamline_flux.C("nue", "'$horn'")'
+	root -l -q -b 'plot_beamline_flux.C("nuebar", "'$horn'")'
+	root -l -q -b 'plot_beamline_flux.C("numu", "'$horn'")'
+	root -l -q -b 'plot_beamline_flux.C("numubar", "'$horn'")'
 elif [ $mode == "eventrate" ]
 then 
 	root -l -q -b 'plot_event_rates.C("'$horn'")'
