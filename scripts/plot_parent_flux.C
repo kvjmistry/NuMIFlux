@@ -103,11 +103,11 @@ void plot_parent_flux(const char* horn, TString mode) { // (fhc/rhc, numu/nue)
 
 	// FHC File in 
 	if (!strcmp(horn, "fhc")) {
-		boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/FHC/output_uboone_run0.root");
+		boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/FHC/output_uboone_fhc_run0_set1.root");
 		if (boolfile == false) gSystem->Exit(0);
 	}
 	else { // RHC file
-		boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold/RHC/output_uboone_run0.root");
+		boolfile  = GetFile(f,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/RHC/output_uboone_rhc_run0_set1.root");
 		if (boolfile == false) gSystem->Exit(0); // turn off K- capture at rest
 	}
 
@@ -121,7 +121,10 @@ void plot_parent_flux(const char* horn, TString mode) { // (fhc/rhc, numu/nue)
 	
 
 	// Define Integrals
-	double flux_cv  = h_ppfx_flux->Integral(0,  h_ppfx_flux->GetNbinsX()+1) * normfactor;
+  double energy_threshold = 0.125;
+  std::cout <<"Using Energy Threshold of: " << energy_threshold << std::endl;
+  double xbin_th = h_ppfx_flux->GetXaxis()->FindBin(energy_threshold);   // find the x bin to integrate from
+	double flux_cv  = h_ppfx_flux->Integral(xbin_th,  h_ppfx_flux->GetNbinsX()+1) * normfactor;
 	std::vector<double> flux_parent(parent.size());
 
 	// Rebin and normalise
@@ -149,7 +152,8 @@ void plot_parent_flux(const char* horn, TString mode) { // (fhc/rhc, numu/nue)
 
 	for (unsigned int i = 0; i < parent.size(); i++){
 		boolhist = GetHist(f, h_parent.at(i), Form("%s/%s/Enu_%s_%s_AV_TPC", mode_char, parent.at(i).c_str(),mode_char, parent.at(i).c_str() )); if (boolhist == false) gSystem->Exit(0);
-		flux_parent.at(i) =  h_parent.at(i)->Integral(0,  h_parent.at(i)->GetNbinsX()+1) * normfactor;
+    xbin_th = h_parent.at(i)->GetXaxis()->FindBin(energy_threshold);   // find the x bin to integrate from
+		flux_parent.at(i) =  h_parent.at(i)->Integral(xbin_th,  h_parent.at(i)->GetNbinsX()+1) * normfactor;
 		h_parent.at(i)->Rebin(rebin);
 		Normalise(h_parent.at(i));
 		h_parent.at(i)->Scale(normfactor);

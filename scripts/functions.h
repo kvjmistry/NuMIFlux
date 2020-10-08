@@ -702,8 +702,11 @@ void PlotFluxSame(TCanvas *c,TLegend *leg, TFile *f1, TString mode, double fPOT,
     bool boolhist = GetHist(f1, h_flux, Gethist_TPC); if (boolhist == false) gSystem->Exit(0);
     h_flux->SetDirectory(0);
 
+    double energy_threshold = 0.125; // Energy threhsold
+    double xbin_th = h_flux->GetXaxis()->FindBin(energy_threshold);   // find the x bin to integrate from
+
     // Get the flux for the neutrino flavour
-    double flux_flav = h_flux->Integral(0,  h_flux->GetNbinsX()+1);
+    double flux_flav = h_flux->Integral(xbin_th,  h_flux->GetNbinsX()+1);
 
     // Convert the flux percentage to a char
     char flux_pcent[15];
@@ -779,17 +782,23 @@ double GetTotalFlux(TFile *f1){
 
     double flux_cv{0.0}; 
 
+    double energy_threshold = 0.125; // define an energy threshold to integrate the flux from
+
     boolhist = GetHist(f1, h, "numu/Detsmear/numu_UW_AV_TPC_5MeV_bin"); if (boolhist == false) gSystem->Exit(0);
-    flux_cv += h->Integral(0,  h->GetNbinsX()+1);
+    double xbin_th = h->GetXaxis()->FindBin(energy_threshold);   // find the x bin to integrate from
+    flux_cv += h->Integral(xbin_th,  h->GetNbinsX()+1);
 
     boolhist = GetHist(f1, h, "numubar/Detsmear/numubar_UW_AV_TPC_5MeV_bin"); if (boolhist == false) gSystem->Exit(0);
-    flux_cv += h->Integral(0,  h->GetNbinsX()+1);
+    xbin_th = h->GetXaxis()->FindBin(energy_threshold);   // find the x bin to integrate from
+    flux_cv += h->Integral(xbin_th,  h->GetNbinsX()+1);
 
     boolhist = GetHist(f1, h, "nue/Detsmear/nue_UW_AV_TPC_5MeV_bin"); if (boolhist == false) gSystem->Exit(0);
-    flux_cv += h->Integral(0,  h->GetNbinsX()+1);
+    xbin_th = h->GetXaxis()->FindBin(energy_threshold);   // find the x bin to integrate from
+    flux_cv += h->Integral(xbin_th,  h->GetNbinsX()+1);
 
     boolhist = GetHist(f1, h, "nuebar/Detsmear/nuebar_UW_AV_TPC_5MeV_bin"); if (boolhist == false) gSystem->Exit(0);
-    flux_cv += h->Integral(0,  h->GetNbinsX()+1);
+    xbin_th = h->GetXaxis()->FindBin(energy_threshold);   // find the x bin to integrate from
+    flux_cv += h->Integral(xbin_th,  h->GetNbinsX()+1);
 
     return flux_cv;
 
