@@ -34,7 +34,7 @@ source /cvmfs/uboone.opensciencegrid.org/products/setup_uboone.sh
 source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setup
 source /cvmfs/fermilab.opensciencegrid.org/products/larsoft/setup 
 export PRODUCTS=${PRODUCTS}:/cvmfs/fermilab.opensciencegrid.org/products/common/db/
-echo "setup uboonecode v08_08_00_19 -q e17:prof"
+echo "setup uboonecode v08_00_00_19 -q e17:prof"
 setup uboonecode v08_00_00_19 -q e17:prof
 echo "setup ifdhc"
 setup ifdhc #v2_2_3
