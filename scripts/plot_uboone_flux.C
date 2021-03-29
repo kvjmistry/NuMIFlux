@@ -32,7 +32,7 @@ void plot_uboone_flux(const char* horn,  const char* mode, const char* detector)
     if (!strcmp(detector,"uboone")) {
         // Load in the file, either fhc or rhc
         if (!strcmp(horn,"fhc")) {
-            boolfile  = GetFile(f1 ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/FHC/output_uboone_fhc_run0_merged.root");
+            boolfile  = GetFile(f1 ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/FHC/sept/output_uboone_fhc_run0_merged.root");
             if (boolfile == false) gSystem->Exit(0);
         }
         else {
@@ -70,8 +70,8 @@ void plot_uboone_flux(const char* horn,  const char* mode, const char* detector)
         "ppfx_think_PPFXThinKaon",
         "ppfx_thinmes_PPFXThinMeson",
         "ppfx_thinnpi_PPFXThinNeutronPion",
-        "thinna_PPFXThinNucA",
-        "thinn_PPFXThinNuc",
+        "ppfx_thinna_PPFXThinNucA",
+        "ppfx_thinn_PPFXThinNuc",
         "ppfx_thinpi_PPFXThinPion",
         "ppfx_totabs_PPFXTotAbsorp",
         "ppfx_ms_UBPPFX"};

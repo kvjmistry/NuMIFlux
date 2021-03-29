@@ -113,7 +113,7 @@ void plot_parent_flux(const char* horn, TString mode) { // (fhc/rhc, numu/nue)
 
 	// Get POT
 	double fPOT = GetPOT(f);
-	double normfactor = 6.0e20 / (fPOT*1e4);
+	double normfactor = 1.0 / (fPOT*1e4);
 	
 	// Now get the cv flux
 	TH1D* h_ppfx_flux;
@@ -121,7 +121,7 @@ void plot_parent_flux(const char* horn, TString mode) { // (fhc/rhc, numu/nue)
 	
 
 	// Define Integrals
-  double energy_threshold = 0.125;
+  double energy_threshold = 0.06;
   std::cout <<"Using Energy Threshold of: " << energy_threshold << std::endl;
   double xbin_th = h_ppfx_flux->GetXaxis()->FindBin(energy_threshold);   // find the x bin to integrate from
 	double flux_cv  = h_ppfx_flux->Integral(xbin_th,  h_ppfx_flux->GetNbinsX()+1) * normfactor;
@@ -135,12 +135,12 @@ void plot_parent_flux(const char* horn, TString mode) { // (fhc/rhc, numu/nue)
 	h_ppfx_flux->Draw("hist,same");
 	h_ppfx_flux->SetLineWidth(2);
 	h_ppfx_flux->SetLineColor(kBlack);
-	h_ppfx_flux->GetXaxis()->SetRangeUser(0,3.5);
+	h_ppfx_flux->GetXaxis()->SetRangeUser(0,4.0);
 
-	if (mode == "numu")		h_ppfx_flux->SetTitle("#nu_{#mu}; Energy [GeV]; #nu / 6 #times 10^{20} POT / GeV / cm^{2}");
-	if (mode == "nue")		h_ppfx_flux->SetTitle("#nu_{e}; Energy [GeV]; #nu / 6 #times 10^{20} POT / GeV / cm^{2}");
-	if (mode == "numubar")	h_ppfx_flux->SetTitle("#bar{#nu_{#mu}}; Energy [GeV]; #nu / 6 #times 10^{20} POT / GeV / cm^{2}");
-	if (mode == "nuebar")	h_ppfx_flux->SetTitle("#bar{#nu_{e}}; Energy [GeV]; #nu / 6 #times 10^{20} POT / GeV / cm^{2}");
+	if (mode == "numu")		h_ppfx_flux->SetTitle("#nu_{#mu}; Energy [GeV]; #nu / POT / 25 MeV / cm^{2}");
+	if (mode == "nue")		h_ppfx_flux->SetTitle("#nu_{e}; Energy [GeV]; #nu / POT / 25 MeV / cm^{2}");
+	if (mode == "numubar")	h_ppfx_flux->SetTitle("#bar{#nu_{#mu}}; Energy [GeV]; #nu / POT / 25 MeV / cm^{2}");
+	if (mode == "nuebar")	h_ppfx_flux->SetTitle("#bar{#nu_{e}}; Energy [GeV]; #nu / POT / 25 MeV / cm^{2}");
 	
 	if (mode == "nue" || mode == "numu") gStyle->SetTitleH(0.1);
 	else gStyle->SetTitleH(0.07);

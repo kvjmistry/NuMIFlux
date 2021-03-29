@@ -47,7 +47,7 @@ void plot_total_flux(const char* horn) {
     }
     
     // define the energy threshold to integrate from 
-    double energy_threshold = 0.125; // Energy threhsold
+    double energy_threshold = 0.06; // Energy threhsold
     double flux_int_tot = 0.0;
     std::vector<double> flux_int(flav.size(), 0.0);
 
@@ -72,7 +72,7 @@ void plot_total_flux(const char* horn) {
         h_flux.at(f) ->Rebin(2);
     
         // Normalise the histogram by bin width
-        Normalise(h_flux.at(f));
+        // Normalise(h_flux.at(f));
 
         double POT_Scale = 1.0; // The POT to scale to // was 6.0e20
         
@@ -87,7 +87,7 @@ void plot_total_flux(const char* horn) {
         h_flux.at(f)->GetXaxis()->SetTitleSize(0.05);
         h_flux.at(f)->GetYaxis()->SetLabelSize(0.05);
         h_flux.at(f)->GetYaxis()->SetTitleSize(0.05);
-        h_flux.at(f)->SetTitle(";Neutrino Energy [GeV];#nu / POT / GeV / cm^{2}");
+        h_flux.at(f)->SetTitle(";Neutrino Energy [GeV];#nu / POT / 10 MeV / cm^{2}");
         h_flux.at(f)->GetXaxis()->SetRangeUser(0,5);
         
     }

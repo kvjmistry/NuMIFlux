@@ -101,14 +101,14 @@ void legDraw(TLegend * &legend, TH1D *&hist, std::string inputmode, TString mode
         hist->SetLineStyle(2);
         hist->Draw("hist,same");
     }
-    else if  (inputmode == "thinna_PPFXThinNucA"){
+    else if  (inputmode == "ppfx_thinna_PPFXThinNucA"){
         hist->SetLineColor(50);
         hist->SetLineWidth(2);
         legend->AddEntry(hist, "Nucleon-A", "l");
         hist->SetLineStyle(2);
         hist->Draw("hist,same");
     }
-    else if  (inputmode == "thinn_PPFXThinNuc"){
+    else if  (inputmode == "ppfx_thinn_PPFXThinNuc"){
         hist->SetLineColor(kOrange+10);
         hist->SetLineWidth(2);
         legend->AddEntry(hist, "pC #rightarrow NucleonX", "l");
