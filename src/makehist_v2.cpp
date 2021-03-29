@@ -40,20 +40,20 @@ int main(int argc, char** argv) {
     int set = 1;
 
     // Beamline and CV
-    InputTag eventweight_tag_00("eventweight","","EventWeightMar18");
-    InputTag eventweight_tag_01("eventweight","","EventWeightMar18ExtraGENIE1");
+    InputTag eventweight_tag_00("eventweight","","EventWeightSept24");
+    InputTag eventweight_tag_01("eventweight","","EventWeightSept24ExtraGENIE1");
     
     // Set 2
     // set = 2;
     // std::cout << "Running Set 2"<< std::endl;
-    // InputTag eventweight_tag_00("eventweight","","EventWeightMar18ExtraGENIE2");
-    // InputTag eventweight_tag_01("eventweight","","EventWeightMar18ExtraGENIE3");
+    // InputTag eventweight_tag_00("eventweight","","EventWeightSept24ExtraGENIE2");
+    // InputTag eventweight_tag_01("eventweight","","EventWeightSept24ExtraGENIE3");
     
     // Set 3
     // set = 3;
     // std::cout << "Running Set 3"<< std::endl;
-    // InputTag eventweight_tag_00("eventweight","","EventWeightMar18ExtraGENIE4");
-    // InputTag eventweight_tag_01("eventweight","","EventWeightMar18ExtraGENIE5");
+    // InputTag eventweight_tag_00("eventweight","","EventWeightSept24ExtraGENIE4");
+    // InputTag eventweight_tag_01("eventweight","","EventWeightSept24ExtraGENIE5");
     
     std::vector<std::string> labels = {"ppfx_mippk_PPFXMIPPKaon",
                                        "ppfx_mipppi_PPFXMIPPPion",
@@ -62,8 +62,8 @@ int main(int argc, char** argv) {
                                        "ppfx_think_PPFXThinKaon",
                                        "ppfx_thinmes_PPFXThinMeson",
                                        "ppfx_thinnpi_PPFXThinNeutronPion",
-                                       "thinna_PPFXThinNucA",
-                                       "thinn_PPFXThinNuc",
+                                       "ppfx_thinna_PPFXThinNucA",
+                                       "ppfx_thinn_PPFXThinNuc",
                                        "ppfx_thinpi_PPFXThinPion",
                                        "ppfx_totabs_PPFXTotAbsorp",
                                        "ppfx_ms_UBPPFX"};
@@ -271,6 +271,8 @@ int main(int argc, char** argv) {
     int const n_th = bins.at(flav.size()).size()-1; // theta bins
     temp2 = bins.at(4); 
 
+    int num_bins = 4000; // Number of bins to divide the main histograms by. Was 4000
+
     // Flavors
     for(unsigned i=0; i<flav.size(); i++) {
         
@@ -296,20 +298,20 @@ int main(int argc, char** argv) {
         MuDAR_zpos[i]   = new TH1D(Form("%s_MuDAR_zpos",   flav[i].c_str()),"",  400, 0, 80000); // Mudar peak zpos
         parent_zpos_angle[i]        = new TH2D(Form("%s_parent_zpos_angle", flav[i].c_str()), "", 200, 0, 80000, 180 , 0, 180);
         parent_zpos_angle_energy[i] = new TH2D(Form("%s_parent_zpos_angle_energy", flav[i].c_str()), "", 200, 0, 80000, 180 , 0, 180);
-        flux_targ[i] = new TH1D( Form("%s_flux_targ", flav[i].c_str()),"", 4000, 0, 20 );
-        flux_pipe[i] = new TH1D( Form("%s_flux_pipe", flav[i].c_str()),"", 4000, 0, 20 );
-        flux_dump[i] = new TH1D( Form("%s_flux_dump", flav[i].c_str()),"", 4000, 0, 20 );
-        flux_targ_theta[i] = new TH1D( Form("%s_flux_targ_theta", flav[i].c_str()),"", 4000, 0, 20 );
-        flux_pipe_theta[i] = new TH1D( Form("%s_flux_pipe_theta", flav[i].c_str()),"", 4000, 0, 20 );
-        flux_dump_theta[i] = new TH1D( Form("%s_flux_dump_theta", flav[i].c_str()),"", 4000, 0, 20 );
+        flux_targ[i] = new TH1D( Form("%s_flux_targ", flav[i].c_str()),"", num_bins, 0, 20 );
+        flux_pipe[i] = new TH1D( Form("%s_flux_pipe", flav[i].c_str()),"", num_bins, 0, 20 );
+        flux_dump[i] = new TH1D( Form("%s_flux_dump", flav[i].c_str()),"", num_bins, 0, 20 );
+        flux_targ_theta[i] = new TH1D( Form("%s_flux_targ_theta", flav[i].c_str()),"", num_bins, 0, 20 );
+        flux_pipe_theta[i] = new TH1D( Form("%s_flux_pipe_theta", flav[i].c_str()),"", num_bins, 0, 20 );
+        flux_dump_theta[i] = new TH1D( Form("%s_flux_dump_theta", flav[i].c_str()),"", num_bins, 0, 20 );
 
         // 2D
         Enu_Th_CV_AV_TPC[i] = new TH2D(Form("%s_CV_AV_TPC_2D",flav[i].c_str()),"",n, bin, n_th, bin_th);
         Enu_Th_UW_AV_TPC[i] = new TH2D(Form("%s_unweighted_AV_TPC_2D",flav[i].c_str()),"",n, bin, n_th, bin_th);
 
         // new binning schmeme to be the same as marcos
-        Enu_CV_AV_TPC_5MeV_bin[i] = new TH1D(Form("%s_CV_AV_TPC_5MeV_bin",flav[i].c_str()),"",4000, 0, 20);
-        Enu_UW_AV_TPC_5MeV_bin[i] = new TH1D(Form("%s_UW_AV_TPC_5MeV_bin",flav[i].c_str()),"",4000, 0, 20);
+        Enu_CV_AV_TPC_5MeV_bin[i] = new TH1D(Form("%s_CV_AV_TPC_5MeV_bin",flav[i].c_str()),"",num_bins, 0, 20);
+        Enu_UW_AV_TPC_5MeV_bin[i] = new TH1D(Form("%s_UW_AV_TPC_5MeV_bin",flav[i].c_str()),"",num_bins, 0, 20);
 
         Enu_Parent_AV_TPC[i].resize(parent.size());
         Th_Parent_AV_TPC[i].resize(parent.size());
@@ -320,12 +322,12 @@ int main(int argc, char** argv) {
         
         // Parent
         for(unsigned k = 0; k < parent.size(); k++){
-            Enu_Parent_AV_TPC[i][k]  = new TH1D(Form("Enu_%s_%s_AV_TPC",     flav[i].c_str(), parent[k].c_str()),"", 4000, 0, 20);
+            Enu_Parent_AV_TPC[i][k]  = new TH1D(Form("Enu_%s_%s_AV_TPC",     flav[i].c_str(), parent[k].c_str()),"", num_bins, 0, 20);
             Th_Parent_AV_TPC[i][k]   = new TH1D(Form("Th_%s_%s_AV_TPC",      flav[i].c_str(), parent[k].c_str()),"", 18,   0, 180);
             zpos_Parent_AV_TPC[i][k] = new TH1D(Form("zpos_%s_%s_AV_TPC",    flav[i].c_str(), parent[k].c_str()),"", 400,  0, 80000);
             impwght_Parent[i][k]     = new TH1D(Form("impwght_Parent_%s_%s", flav[i].c_str(), parent[k].c_str()),"", 1000, 0, 1000);
-            Targ_mom_Parent[i][k]    = new TH1D(Form("Targ_mom_Parent_%s_%s",flav[i].c_str(), parent[k].c_str()),"", 4000, 0, 20);
-            DAR_Enu_Parent[i][k]     = new TH1D(Form("DAR_Enu_%s_%s_AV_TPC", flav[i].c_str(), parent[k].c_str()),"", 4000, 0, 20);
+            Targ_mom_Parent[i][k]    = new TH1D(Form("Targ_mom_Parent_%s_%s",flav[i].c_str(), parent[k].c_str()),"", num_bins, 0, 20);
+            DAR_Enu_Parent[i][k]     = new TH1D(Form("DAR_Enu_%s_%s_AV_TPC", flav[i].c_str(), parent[k].c_str()),"", num_bins, 0, 20);
         }
         
         // Weighted Stuff

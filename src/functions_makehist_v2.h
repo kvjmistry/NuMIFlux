@@ -98,7 +98,6 @@ void check_weight(float &weight){
 // Get the PPFX weights
 void GetPPFXWeights(std::vector< std::vector< double > > &Weights, int shift, std::map<std::string, std::vector<double>> evtwgt_map, std::vector<std::string> labels){
 
-
     // Loop over all options
     for (unsigned l=0; l<labels.size(); l++) { 
 
@@ -114,7 +113,6 @@ void GetPPFXWeights(std::vector< std::vector< double > > &Weights, int shift, st
                 }     
                 else {
                     Weights[l][i+shift] *= evtwgt_map.find(labels[l])->second.at(i);
-                    // std::cout <<evtwgt_map.find(labels[l])->second.at(i) << std::endl;
                     if (std::isnan(Weights[l][i+shift]) == 1) { // catch NaN values
                         std::cout << "got a nan:\t" << Weights[l][i+shift] << std::endl;
                         Weights[l][i+shift] = 0;
@@ -125,9 +123,13 @@ void GetPPFXWeights(std::vector< std::vector< double > > &Weights, int shift, st
                         std::cout << "got a inf:\t" << Weights[l][i+shift] << std::endl;
                         Weights[l][i+shift] = 0;
                     }
+
                 }
 
+
             } // End loop over universes
+
+            
 
         }
 
