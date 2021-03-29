@@ -5,7 +5,7 @@
 
 <!-- Production Project -->
 <!DOCTYPE project [
-<!ENTITY relreco "v08_00_00_46">
+<!ENTITY relreco "v08_00_00_51">
 <!ENTITY file_type "mc">
 <!ENTITY run_type "physics">
 
@@ -45,7 +45,7 @@
   <larsoft>
     <tag>&relreco;</tag>
     <qual>e17:prof</qual>
-    <local>/pnfs/uboone/resilient/users/kmistry/tars/uboonecode_mcc9_v08_00_00_46_sl7.tar</local>
+    <local>/pnfs/uboone/resilient/users/kmistry/tars/uboonecode_mcc9_v08_00_00_51_sl7.tar</local>
   </larsoft>
   
   <!-- Project stages -->
@@ -62,7 +62,7 @@
     <numjobs>&n_jobs;</numjobs>
     <!--<memory>4000</memory>-->
     <disk>20GB</disk>
-    <jobsub>--expected-lifetime=24h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
+    <jobsub>--expected-lifetime=30h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
     <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
     <schema>gsiftp</schema>
   </stage>  
@@ -77,7 +77,7 @@
     <numjobs>490</numjobs>
     <!--<memory>4000</memory>-->
     <disk>20GB</disk>
-    <jobsub>--expected-lifetime=26h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
+    <jobsub>--expected-lifetime=30h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
     <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
     <schema>gsiftp</schema>
   </stage>

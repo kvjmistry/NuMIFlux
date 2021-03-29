@@ -25,13 +25,13 @@ python ProcessMakehist.py --n_jobs=100 --files_per_job=5 --process_shift=0 --mem
 # FHC ----------------------------------------------------------------------------------------------------------------
 
 # CV set 1
-python ProcessMakehist.py --n_jobs=500 --files_per_job=1 --run=0 --process_shift=0 --memory=900 --lifetime=6 --hpset=1 --horn='FHC' --flist="/pnfs/uboone/persistent/users/kmistry/PPFX/makehist/FHC/files_run0.list"
+python ProcessMakehist.py --n_jobs=490 --files_per_job=1 --run=0 --process_shift=0 --memory=900 --lifetime=6 --hpset=1 --horn='FHC' --flist="/pnfs/uboone/persistent/users/kmistry/PPFX/makehist/FHC/files_run0.list"
 
 # CV set 2
-python ProcessMakehist.py --n_jobs=433 --files_per_job=1 --run=0 --process_shift=0 --memory=900 --lifetime=6 --hpset=2 --horn='FHC' --flist="/pnfs/uboone/persistent/users/kmistry/PPFX/makehist/FHC/files_run0_set2.list"
+python ProcessMakehist.py --n_jobs=490 --files_per_job=1 --run=0 --process_shift=0 --memory=900 --lifetime=6 --hpset=2 --horn='FHC' --flist="/pnfs/uboone/persistent/users/kmistry/PPFX/makehist/FHC/files_run0_set2.list"
 
 # CV set 3
-python ProcessMakehist.py --n_jobs=445 --files_per_job=1 --run=0 --process_shift=0 --memory=900 --lifetime=6 --hpset=3 --horn='FHC' --flist="/pnfs/uboone/persistent/users/kmistry/PPFX/makehist/FHC/files_run0_set3.list"
+python ProcessMakehist.py --n_jobs=499 --files_per_job=1 --run=0 --process_shift=0 --memory=900 --lifetime=6 --hpset=3 --horn='FHC' --flist="/pnfs/uboone/persistent/users/kmistry/PPFX/makehist/FHC/files_run0_set3.list"
 
 # RHC ----------------------------------------------------------------------------------------------------------------
 

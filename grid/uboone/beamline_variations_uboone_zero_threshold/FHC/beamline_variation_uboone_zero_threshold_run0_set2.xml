@@ -6,7 +6,7 @@
 
 <!-- Production Project -->
 <!DOCTYPE project [
-<!ENTITY relreco "v08_00_00_46">
+<!ENTITY relreco "v08_00_00_51">
 <!ENTITY file_type "mc">
 <!ENTITY run_type "physics">
 
@@ -46,7 +46,7 @@
   <larsoft>
     <tag>&relreco;</tag>
     <qual>e17:prof</qual>
-    <local>/pnfs/uboone/resilient/users/kmistry/tars/uboonecode_mcc9_v08_00_00_46_sl7.tar</local>
+    <local>/pnfs/uboone/resilient/users/kmistry/tars/uboonecode_mcc9_v08_00_00_51_sl7.tar</local>
   </larsoft>
   
   <!-- Project stages -->
@@ -60,10 +60,10 @@
     <workdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra2</workdir>
     <inputlist>/pnfs/uboone/persistent/users/kmistry/PPFX/beamline/file_list_fhc_uboone_zero_threshold_run0_newlocation.txt</inputlist>
     <maxfilesperjob>1</maxfilesperjob>
-    <numjobs>&n_jobs;</numjobs>
+    <numjobs>53</numjobs>
     <!--<memory>4000</memory>-->
     <disk>20GB</disk>
-    <jobsub>--expected-lifetime=24h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
+    <jobsub>--expected-lifetime=30h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
     <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
     <schema>gsiftp</schema>
   </stage>  
@@ -75,10 +75,10 @@
     <bookdir>/uboone/data/users/&user_name;/book/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra3</bookdir>
     <workdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra3</workdir>
     <maxfilesperjob>1</maxfilesperjob>
-    <numjobs>494</numjobs>
+    <numjobs>500</numjobs>
     <!--<memory>4000</memory>-->
-    <disk>20GB</disk>
-    <jobsub>--expected-lifetime=24h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
+    <disk>30GB</disk>
+    <jobsub>--expected-lifetime=30h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
     <jobsub_start>--expected-lifetime=short --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub_start>
     <schema>gsiftp</schema>
   </stage>
