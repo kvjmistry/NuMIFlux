@@ -100,12 +100,17 @@ int main(int argc, char** argv) {
 
     std::vector<TH1D*> Th_CV_AV_TPC;	
     std::vector<TH1D*> Th_UW_AV_TPC;	
+    std::vector<TH1D*> Th_CV_AV_TPC_DIF;	
+    std::vector<TH1D*> Th_UW_AV_TPC_DIF;	
 
     // 5Mev Bins
     std::vector<TH1D*> Enu_CV_Window_5MeV_bin;	
     std::vector<TH1D*> Enu_CV_AV_TPC_5MeV_bin;	
     std::vector<TH1D*> Enu_UW_Window_5MeV_bin;	
     std::vector<TH1D*> Enu_UW_AV_TPC_5MeV_bin;	
+
+    std::vector<TH1D*> Enu_CV_AV_TPC_5MeV_bin_DIF;	
+    std::vector<TH1D*> Enu_UW_AV_TPC_5MeV_bin_DIF;	
 
     // Detector intersection window method
     std::vector<TH1D*> Enu_CV_Window_5MeV_bin_intersect;	
@@ -120,6 +125,9 @@ int main(int argc, char** argv) {
     std::vector<std::vector<TH1D*> > Prod_energy_Parent; 	// Production energy by parent
     std::vector<std::vector<TH1D*> > Targ_mom_Parent; 	    // Momentum by parent as it leaves the target
     std::vector<std::vector<TH1D*> > DAR_Enu_Parent; 	    // Energy spectrum of decay at rest particles
+    std::vector<std::vector<TH1D*> > DAR_Th_Parent; 	    // Energy spectrum of decay at rest particles
+    std::vector<std::vector<TH1D*> > DIF_Enu_Parent; 	    // Energy spectrum of decay in flight particles
+    std::vector<std::vector<TH1D*> > DIF_Th_Parent; 	    // Energy spectrum of decay in flight particles
 
     // Other hists
     std::vector<TH1D*> PiDAR_zpos;
@@ -186,9 +194,15 @@ int main(int argc, char** argv) {
     
     Th_CV_AV_TPC.resize(flav.size());
     Th_UW_AV_TPC.resize(flav.size());
+    Th_CV_AV_TPC_DIF.resize(flav.size());
+    Th_UW_AV_TPC_DIF.resize(flav.size());
+    
     
     Enu_CV_AV_TPC_5MeV_bin.resize(flav.size());
     Enu_UW_AV_TPC_5MeV_bin.resize(flav.size());
+
+    Enu_CV_AV_TPC_5MeV_bin_DIF.resize(flav.size());
+    Enu_UW_AV_TPC_5MeV_bin_DIF.resize(flav.size());
     
     Enu_Parent_AV_TPC.resize(flav.size());
     Th_Parent_AV_TPC.resize(flav.size());
@@ -196,6 +210,9 @@ int main(int argc, char** argv) {
     impwght_Parent.resize(flav.size());
     Targ_mom_Parent.resize(flav.size());
     DAR_Enu_Parent.resize(flav.size());
+    DAR_Th_Parent.resize(flav.size());
+    DIF_Enu_Parent.resize(flav.size());
+    DIF_Th_Parent.resize(flav.size());
 
     // 2D
     Enu_Th_CV_AV_TPC.resize(flav.size());
@@ -288,6 +305,8 @@ int main(int argc, char** argv) {
         Enu_UW_AV_TPC[i] = new TH1D(Form("%s_UW_AV_TPC",flav[i].c_str()),"",n, bin);
         Th_CV_AV_TPC [i] = new TH1D(Form("Th_%s_CV_TPC", flav[i].c_str()), "", 180, 0, 180);
         Th_UW_AV_TPC [i] = new TH1D(Form("Th_%s_UW_TPC", flav[i].c_str()), "", 180, 0, 180);
+        Th_CV_AV_TPC_DIF [i] = new TH1D(Form("Th_%s_CV_TPC_DIF", flav[i].c_str()), "", 180, 0, 180);
+        Th_UW_AV_TPC_DIF [i] = new TH1D(Form("Th_%s_UW_TPC_DIF", flav[i].c_str()), "", 180, 0, 180);
 
         // Other Histograms
         parent_mom[i]   = new TH1D(Form("%s_parent_mom",   flav[i].c_str()), "", 100, 0, 25);    // momentum distribution of nu parent
@@ -313,21 +332,30 @@ int main(int argc, char** argv) {
         Enu_CV_AV_TPC_5MeV_bin[i] = new TH1D(Form("%s_CV_AV_TPC_5MeV_bin",flav[i].c_str()),"",num_bins, 0, 20);
         Enu_UW_AV_TPC_5MeV_bin[i] = new TH1D(Form("%s_UW_AV_TPC_5MeV_bin",flav[i].c_str()),"",num_bins, 0, 20);
 
+        Enu_CV_AV_TPC_5MeV_bin_DIF[i] = new TH1D(Form("%s_CV_AV_TPC_5MeV_bin_DIF",flav[i].c_str()),"",num_bins, 0, 20);
+        Enu_UW_AV_TPC_5MeV_bin_DIF[i] = new TH1D(Form("%s_UW_AV_TPC_5MeV_bin_DIF",flav[i].c_str()),"",num_bins, 0, 20);
+
         Enu_Parent_AV_TPC[i].resize(parent.size());
         Th_Parent_AV_TPC[i].resize(parent.size());
         zpos_Parent_AV_TPC[i].resize(parent.size());
         impwght_Parent[i].resize(parent.size());
         Targ_mom_Parent[i].resize(parent.size());
         DAR_Enu_Parent[i].resize(parent.size());
+        DAR_Th_Parent[i].resize(parent.size());
+        DIF_Enu_Parent[i].resize(parent.size());
+        DIF_Th_Parent[i].resize(parent.size());
         
         // Parent
         for(unsigned k = 0; k < parent.size(); k++){
             Enu_Parent_AV_TPC[i][k]  = new TH1D(Form("Enu_%s_%s_AV_TPC",     flav[i].c_str(), parent[k].c_str()),"", num_bins, 0, 20);
-            Th_Parent_AV_TPC[i][k]   = new TH1D(Form("Th_%s_%s_AV_TPC",      flav[i].c_str(), parent[k].c_str()),"", 18,   0, 180);
+            Th_Parent_AV_TPC[i][k]   = new TH1D(Form("Th_%s_%s_AV_TPC",      flav[i].c_str(), parent[k].c_str()),"", 180,   0, 180);
             zpos_Parent_AV_TPC[i][k] = new TH1D(Form("zpos_%s_%s_AV_TPC",    flav[i].c_str(), parent[k].c_str()),"", 400,  0, 80000);
             impwght_Parent[i][k]     = new TH1D(Form("impwght_Parent_%s_%s", flav[i].c_str(), parent[k].c_str()),"", 1000, 0, 1000);
             Targ_mom_Parent[i][k]    = new TH1D(Form("Targ_mom_Parent_%s_%s",flav[i].c_str(), parent[k].c_str()),"", num_bins, 0, 20);
             DAR_Enu_Parent[i][k]     = new TH1D(Form("DAR_Enu_%s_%s_AV_TPC", flav[i].c_str(), parent[k].c_str()),"", num_bins, 0, 20);
+            DAR_Th_Parent[i][k]     = new TH1D(Form("DAR_Th_%s_%s_AV_TPC", flav[i].c_str(), parent[k].c_str()),"", 180,   0, 180);
+            DIF_Enu_Parent[i][k]     = new TH1D(Form("DIF_Enu_%s_%s_AV_TPC", flav[i].c_str(), parent[k].c_str()),"", num_bins, 0, 20);
+            DIF_Th_Parent[i][k]     = new TH1D(Form("DIF_Th_%s_%s_AV_TPC", flav[i].c_str(), parent[k].c_str()),"", 180,   0, 180);
         }
         
         // Weighted Stuff
@@ -495,6 +523,13 @@ int main(int argc, char** argv) {
             Th_CV_AV_TPC[pdg]               ->Fill(theta, cv_weight);
             Th_UW_AV_TPC[pdg]               ->Fill(theta, dk2nu_weight);
 
+            if (Pmom_dk != 0 ) {
+                Th_CV_AV_TPC_DIF[pdg]               ->Fill(theta, cv_weight);
+                Th_UW_AV_TPC_DIF[pdg]               ->Fill(theta, dk2nu_weight);
+                Enu_CV_AV_TPC_5MeV_bin_DIF[pdg]     ->Fill(Enu, cv_weight);
+                Enu_UW_AV_TPC_5MeV_bin_DIF[pdg]     ->Fill(Enu, dk2nu_weight);
+            }
+
             // INDEXING: 0: PI_Plus 1: PI_Minus 2: Mu Plus 3: Mu_Minus 4: Kaon_Plus 5: Kaon_Minus 6: K0L 
             if (mcflux.fptype == 211){ // pi plus
                 Enu_Parent_AV_TPC[pdg][0]  ->Fill(Enu, cv_weight);
@@ -504,7 +539,14 @@ int main(int argc, char** argv) {
                 Targ_mom_Parent[pdg][0]    ->Fill(Pmom_tg, cv_weight);
 
                 // Fill DAR Energy spectrum
-                if (Pmom_dk == 0 ) DAR_Enu_Parent[pdg][0]->Fill(Enu, cv_weight);
+                if (Pmom_dk == 0 ) {
+                    DAR_Enu_Parent[pdg][0]->Fill(Enu, cv_weight);
+                    DAR_Th_Parent[pdg][0]->Fill(theta, cv_weight);
+                }
+                else {
+                    DIF_Enu_Parent[pdg][0]->Fill(Enu, cv_weight);
+                    DIF_Th_Parent[pdg][0]->Fill(theta, cv_weight);
+                }
                 
             }
             else if (mcflux.fptype == -211){ // pi minus
@@ -515,7 +557,14 @@ int main(int argc, char** argv) {
                 Targ_mom_Parent[pdg][1]    ->Fill(Pmom_tg, cv_weight);
 
                 // Fill DAR Energy spectrum
-                if (Pmom_dk == 0 ) DAR_Enu_Parent[pdg][1]->Fill(Enu, cv_weight);
+                if (Pmom_dk == 0 ){
+                    DAR_Enu_Parent[pdg][1]->Fill(Enu, cv_weight);
+                    DAR_Th_Parent[pdg][1]->Fill(theta, cv_weight);
+                }
+                else {
+                    DIF_Enu_Parent[pdg][1]->Fill(Enu, cv_weight);
+                    DIF_Th_Parent[pdg][1]->Fill(theta, cv_weight);
+                }
                 
             }
             else if (mcflux.fptype == -13){ // mu plus
@@ -526,7 +575,14 @@ int main(int argc, char** argv) {
                 Targ_mom_Parent[pdg][2]    ->Fill(Pmom_tg, cv_weight);
     
                 // Fill DAR Energy spectrum
-                if (Pmom_dk == 0 ) DAR_Enu_Parent[pdg][2]->Fill(Enu, cv_weight);
+                if (Pmom_dk == 0 ){
+                    DAR_Enu_Parent[pdg][2]->Fill(Enu, cv_weight);
+                    DAR_Th_Parent[pdg][2]->Fill(theta, cv_weight);
+                }
+                else {
+                    DIF_Enu_Parent[pdg][2]->Fill(Enu, cv_weight);
+                    DIF_Th_Parent[pdg][2]->Fill(theta, cv_weight);
+                }
 
             } 
             else if (mcflux.fptype == 13){ // mu minus
@@ -537,7 +593,14 @@ int main(int argc, char** argv) {
                 Targ_mom_Parent[pdg][3]    ->Fill(Pmom_tg, cv_weight);
 
                 // Fill DAR Energy spectrum
-                if (Pmom_dk == 0 ) DAR_Enu_Parent[pdg][3]->Fill(Enu, cv_weight);
+                if (Pmom_dk == 0 ){
+                    DAR_Enu_Parent[pdg][3]->Fill(Enu, cv_weight);
+                    DAR_Th_Parent[pdg][3]->Fill(theta, cv_weight);
+                }
+                else {
+                    DIF_Enu_Parent[pdg][3]->Fill(Enu, cv_weight);
+                    DIF_Th_Parent[pdg][3]->Fill(theta, cv_weight);
+                }
 
             } 
             else if (mcflux.fptype == 321){ // K+
@@ -548,7 +611,14 @@ int main(int argc, char** argv) {
                 Targ_mom_Parent[pdg][4]    ->Fill(Pmom_tg, cv_weight);
 
                 // Fill DAR Energy spectrum
-                if (Pmom_dk == 0 ) DAR_Enu_Parent[pdg][4]->Fill(Enu, cv_weight);
+                if (Pmom_dk == 0 ){
+                    DAR_Enu_Parent[pdg][4]->Fill(Enu, cv_weight);
+                    DAR_Th_Parent[pdg][4]->Fill(theta, cv_weight);
+                }
+                else {
+                    DIF_Enu_Parent[pdg][4]->Fill(Enu, cv_weight);
+                    DIF_Th_Parent[pdg][4]->Fill(theta, cv_weight);
+                }
                 
             }
             else if ( mcflux.fptype == -321){ // K-
@@ -559,7 +629,14 @@ int main(int argc, char** argv) {
                 Targ_mom_Parent[pdg][5]    ->Fill(Pmom_tg, cv_weight);
 
                 // Fill DAR Energy spectrum
-                if (Pmom_dk == 0 ) DAR_Enu_Parent[pdg][5]->Fill(Enu, cv_weight);
+                if (Pmom_dk == 0 ){
+                    DAR_Enu_Parent[pdg][5]->Fill(Enu, cv_weight);
+                    DAR_Th_Parent[pdg][5]->Fill(theta, cv_weight);
+                }
+                else {
+                    DIF_Enu_Parent[pdg][5]->Fill(Enu, cv_weight);
+                    DIF_Th_Parent[pdg][5]->Fill(theta, cv_weight);
+                }
                 
             }
             else if (mcflux.fptype == 130 ){ // K0L
@@ -570,7 +647,14 @@ int main(int argc, char** argv) {
                 Targ_mom_Parent[pdg][6]    ->Fill(Pmom_tg, cv_weight);
 
                 // Fill DAR Energy spectrum
-                if (Pmom_dk == 0 ) DAR_Enu_Parent[pdg][6]->Fill(Enu, cv_weight);
+                if (Pmom_dk == 0 ){
+                    DAR_Enu_Parent[pdg][6]->Fill(Enu, cv_weight);
+                    DAR_Th_Parent[pdg][6]->Fill(theta, cv_weight);
+                }
+                else {
+                    DIF_Enu_Parent[pdg][6]->Fill(Enu, cv_weight);
+                    DIF_Th_Parent[pdg][6]->Fill(theta, cv_weight);
+                }
 
             }
             
@@ -661,6 +745,9 @@ int main(int argc, char** argv) {
             impwght_Parent[f][k-1]->Write();
             Targ_mom_Parent[f][k-1]->Write();
             DAR_Enu_Parent[f][k-1]->Write();
+            DAR_Th_Parent[f][k-1]->Write();
+            DIF_Enu_Parent[f][k-1]->Write();
+            DIF_Th_Parent[f][k-1]->Write();
     
         }
 
@@ -691,8 +778,12 @@ int main(int argc, char** argv) {
         Enu_UW_AV_TPC[f]->Write();
         Th_CV_AV_TPC[f]->Write();
         Th_UW_AV_TPC[f]->Write();
+        Th_CV_AV_TPC_DIF[f]->Write();
+        Th_UW_AV_TPC_DIF[f]->Write();
         Enu_CV_AV_TPC_5MeV_bin[f]->Write();
         Enu_UW_AV_TPC_5MeV_bin[f]->Write();
+        Enu_CV_AV_TPC_5MeV_bin_DIF[f]->Write();
+        Enu_UW_AV_TPC_5MeV_bin_DIF[f]->Write();
         Enu_Th_CV_AV_TPC[f]->Write();
         Enu_Th_UW_AV_TPC[f]->Write();
 
