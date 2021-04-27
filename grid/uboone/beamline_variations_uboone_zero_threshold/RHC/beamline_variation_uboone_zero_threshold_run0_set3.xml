@@ -59,7 +59,7 @@
     <workdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra4</workdir>
     <inputlist>/pnfs/uboone/persistent/users/kmistry/PPFX/beamline/file_list_rhc_uboone_zero_threshold_&unisim_run;.txt</inputlist>
     <maxfilesperjob>1</maxfilesperjob>
-    <numjobs>&n_jobs;</numjobs>
+    <numjobs>3</numjobs>
     <!--<memory>4000</memory>-->
     <disk>20GB</disk>
     <jobsub>--expected-lifetime=30h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
@@ -74,7 +74,7 @@
     <bookdir>/uboone/data/users/&user_name;/book/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra5</bookdir>
     <workdir>/pnfs/uboone/scratch/users/&user_name;/PPFX/&relreco;/&name;/&type;/&proj_name;_&unisim_run;_extra5</workdir>
     <maxfilesperjob>1</maxfilesperjob>
-    <numjobs>472</numjobs>
+    <numjobs>497</numjobs>
     <!--<memory>4000</memory>-->
     <disk>20GB</disk>
     <jobsub>--expected-lifetime=30h --append_condor_requirements='(TARGET.HAS_CVMFS_uboone_opensciencegrid_org==true)'</jobsub>
