@@ -36,7 +36,7 @@ void plot_uboone_flux(const char* horn,  const char* mode, const char* detector)
             if (boolfile == false) gSystem->Exit(0);
         }
         else {
-            boolfile  = GetFile(f1 ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/RHC/output_uboone_rhc_run0_merged.root");
+            boolfile  = GetFile(f1 ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/RHC/sept/output_uboone_rhc_run0_merged.root");
             if (boolfile == false) gSystem->Exit(0);
         }
     }

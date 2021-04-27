@@ -40,9 +40,9 @@ void merge_hpsets(){
     int n_uni = 600;
 
     // Open the TFiles
-    TFile *f_set1 = TFile::Open("/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/FHC/sept/output_uboone_fhc_run0_set1.root");
-    TFile *f_set2 = TFile::Open("/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/FHC/sept/output_uboone_fhc_run0_set2.root");
-    TFile *f_set3 = TFile::Open("/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/FHC/sept/output_uboone_fhc_run0_set3.root");
+    TFile *f_set1 = TFile::Open("/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/RHC/sept/output_uboone_rhc_run0_set1.root");
+    TFile *f_set2 = TFile::Open("/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/RHC/sept/output_uboone_rhc_run0_set2.root");
+    TFile *f_set3 = TFile::Open("/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/RHC/sept/output_uboone_rhc_run0_set3.root");
 
     // Get the POT for each file
     double pot_set1 =  GetPOT(f_set1);

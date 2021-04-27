@@ -90,7 +90,7 @@ void DrawSpecifiers(TH1D* &hist, TLegend* legend, std::string param, const char*
 	}
 	else if  (param == "Horm1_x_m3mm" ){
 		hist->SetLineColor(28);
-		legend->AddEntry(hist, "Horm1 x -3mm", "l");
+		legend->AddEntry(hist, "Horn1 x -3mm", "l");
 		hist->SetLineStyle(2);
 	}
 	else if  (param == "Horn1_y_p3mm"){
@@ -125,7 +125,7 @@ void DrawSpecifiers(TH1D* &hist, TLegend* legend, std::string param, const char*
 	}
 	else if  (param == "Horm2_x_m3mm"){
 		hist->SetLineColor(kOrange+1);
-		legend->AddEntry(hist, "Horm2 x -3mm", "l");
+		legend->AddEntry(hist, "Horn2 x -3mm", "l");
 		hist->SetLineStyle(2);
 	}
 	else if  (param == "Horn2_y_p3mm"){
@@ -317,13 +317,13 @@ void plot_beamline_flux(const char* mode, const char * horn){
 
 	double flux_cv  = h_1D.at(0)->Integral(0,  h_1D.at(0)->GetNbinsX()+1); // Get the CV Flux
 	std::vector<double> beamline_flux(params.size(), 0);
-	beamline_flux.at(0) = flux_cv * (6.0e20)/ (POT*1.0e4);
+	beamline_flux.at(0) = flux_cv * (1.0)/ (POT*1.0e4);
 
 	// 2D
 	// Get POT and Unwrap histogram
 	UnwrapTH2D( h_2D, h_unwrap, POT );
 	h_unwrap_clone = (TH1D*) h_unwrap->Clone("h_unwrap_clone");
-	h_unwrap->SetTitle(Form("%s;Bin index; #nu / 6 #times 10^{20} POT / GeV / deg / cm^{2}", mode_title ));
+	h_unwrap->SetTitle(Form("%s;Bin index; #nu / POT / GeV / deg / cm^{2}", mode_title ));
 	c_beamline->cd();
 	DrawSpecifiers(h_unwrap, lFlux, "CV","hist,same");
 	Draw_Nu_Mode(c_beamline, horn); // Draw FHC Mode/RHC Mode Text
@@ -331,10 +331,15 @@ void plot_beamline_flux(const char* mode, const char * horn){
 	//1D
 	c_beamline_1D->cd();
 	Normalise(h_1D.at(0));
-	h_1D.at(0)->Scale((6.0e20)/ (POT*1.0e4)); // scale to right POT and m2
+	h_1D.at(0)->Scale((1.0)/ (POT*1.0e4)); // scale to right POT and m2
 	// h_1D.at(0)->Rebin(10);
-	h_1D.at(0)->GetXaxis()->SetRangeUser(0, 6);
-	h_1D.at(0)->SetTitle(Form("%s;Energy [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}", mode_title));
+	
+	if (std::string(mode) == "nue" || std::string(mode) =="nuebar" )
+		h_1D.at(0)->GetXaxis()->SetRangeUser(0, 5);
+	else
+		h_1D.at(0)->GetXaxis()->SetRangeUser(0, 6);
+	
+	h_1D.at(0)->SetTitle(Form("%s;Energy [GeV];#nu /  POT / GeV / cm^{2}", mode_title));
 	DrawSpecifiers(h_1D.at(0), lFlux_1D, "CV","hist,same");
 	Draw_Nu_Mode(c_beamline_1D, horn); // Draw FHC Mode/RHC Mode Text
 	h_1D_clone = (TH1D*) h_1D.at(0)->Clone("h_1D_clone");
@@ -344,7 +349,7 @@ void plot_beamline_flux(const char* mode, const char * horn){
 	// Loop over the beamline
 	for (int i = 1; i < params.size(); i++){
 
-		if (params.at(i) == "Horn1_refined_descr" || params.at(i) == "Old_Horn") continue; // Remove these variations
+		if (params.at(i) == "Horn1_refined_descr" || params.at(i) == "Old_Horn" || params.at(i) == "Decay_pipe_Bfield") continue; // Remove these variations
 		
 		if (std::string(horn) == "fhc"){
 			boolfile  = GetFile(f , Form("/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/FHC/output_uboone_fhc_run%i.root",i)); 
@@ -361,7 +366,7 @@ void plot_beamline_flux(const char* mode, const char * horn){
 		boolhist  = GetHist(f, h_2D, Form("%s/Detsmear/%s_CV_AV_TPC_2D", mode, mode)); if (boolhist == false) gSystem->Exit(0);
 		boolhist  = GetHist(f, h_1D.at(i), Form("%s/Detsmear/%s_CV_AV_TPC", mode, mode)); if (boolhist == false) gSystem->Exit(0);
 
-		beamline_flux.at(i) = h_1D.at(i)->Integral(0,  h_1D.at(i)->GetNbinsX()+1) * (6.0e20)/ (POT*1.0e4); // Get the beamline Flux
+		beamline_flux.at(i) = h_1D.at(i)->Integral(0,  h_1D.at(i)->GetNbinsX()+1)/ (POT*1.0e4); // Get the beamline Flux
 
 		// Get POT and Unwrap histogram
 		std::cout << params[i] << " ";
@@ -392,7 +397,7 @@ void plot_beamline_flux(const char* mode, const char * horn){
 		h_1D.at(i)->SetDirectory(0);
 		Normalise(h_1D.at(i));
 		// h_1D.at(i)->Rebin(10);
-		h_1D.at(i)->Scale((6.0e20)/ (POT*1.0e4)); // scale to right POT and m2
+		h_1D.at(i)->Scale(1.0/ (POT*1.0e4)); // scale to right POT and m2
 		DrawSpecifiers(h_1D.at(i), lFlux_1D, params.at(i), "hist,same");
 
 		// Divide histograms and draw again
