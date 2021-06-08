@@ -52,7 +52,6 @@ void IncreaseLabelSize(TH2D* h){
 // function that makes a legend for multiple histograms and draws them to the canvas
 void legDraw(TLegend * &legend, TH1D *&hist, std::string inputmode, TString mode){
     
-
     if (inputmode == "ppfx_ms_UBPPFX"){
     hist->SetLineColor(kBlack);
     hist->SetLineWidth(2);
@@ -654,9 +653,9 @@ void DrawErrorBand(TFile* f, const char* mode, TLegend* leg, std::string inputmo
     Normalise(htemp);
     Normalise(htemp_clone);
 
-    htemp->Scale(6.0e20 / (GetPOT(f, false) * 1.0e4));
-    htemp_clone->Scale(6.0e20 / (GetPOT(f, false) * 1.0e4));
-    hcv->Scale(6.0e20 / (GetPOT(f, false) * 1.0e4));
+    htemp->Scale(1.0 / (GetPOT(f, false) * 1.0e4));
+    htemp_clone->Scale(1.0 / (GetPOT(f, false) * 1.0e4));
+    hcv->Scale(1.0 / (GetPOT(f, false) * 1.0e4));
 
     htemp->SetFillColor(18);
     htemp->SetFillStyle(1001);
@@ -674,7 +673,7 @@ void DrawErrorBand(TFile* f, const char* mode, TLegend* leg, std::string inputmo
     htemp->SetMarkerSize(0);
     // htemp->SetTitle(Form("Error band for %s",mode));
     htemp->GetXaxis()->SetTitle("Neutrino Energy [GeV]");
-    htemp->GetYaxis()->SetTitle(Form("%s / 6 #times 10^{20} POT / cm^{2} / GeV", mode_title));
+    htemp->GetYaxis()->SetTitle(Form("%s / POT / cm^{2} / GeV", mode_title));
     htemp->SetTitle(Form("%s", mode_title));
 
     htemp->Draw("e2");
@@ -689,6 +688,7 @@ void DrawErrorBand(TFile* f, const char* mode, TLegend* leg, std::string inputmo
     leg->SetBorderSize(0);
     leg->SetFillStyle(0);
     leg->SetTextFont(62); 
+    gPad->SetLeftMargin(0.16);
 
     gPad->SetLogy();
 }

@@ -127,10 +127,10 @@ void plot_uboone_flux(const char* horn,  const char* mode, const char* detector)
     Normalise(hUW_Flux); // Normalise flux by bin width (gives a flux/E [GeV])
 
     // 6e20 POT, 1e-4 for m2->cm2
-    hUW_Flux->Scale( (6.0e20)/ (fPOT*1.0e4));  
+    hUW_Flux->Scale( (1.0)/ (fPOT*1.0e4));  
     hUW_Flux->SetLineColor(kBlue+1);
     hUW_Flux->SetLineWidth(2);
-    hUW_Flux->SetTitle(";Energy [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
+    hUW_Flux->SetTitle(";Energy [GeV];#nu / POT / GeV / cm^{2}");
     hCV_Flux->GetXaxis()->SetRangeUser(0,5);
     hCV_Flux->Draw("hist");
     hUW_Flux->Draw("hist,same");
@@ -306,7 +306,7 @@ void plot_uboone_flux(const char* horn,  const char* mode, const char* detector)
     // Normalise 2d hist by bin area / deg / GeV
     Normalise(hCV2d);
     double POT_2d = GetPOT(f1,false);
-    hCV2d->Scale((6.0e20)/ (POT_2d * 1.0e4)); // scale to POT
+    hCV2d->Scale((1.0)/ (POT_2d * 1.0e4)); // scale to POT
     //------------------------------
     // Unwrap the histogram to binindex
     hCV_unwrap = new TH1D("", "",nBinsEnu*nBinsTh, 0, nBinsEnu*nBinsTh );
@@ -326,11 +326,14 @@ void plot_uboone_flux(const char* horn,  const char* mode, const char* detector)
     // Draw the CV in 2D
     TCanvas* c_CV2d= new TCanvas();
     c_CV2d->cd();
-    hCV2d->SetTitle(Form("%s CV 2D; Energy [GeV]; Theta [deg] ", mode_title));
+    hCV2d->SetTitle(Form("%s; Energy [GeV]; Angle [deg] ", mode_title));
     gPad->SetLogz();
     // gPad->Update();
     hCV2d->Draw("colz");
-    hCV2d->GetZaxis()->SetTitle("#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
+    hCV2d->SetMinimum(1e-14);
+    hCV2d->GetXaxis()->SetRangeUser(0,4);
+    // hCV2d->SetMaximum(5e-8);
+    hCV2d->GetZaxis()->SetTitle("#nu / POT / GeV / cm^{2}");
     hCV2d->GetZaxis()->SetTitleOffset(+1.3);
     IncreaseLabelSize(hCV2d);
     Draw_Nu_Mode(c_CV2d, horn); // Draw FHC Mode/RHC Mode Text
@@ -352,7 +355,7 @@ void plot_uboone_flux(const char* horn,  const char* mode, const char* detector)
         //------------------------------
         // Normalise 2d hist by bin area / deg / GeV
         Normalise(hu);
-        hu->Scale((6.0e20)/ (POT_2d*1.0e4)); // scale to right POT and m2
+        hu->Scale((1.0)/ (POT_2d*1.0e4)); // scale to right POT and m2
         //------------------------------
         // Unwrap the histogram to binindex
         hu_unwrap = new TH1D("", "",nBinsEnu*nBinsTh, 0, nBinsEnu*nBinsTh );
@@ -368,7 +371,7 @@ void plot_uboone_flux(const char* horn,  const char* mode, const char* detector)
     cov4d->SetTitle(Form("%s Covariance Matrix ; Bin i; Bin j", mode_title));
     gStyle->SetPalette(kViridis);
     cov4d->Draw("colz");
-    cov4d->GetZaxis()->SetTitle("#nu^{2} / 3.6 #times 10^{41} POT / GeV^{2} / cm^{4}");
+    cov4d->GetZaxis()->SetTitle("Covariance");
     cov4d->GetZaxis()->SetTitleOffset(+1.3);
     IncreaseLabelSize(cov4d);
     Draw_Nu_Mode(c_cov, horn); // Draw FHC Mode/RHC Mode Text

@@ -18,17 +18,20 @@ void plot_total_flux(const char* horn) {
     
     gStyle->SetOptStat(0); // say no to stats box
 
+    const char * var = "ang";
+    //  const char * var = "other";
+
     TFile *file; 
 
     bool boolfile;
 
     // Get the flux file
     if (!strcmp(horn,"fhc")) {
-        boolfile  = GetFile(file ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/FHC/output_uboone_fhc_run0_set1.root");
+        boolfile  = GetFile(file ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/FHC/sept/output_uboone_fhc_run0_set1.root");
         if (boolfile == false) gSystem->Exit(0);
     }
     else {
-        boolfile  = GetFile(file ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/RHC/output_uboone_rhc_run0_set1.root");
+        boolfile  = GetFile(file ,"/uboone/data/users/kmistry/work/PPFX/uboone/beamline_zero_threshold_v46/RHC/sept/output_uboone_rhc_run0_set1.root");
         if (boolfile == false) gSystem->Exit(0);
     }
 
@@ -42,12 +45,21 @@ void plot_total_flux(const char* horn) {
     
     // Get the Histograms
     for (unsigned int f = 0; f < flav.size(); f++){
-        h_flux.at(f) = (TH1D*) file->Get( Form("%s/Detsmear/%s_CV_AV_TPC_5MeV_bin", flav.at(f).c_str(), flav.at(f).c_str()) ); 
+
+        if (std::string(var) == "ang")
+            h_flux.at(f) = (TH1D*) file->Get( Form("%s/Detsmear/Th_%s_CV_TPC", flav.at(f).c_str(), flav.at(f).c_str()) ); 
+        else
+            h_flux.at(f) = (TH1D*) file->Get( Form("%s/Detsmear/%s_CV_AV_TPC_5MeV_bin", flav.at(f).c_str(), flav.at(f).c_str()) ); 
         
     }
     
     // define the energy threshold to integrate from 
-    double energy_threshold = 0.06; // Energy threhsold
+    double energy_threshold = 0.3; // Energy threhsold
+
+    // Max angle to integrate to
+    if (std::string(var) == "ang")
+        energy_threshold  = 180;
+    
     double flux_int_tot = 0.0;
     std::vector<double> flux_int(flav.size(), 0.0);
 
@@ -57,7 +69,10 @@ void plot_total_flux(const char* horn) {
         double xbin_th = h_flux.at(f)->GetXaxis()->FindBin(energy_threshold);   // find the x bin to integrate from
 
         // Get the flux for the neutrino flavour
-        flux_int.at(f) = h_flux.at(f)->Integral(xbin_th, h_flux.at(f)->GetNbinsX()+1);
+        if (std::string(var) == "ang")
+            flux_int.at(f) = h_flux.at(f)->Integral(0, xbin_th);
+        else
+            flux_int.at(f) = h_flux.at(f)->Integral(xbin_th, h_flux.at(f)->GetNbinsX()+1);
         
 
         // Add to the total flux
@@ -87,8 +102,17 @@ void plot_total_flux(const char* horn) {
         h_flux.at(f)->GetXaxis()->SetTitleSize(0.05);
         h_flux.at(f)->GetYaxis()->SetLabelSize(0.05);
         h_flux.at(f)->GetYaxis()->SetTitleSize(0.05);
-        h_flux.at(f)->SetTitle(";Neutrino Energy [GeV];#nu / POT / 10 MeV / cm^{2}");
-        h_flux.at(f)->GetXaxis()->SetRangeUser(0,5);
+        
+        
+        if (std::string(var) == "ang"){
+            h_flux.at(f)->GetXaxis()->SetRangeUser(0,155);
+            h_flux.at(f)->SetMinimum(1e-6);
+            h_flux.at(f)->SetTitle(";Neutrino Angle [deg];#nu / POT / 2 deg / cm^{2}");
+        }
+        else{
+            h_flux.at(f)->GetXaxis()->SetRangeUser(0,5);
+            h_flux.at(f)->SetTitle(";Neutrino Energy [GeV];#nu / POT / 10 MeV / cm^{2}");
+        }
         
     }
     
@@ -126,6 +150,7 @@ void plot_total_flux(const char* horn) {
     h_flux.at(3)->Draw("hist,same");
 
     c->SetLogy();
+    h_flux.at(0)->SetMinimum(1e-15);
 
     leg->SetNColumns(1);
     leg->SetBorderSize(0);
@@ -135,7 +160,41 @@ void plot_total_flux(const char* horn) {
 
     Draw_Nu_Mode(c, horn); // Draw FHC Mode/RHC Mode Text
 
-    c->Print(Form("NuMI_%s_Flux.pdf", horn));
+    if (std::string(var) == "ang")
+        c->Print(Form("NuMI_%s_Flux_angle.pdf", horn));
+    else
+        c->Print(Form("NuMI_%s_Flux.pdf", horn));
+
+    // Make a ratio plot of nue to nuebar
+    TCanvas *c2 = new TCanvas();
+    
+    c2->SetLeftMargin(0.15);
+    c2->SetBottomMargin(0.12);
+    
+    // Nue / nuebar
+    h_flux.at(1)->SetLineColor(kBlack);
+    h_flux.at(1)->SetLineWidth(2);
+    h_flux.at(1)->SetLineStyle(1);
+    h_flux.at(1)->GetYaxis()->SetTitle("#nu_{e}/#bar{#nu}_{e} Flux Ratio");
+
+    // h_flux.at(1)->Rebin(10);
+    // h_flux.at(3)->Rebin(10);
+
+    // h_flux.at(1)->GetXaxis()->SetRangeUser(0,4);
+    h_flux.at(1)->GetYaxis()->SetRangeUser(0,5);
+
+    h_flux.at(1)->Divide(h_flux.at(3));
+
+    h_flux.at(1)->Draw("hist,same");
+    
+    // c->SetLogy();
+
+    Draw_Nu_Mode(c, horn); // Draw FHC Mode/RHC Mode Text
+
+    if (std::string(var) == "ang")
+        c2->Print(Form("NuMI_%s_Flux_nue_nuebar_ratio_angle.pdf", horn));
+    else
+        c2->Print(Form("NuMI_%s_Flux_nue_nuebar_ratio.pdf", horn));
 
 }
 

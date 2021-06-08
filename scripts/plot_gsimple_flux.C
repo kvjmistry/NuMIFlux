@@ -22,7 +22,7 @@ void plot_gsimple_flux(const char* horn, const char* mode) {
 	TH1D *h_dk2nu_flux, *h_g_simp, *hnovafileflux, *hppfx, *hppfx_mod; 
 	TFile *f_gsimple, *f_ppfx, *f_ppfx_mod;
 	bool boolfile, boolhist;
-	double rebin{5}; // number to rebin the histograms by
+	double rebin{10}; // number to rebin the histograms by
 
 	// Select neutrino type to run with 
 	if (!strcmp(mode, "numu")){
@@ -95,13 +95,14 @@ void plot_gsimple_flux(const char* horn, const char* mode) {
 	h_dk2nu_flux->SetDirectory(0);
 
 	// Scalings
-	h_dk2nu_flux->Scale((6.0e20)/ (fPOT*1.0e4) );  
-	hppfx->Scale( (6.0e20)/ (fPOT*1.0e4) );  
+	h_dk2nu_flux->Scale(1.0/ (fPOT*1.0e4) );  
+	hppfx->Scale( 1.0/ (fPOT*1.0e4) );  
+	h_g_simp->Scale(1.0/(6.0e20));
 
 	// Plottings
 	h_dk2nu_flux->SetLineColor(kRed+1);
 	h_dk2nu_flux->SetLineWidth(2);
-	h_dk2nu_flux->SetTitle(";E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
+	h_dk2nu_flux->SetTitle(";Neutrino Energy [GeV];#nu / POT / GeV / cm^{2}");
 	// h_dk2nu_flux->SetTitle(";E_{#nu} [GeV];#nu / 6 #times 10^{20} POT / GeV / cm^{2}");
 	IncreaseLabelSize(h_dk2nu_flux);
 	h_dk2nu_flux->GetXaxis()->SetRangeUser(0,5);
@@ -124,7 +125,7 @@ void plot_gsimple_flux(const char* horn, const char* mode) {
 	
 	lFlux->AddEntry(h_dk2nu_flux, "dk2nu","l");
 	lFlux->AddEntry(h_g_simp, "flugg","l");
-	lFlux->AddEntry(hppfx, "dk2nu PPFX Corrected","l");;
+	lFlux->AddEntry(hppfx, "dk2nu Constrained","l");;
 	lFlux->Draw();
 	Draw_Nu_Mode(c1, horn); // Draw FHC Mode/RHC Mode Text
 

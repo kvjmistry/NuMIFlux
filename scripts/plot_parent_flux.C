@@ -146,8 +146,7 @@ void plot_parent_flux(const char* horn, TString mode) { // (fhc/rhc, numu/nue)
 	if (mode == "nue" || mode == "numu") gStyle->SetTitleH(0.1);
 	else gStyle->SetTitleH(0.07);
 
-	lFlux->AddEntry(h_ppfx_flux, "Total Flux","l");
-	
+	lFlux->AddEntry(h_ppfx_flux, "Total Flux","l");	
 	// Now do the same for each neutrino parent
 	boolhist = GetHist(f, h_ppfx_flux, Gethist_CV_AV); if (boolhist == false) gSystem->Exit(0);
 
@@ -190,6 +189,14 @@ void plot_parent_flux(const char* horn, TString mode) { // (fhc/rhc, numu/nue)
 		std::cout << std::setprecision(3) << std::setw(10) << parent.at(i)<< ":\t" << std::setw(10) << flux_parent.at(i) << "\tPercentage\t" << 100 * flux_parent.at(i) / flux_cv << "\%" << std::endl;
 	}
 	std::cout << "----------------------------------" << std::endl;
+
+	TLatex* range;
+	range = new TLatex(0.90,0.925, "(E_{#nu} > 60 MeV)");
+	range->SetTextColor(kGray+2);
+	range->SetNDC();
+	range->SetTextSize(0.038);
+	range->SetTextAlign(32);
+	range->Draw();
 
 
 	// ++++++++++++++++++++++++++++++++++

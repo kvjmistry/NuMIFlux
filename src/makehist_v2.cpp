@@ -103,6 +103,10 @@ int main(int argc, char** argv) {
     std::vector<TH1D*> Th_CV_AV_TPC_DIF;	
     std::vector<TH1D*> Th_UW_AV_TPC_DIF;	
 
+    std::vector<TH1D*> Baseline_CV_AV_TPC;
+    std::vector<TH1D*> Baseline_CV_AV_TPC_DIF;
+    std::vector<TH2D*> Enu_Baseline_CV_AV_TPC_2D;
+
     // 5Mev Bins
     std::vector<TH1D*> Enu_CV_Window_5MeV_bin;	
     std::vector<TH1D*> Enu_CV_AV_TPC_5MeV_bin;	
@@ -128,6 +132,10 @@ int main(int argc, char** argv) {
     std::vector<std::vector<TH1D*> > DAR_Th_Parent; 	    // Energy spectrum of decay at rest particles
     std::vector<std::vector<TH1D*> > DIF_Enu_Parent; 	    // Energy spectrum of decay in flight particles
     std::vector<std::vector<TH1D*> > DIF_Th_Parent; 	    // Energy spectrum of decay in flight particles
+    std::vector<std::vector<TH1D*> > Baseline_Parent;       // Flux by Parent vs baseline
+    std::vector<std::vector<TH1D*> > DIF_Baseline_Parent;   // Flux by Parent vs baseline for DIF
+    std::vector<std::vector<TH2D*> > Enu_Baseline_Parent;   // Flux by Parent Enu vs baseline
+
 
     // Other hists
     std::vector<TH1D*> PiDAR_zpos;
@@ -196,6 +204,10 @@ int main(int argc, char** argv) {
     Th_UW_AV_TPC.resize(flav.size());
     Th_CV_AV_TPC_DIF.resize(flav.size());
     Th_UW_AV_TPC_DIF.resize(flav.size());
+
+    Baseline_CV_AV_TPC.resize(flav.size());
+    Baseline_CV_AV_TPC_DIF.resize(flav.size());
+    Enu_Baseline_CV_AV_TPC_2D.resize(flav.size());
     
     
     Enu_CV_AV_TPC_5MeV_bin.resize(flav.size());
@@ -213,6 +225,9 @@ int main(int argc, char** argv) {
     DAR_Th_Parent.resize(flav.size());
     DIF_Enu_Parent.resize(flav.size());
     DIF_Th_Parent.resize(flav.size());
+    Baseline_Parent.resize(flav.size());
+    DIF_Baseline_Parent.resize(flav.size());
+    Enu_Baseline_Parent.resize(flav.size());
 
     // 2D
     Enu_Th_CV_AV_TPC.resize(flav.size());
@@ -308,6 +323,11 @@ int main(int argc, char** argv) {
         Th_CV_AV_TPC_DIF [i] = new TH1D(Form("Th_%s_CV_TPC_DIF", flav[i].c_str()), "", 180, 0, 180);
         Th_UW_AV_TPC_DIF [i] = new TH1D(Form("Th_%s_UW_TPC_DIF", flav[i].c_str()), "", 180, 0, 180);
 
+        Baseline_CV_AV_TPC[i] = new TH1D(Form("Baseline_%s_CV_TPC", flav[i].c_str()), "", 330,   50, 710);
+        Baseline_CV_AV_TPC_DIF[i] = new TH1D(Form("Baseline_%s_CV_TPC", flav[i].c_str()), "", 330,   50, 710);
+        Enu_Baseline_CV_AV_TPC_2D[i] = new TH2D(Form("Enu_Baseline_%s_CV_TPC", flav[i].c_str()), "", 50, 0, 5, 100, 50, 700);
+        
+
         // Other Histograms
         parent_mom[i]   = new TH1D(Form("%s_parent_mom",   flav[i].c_str()), "", 100, 0, 25);    // momentum distribution of nu parent
         parent_angle[i] = new TH1D(Form("%s_parent_angle", flav[i].c_str()), "", 180, 0, 180);   // angle distribution of nu parent
@@ -344,6 +364,9 @@ int main(int argc, char** argv) {
         DAR_Th_Parent[i].resize(parent.size());
         DIF_Enu_Parent[i].resize(parent.size());
         DIF_Th_Parent[i].resize(parent.size());
+        Baseline_Parent[i].resize(parent.size());
+        DIF_Baseline_Parent[i].resize(parent.size());
+        Enu_Baseline_Parent[i].resize(parent.size());
         
         // Parent
         for(unsigned k = 0; k < parent.size(); k++){
@@ -356,6 +379,9 @@ int main(int argc, char** argv) {
             DAR_Th_Parent[i][k]     = new TH1D(Form("DAR_Th_%s_%s_AV_TPC", flav[i].c_str(), parent[k].c_str()),"", 180,   0, 180);
             DIF_Enu_Parent[i][k]     = new TH1D(Form("DIF_Enu_%s_%s_AV_TPC", flav[i].c_str(), parent[k].c_str()),"", num_bins, 0, 20);
             DIF_Th_Parent[i][k]     = new TH1D(Form("DIF_Th_%s_%s_AV_TPC", flav[i].c_str(), parent[k].c_str()),"", 180,   0, 180);
+            Baseline_Parent[i][k]   = new TH1D(Form("Baseline_Parent_%s_%s_AV_TPC", flav[i].c_str(), parent[k].c_str()),"", 330,   50, 710);
+            DIF_Baseline_Parent[i][k] = new TH1D(Form("DIF_Baseline_Parent_%s_%s_AV_TPC", flav[i].c_str(), parent[k].c_str()),"", 330,   50, 710);
+            Enu_Baseline_Parent[i][k] = new TH2D(Form("Enu_Baseline_Parent_%s_%s_AV_TPC", flav[i].c_str(), parent[k].c_str()),"", 50, 0, 5, 100, 50, 700);
         }
         
         // Weighted Stuff
@@ -401,6 +427,7 @@ int main(int argc, char** argv) {
         // Alert the user
         if (n % 10000 == 0) std::cout << "On entry " << n/10000.0 <<"0k" << std::endl;
 
+        // if (n == 100000) break; 
         // if (n == 30) break; 
 
         auto const& mctruths = *ev.getValidHandle<vector<simb::MCTruth>>(mctruths_tag);   
@@ -513,6 +540,13 @@ int main(int argc, char** argv) {
             decay_zpos = mcflux.fvz;
             imp_weight  = mcflux.fnimpwt;
 
+            TVector3 Trans_Targ2Det_beam = {5502, 7259, 67270};
+            TVector3 Decay_pos = {mcflux.fvx, mcflux.fvy, mcflux.fvz};
+
+            // std::cout << mcflux.fvx << " " << mcflux.fvy << " " << mcflux.fvz << std::endl;
+            TVector3 baseline_vec = Trans_Targ2Det_beam - Decay_pos;
+            double baseline = baseline_vec.Mag()/100.0;
+            // std::cout << "Baseline: "<< baseline << std::endl; 
             
 
             // TPC AV
@@ -522,12 +556,15 @@ int main(int argc, char** argv) {
             Enu_UW_AV_TPC_5MeV_bin[pdg]     ->Fill(Enu, dk2nu_weight);
             Th_CV_AV_TPC[pdg]               ->Fill(theta, cv_weight);
             Th_UW_AV_TPC[pdg]               ->Fill(theta, dk2nu_weight);
+            Baseline_CV_AV_TPC[pdg]         ->Fill(baseline, cv_weight);
+            Enu_Baseline_CV_AV_TPC_2D[pdg]  ->Fill(Enu, baseline, cv_weight);
 
             if (Pmom_dk != 0 ) {
                 Th_CV_AV_TPC_DIF[pdg]               ->Fill(theta, cv_weight);
                 Th_UW_AV_TPC_DIF[pdg]               ->Fill(theta, dk2nu_weight);
                 Enu_CV_AV_TPC_5MeV_bin_DIF[pdg]     ->Fill(Enu, cv_weight);
                 Enu_UW_AV_TPC_5MeV_bin_DIF[pdg]     ->Fill(Enu, dk2nu_weight);
+                Baseline_CV_AV_TPC_DIF[pdg]         ->Fill(baseline, cv_weight);
             }
 
             // INDEXING: 0: PI_Plus 1: PI_Minus 2: Mu Plus 3: Mu_Minus 4: Kaon_Plus 5: Kaon_Minus 6: K0L 
@@ -537,6 +574,8 @@ int main(int argc, char** argv) {
                 zpos_Parent_AV_TPC[pdg][0] ->Fill(mcflux.fvz, cv_weight);
                 impwght_Parent[pdg][0]     ->Fill(mcflux.fnimpwt);
                 Targ_mom_Parent[pdg][0]    ->Fill(Pmom_tg, cv_weight);
+                Baseline_Parent[pdg][0]    ->Fill(baseline, cv_weight);
+                Enu_Baseline_Parent[pdg][0]    ->Fill(Enu, baseline, cv_weight);
 
                 // Fill DAR Energy spectrum
                 if (Pmom_dk == 0 ) {
@@ -546,6 +585,7 @@ int main(int argc, char** argv) {
                 else {
                     DIF_Enu_Parent[pdg][0]->Fill(Enu, cv_weight);
                     DIF_Th_Parent[pdg][0]->Fill(theta, cv_weight);
+                    DIF_Baseline_Parent[pdg][0]->Fill(baseline, cv_weight);
                 }
                 
             }
@@ -555,6 +595,8 @@ int main(int argc, char** argv) {
                 zpos_Parent_AV_TPC[pdg][1] ->Fill(mcflux.fvz, cv_weight);
                 impwght_Parent[pdg][1]     ->Fill(mcflux.fnimpwt);
                 Targ_mom_Parent[pdg][1]    ->Fill(Pmom_tg, cv_weight);
+                Baseline_Parent[pdg][1]    ->Fill(baseline, cv_weight);
+                Enu_Baseline_Parent[pdg][1]    ->Fill(Enu, baseline, cv_weight);
 
                 // Fill DAR Energy spectrum
                 if (Pmom_dk == 0 ){
@@ -564,6 +606,7 @@ int main(int argc, char** argv) {
                 else {
                     DIF_Enu_Parent[pdg][1]->Fill(Enu, cv_weight);
                     DIF_Th_Parent[pdg][1]->Fill(theta, cv_weight);
+                    DIF_Baseline_Parent[pdg][1]->Fill(baseline, cv_weight);
                 }
                 
             }
@@ -573,6 +616,8 @@ int main(int argc, char** argv) {
                 zpos_Parent_AV_TPC[pdg][2] ->Fill(mcflux.fvz, cv_weight);
                 impwght_Parent[pdg][2]     ->Fill(mcflux.fnimpwt);
                 Targ_mom_Parent[pdg][2]    ->Fill(Pmom_tg, cv_weight);
+                Baseline_Parent[pdg][2]    ->Fill(baseline, cv_weight);
+                Enu_Baseline_Parent[pdg][2]    ->Fill(Enu, baseline, cv_weight);
     
                 // Fill DAR Energy spectrum
                 if (Pmom_dk == 0 ){
@@ -582,6 +627,7 @@ int main(int argc, char** argv) {
                 else {
                     DIF_Enu_Parent[pdg][2]->Fill(Enu, cv_weight);
                     DIF_Th_Parent[pdg][2]->Fill(theta, cv_weight);
+                    DIF_Baseline_Parent[pdg][2]->Fill(baseline, cv_weight);
                 }
 
             } 
@@ -591,6 +637,8 @@ int main(int argc, char** argv) {
                 zpos_Parent_AV_TPC[pdg][3] ->Fill(mcflux.fvz, cv_weight);
                 impwght_Parent[pdg][3]     ->Fill(mcflux.fnimpwt);
                 Targ_mom_Parent[pdg][3]    ->Fill(Pmom_tg, cv_weight);
+                Baseline_Parent[pdg][3]    ->Fill(baseline, cv_weight);
+                Enu_Baseline_Parent[pdg][3]    ->Fill(Enu, baseline, cv_weight);
 
                 // Fill DAR Energy spectrum
                 if (Pmom_dk == 0 ){
@@ -600,6 +648,7 @@ int main(int argc, char** argv) {
                 else {
                     DIF_Enu_Parent[pdg][3]->Fill(Enu, cv_weight);
                     DIF_Th_Parent[pdg][3]->Fill(theta, cv_weight);
+                    DIF_Baseline_Parent[pdg][3]->Fill(baseline, cv_weight);
                 }
 
             } 
@@ -609,6 +658,8 @@ int main(int argc, char** argv) {
                 zpos_Parent_AV_TPC[pdg][4] ->Fill(mcflux.fvz, cv_weight);
                 impwght_Parent[pdg][4]     ->Fill(mcflux.fnimpwt);
                 Targ_mom_Parent[pdg][4]    ->Fill(Pmom_tg, cv_weight);
+                Baseline_Parent[pdg][4]    ->Fill(baseline, cv_weight);
+                Enu_Baseline_Parent[pdg][4]    ->Fill(Enu, baseline, cv_weight);
 
                 // Fill DAR Energy spectrum
                 if (Pmom_dk == 0 ){
@@ -618,6 +669,7 @@ int main(int argc, char** argv) {
                 else {
                     DIF_Enu_Parent[pdg][4]->Fill(Enu, cv_weight);
                     DIF_Th_Parent[pdg][4]->Fill(theta, cv_weight);
+                    DIF_Baseline_Parent[pdg][4]->Fill(baseline, cv_weight);
                 }
                 
             }
@@ -627,6 +679,8 @@ int main(int argc, char** argv) {
                 zpos_Parent_AV_TPC[pdg][5] ->Fill(mcflux.fvz, cv_weight);
                 impwght_Parent[pdg][5]     ->Fill(mcflux.fnimpwt);
                 Targ_mom_Parent[pdg][5]    ->Fill(Pmom_tg, cv_weight);
+                Baseline_Parent[pdg][5]    ->Fill(baseline, cv_weight);
+                Enu_Baseline_Parent[pdg][5]    ->Fill(Enu, baseline, cv_weight);
 
                 // Fill DAR Energy spectrum
                 if (Pmom_dk == 0 ){
@@ -636,6 +690,7 @@ int main(int argc, char** argv) {
                 else {
                     DIF_Enu_Parent[pdg][5]->Fill(Enu, cv_weight);
                     DIF_Th_Parent[pdg][5]->Fill(theta, cv_weight);
+                    DIF_Baseline_Parent[pdg][5]->Fill(baseline, cv_weight);
                 }
                 
             }
@@ -645,6 +700,8 @@ int main(int argc, char** argv) {
                 zpos_Parent_AV_TPC[pdg][6] ->Fill(mcflux.fvz, cv_weight);
                 impwght_Parent[pdg][6]     ->Fill(mcflux.fnimpwt);
                 Targ_mom_Parent[pdg][6]    ->Fill(Pmom_tg, cv_weight);
+                Baseline_Parent[pdg][6]    ->Fill(baseline, cv_weight);
+                Enu_Baseline_Parent[pdg][6]    ->Fill(Enu, baseline, cv_weight);
 
                 // Fill DAR Energy spectrum
                 if (Pmom_dk == 0 ){
@@ -654,6 +711,7 @@ int main(int argc, char** argv) {
                 else {
                     DIF_Enu_Parent[pdg][6]->Fill(Enu, cv_weight);
                     DIF_Th_Parent[pdg][6]->Fill(theta, cv_weight);
+                    DIF_Baseline_Parent[pdg][6]->Fill(baseline, cv_weight);
                 }
 
             }
@@ -748,6 +806,9 @@ int main(int argc, char** argv) {
             DAR_Th_Parent[f][k-1]->Write();
             DIF_Enu_Parent[f][k-1]->Write();
             DIF_Th_Parent[f][k-1]->Write();
+            Baseline_Parent[f][k-1]->Write();
+            DIF_Baseline_Parent[f][k-1]->Write();
+            Enu_Baseline_Parent[f][k-1]->Write();
     
         }
 
@@ -786,6 +847,9 @@ int main(int argc, char** argv) {
         Enu_UW_AV_TPC_5MeV_bin_DIF[f]->Write();
         Enu_Th_CV_AV_TPC[f]->Write();
         Enu_Th_UW_AV_TPC[f]->Write();
+        Baseline_CV_AV_TPC[f]->Write();
+        Baseline_CV_AV_TPC_DIF[f]->Write();
+        Enu_Baseline_CV_AV_TPC_2D[f]->Write();
 
         std::cout << "Multisims" << std::endl;
         subdir.at(f).at(parent.size()+4) = subdir[f][0]->mkdir("Multisims");
